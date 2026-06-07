@@ -1,6 +1,6 @@
 import * as vscode from "vscode"
 import { funWindow as window } from "./funMessenger"
-import { ADTClient } from "abap-adt-api"
+import { ADTClient, QueryResult } from "abap-adt-api"
 import { log } from "../lib"
 import { getClient } from "../adt/conections"
 import { fetchWhereUsedData, buildGraphData, mergeGraphData, applyFilters } from "./dependencyGraph"
@@ -143,7 +143,7 @@ export class WebviewManager {
    * Create or update a data query webview
    */
   public async createOrUpdateWebview(
-    client: ADTClient | { columns: any[]; values: any[] },
+    client: ADTClient | QueryResult,
     sql: string,
     connectionId: string,
     webviewId?: string,
@@ -157,7 +157,7 @@ export class WebviewManager {
   ): Promise<{ webviewId: string; data?: any; state?: any }> {
     // Detect if we're dealing with direct data input
     const isDirectData = !("runQuery" in client)
-    const directData = isDirectData ? (client as { columns: any[]; values: any[] }) : null
+    const directData = isDirectData ? (client as QueryResult) : null
     const actualClient = isDirectData ? null : (client as ADTClient)
 
     // Only require connectionId for SQL queries, not direct data
