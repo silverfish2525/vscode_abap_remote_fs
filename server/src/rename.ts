@@ -3,9 +3,9 @@ import {
   Position,
   RenameParams,
   TextEdit,
-  WorkspaceEdit
+  WorkspaceEdit,
+  WorkDoneProgressReporter
 } from "vscode-languageserver"
-import { WorkDoneProgress } from "vscode-languageserver/lib/progress"
 import { getVSCodeUri } from "./clientapis"
 import { isAbap } from "./functions"
 import { clientAndObjfromUrl } from "./utilities"
@@ -13,7 +13,7 @@ import { clientAndObjfromUrl } from "./utilities"
 export const renameHandler = async (
   params: RenameParams,
   token: CancellationToken,
-  workDoneProgress: WorkDoneProgress
+  workDoneProgress: WorkDoneProgressReporter
 ): Promise<WorkspaceEdit> => {
   const { textDocument, newName, position } = params
   const co = await clientAndObjfromUrl(textDocument.uri)
