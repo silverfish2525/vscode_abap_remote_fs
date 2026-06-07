@@ -10,7 +10,7 @@
       "es2021"
     ],
     "types": [
-      "jest"
+      "vitest/globals"
     ],
     "sourceMap": true,
     "strict": true,
