@@ -205,7 +205,7 @@ function determineSeverity(rawEntry: any, feedType: FeedType): "error" | "warnin
  * Parse feed response based on feed type
  */
 export function parseFeedResponse(
-  feedData: any,
+  feedData: unknown,
   systemId: string,
   feedTitle: string,
   feedPath: string,
@@ -220,12 +220,13 @@ export function parseFeedResponse(
     // Check for direct array FIRST (before checking .entries property, which exists on arrays!)
     if (Array.isArray(feedData)) {
       rawEntries = feedData
-    } else if (feedData.dumps) {
-      rawEntries = feedData.dumps
-    } else if (feedData.entries) {
-      rawEntries = feedData.entries
-    } else if (feedData.entry) {
-      rawEntries = Array.isArray(feedData.entry) ? feedData.entry : [feedData.entry]
+    } else if (feedData && typeof feedData === "object" && "dumps" in feedData) {
+      rawEntries = (feedData as { dumps: any[] }).dumps
+    } else if (feedData && typeof feedData === "object" && "entries" in feedData) {
+      rawEntries = (feedData as { entries: any[] }).entries
+    } else if (feedData && typeof feedData === "object" && "entry" in feedData) {
+      const entry = (feedData as { entry: unknown }).entry
+      rawEntries = Array.isArray(entry) ? entry : [entry]
     } else {
       // Unknown structure
       return entries
