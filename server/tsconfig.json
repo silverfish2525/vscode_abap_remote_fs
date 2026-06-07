@@ -1,9 +1,10 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "node16",
     "target": "ES2022",
     "rootDir": "src",
     "moduleResolution": "node16",
+    "types": ["node", "jest"],
     "outDir": "./out",
     "sourceMap": true,
     "strict": true,

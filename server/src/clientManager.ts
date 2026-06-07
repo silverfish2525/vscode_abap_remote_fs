@@ -1,5 +1,5 @@
 import { ADTClient, createSSLConfig, LogData, session_types } from "abap-adt-api"
-import { createConnection, ProposedFeatures } from "vscode-languageserver/node"
+import { createConnection, ProposedFeatures, Connection } from "vscode-languageserver/node"
 import { types } from "util"
 import { readConfiguration } from "./clientapis"
 import {
@@ -10,7 +10,7 @@ import {
 import { isString } from "./functions"
 const clients: Map<string, ADTClient> = new Map()
 
-export const connection = createConnection(ProposedFeatures.all)
+export const connection: Connection = createConnection(ProposedFeatures.all)
 export const error = (...params: any) => connection.console.error(convertParams(...params))
 export const warn = (...params: any) => connection.console.warn(convertParams(...params))
 export const info = (...params: any) => connection.console.info(convertParams(...params))
