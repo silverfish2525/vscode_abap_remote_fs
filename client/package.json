@@ -71,7 +71,6 @@
     "fs-jetpack": "^5.1.0",
     "html-entities": "^2.3.3",
     "io-ts": "^2.2.21",
-    "open": "^8.4.0",
     "ramda": "^0.28.0",
     "tmp-promise": "^3.0.3",
     "v8-inspect-profiler": "^0.1.0",
