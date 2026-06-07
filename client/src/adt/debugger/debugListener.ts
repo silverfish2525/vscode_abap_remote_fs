@@ -14,7 +14,7 @@ import { getOrCreateClient } from "../conections"
 import { homedir } from "os"
 import { join } from "path"
 import { StoppedEvent, TerminatedEvent, ThreadEvent } from "@vscode/debugadapter"
-import { v1 } from "uuid"
+import { randomUUID } from "node:crypto"
 import { getWinRegistryReader } from "./winregistry"
 import { context } from "../../extension"
 import { DebugService, isEnded } from "./debugService"
@@ -39,7 +39,7 @@ export interface DebuggerUI {
 const getOrCreateIdeId = (): string => {
   const ideId = context.workspaceState.get("adt.ideId")
   if (typeof ideId === "string") return ideId
-  const newIdeId = v1().replace(/-/g, "").toUpperCase()
+  const newIdeId = randomUUID().replace(/-/g, "").toUpperCase()
   context.workspaceState.update("adt.ideId", newIdeId)
   return newIdeId
 }
@@ -57,7 +57,7 @@ const getOrCreateTerminalId = async () => {
     try {
       return readFileSync(cfgfile).toString("utf8")
     } catch (error) {
-      const terminalId = v1().replace(/-/g, "").toUpperCase()
+      const terminalId = randomUUID().replace(/-/g, "").toUpperCase()
       if (!existsSync(cfgpath)) mkdirSync(cfgpath, { recursive: true })
       writeFileSync(cfgfile, terminalId)
       return terminalId
