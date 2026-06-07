@@ -51,7 +51,7 @@ export function registerVirtualToolsFixOnConnect(context: vscode.ExtensionContex
   context.subscriptions.push(listener)
 }
 
-async function disableVirtualToolGrouping(
+export async function disableVirtualToolGrouping(
   context: vscode.ExtensionContext
 ): Promise<void> {
 

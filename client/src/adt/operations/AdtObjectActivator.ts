@@ -335,7 +335,7 @@ export class AdtObjectActivator {
       return `${v}`
     }
 
-    type Msg = { text: string; href?: string; target: string }
+    type Msg = { text: string; href: string | undefined; target: string }
     // Real ADT activation responses sometimes carry `longText`/`message`/`msg`
     // keys on each message even though upstream `ActivationResultMessage` only
     // declares `shortText`/`objDescr`/`href`. Narrow at the use site instead
@@ -375,7 +375,7 @@ export class AdtObjectActivator {
           return { text, href, target }
         }
       )
-      .filter(Boolean)
+      .filter((m): m is Msg => m !== undefined)
 
     const grouped = new Map<string, Msg[]>()
     for (const m of msgs) {
@@ -527,7 +527,16 @@ export class AdtObjectActivator {
         // User cancelled - don't activate anything, return a cancelled result
         return {
           success: false,
-          messages: [{ shortText: "Activation cancelled by user" }],
+          messages: [
+            {
+              shortText: "Activation cancelled by user",
+              objDescr: "",
+              type: "",
+              line: 0,
+              href: "",
+              forceSupported: false
+            }
+          ],
           inactive: relatedObjects
         }
       }

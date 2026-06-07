@@ -71,6 +71,21 @@ type DependencyGraphMessage =
   | { command: "exportImage"; imageData: string; format: "svg" | "png" }
 
 /**
+ * Loosely-typed inline data passed directly to the webview without an SQL
+ * query. Columns here are described by the LM tool / caller and don't carry
+ * the full set of metadata that `QueryResult` (from `abap-adt-api`) requires
+ * (`keyAttribute`, `colType`, `isKeyFigure`, `length`).
+ */
+export interface InlineQueryData {
+  columns: Array<{
+    name: string
+    type: string
+    description?: string
+  }>
+  values: Array<Record<string, unknown>>
+}
+
+/**
  * Webview metadata stored in globalState
  */
 interface WebviewMetadata {
@@ -206,7 +221,7 @@ export class WebviewManager {
    * Create or update a data query webview
    */
   public async createOrUpdateWebview(
-    client: ADTClient | QueryResult,
+    client: ADTClient | QueryResult | InlineQueryData,
     sql: string,
     connectionId: string,
     webviewId?: string,
@@ -220,7 +235,7 @@ export class WebviewManager {
   ): Promise<{ webviewId: string; data?: any; state?: any }> {
     // Detect if we're dealing with direct data input
     const isDirectData = !("runQuery" in client)
-    const directData = isDirectData ? (client as QueryResult) : null
+    const directData = isDirectData ? (client as QueryResult | InlineQueryData) : null
     const actualClient = isDirectData ? null : (client as ADTClient)
 
     // Only require connectionId for SQL queries, not direct data
