@@ -1,5 +1,5 @@
 // Tests for views/traces/views.ts - TraceRunItem and tracesProvider
-jest.mock("vscode", () => {
+vi.mock("vscode", () => {
   const MarkdownString = class {
     constructor(public value = "") {}
   }
@@ -14,25 +14,25 @@ jest.mock("vscode", () => {
   }
   const TreeItemCollapsibleState = { None: 0, Collapsed: 1, Expanded: 2 }
   const EventEmitter = class {
-    event = jest.fn()
-    fire = jest.fn()
+    event = vi.fn()
+    fire = vi.fn()
   }
   const Uri = {
-    parse: jest.fn((s: string) => ({ toString: () => s, path: s }))
+    parse: vi.fn((s: string) => ({ toString: () => s, path: s }))
   }
   return { MarkdownString, ThemeIcon, TreeItem, TreeItemCollapsibleState, EventEmitter, Uri }
 }, { virtual: true })
 
-jest.mock("../../config", () => ({
-  connectedRoots: jest.fn(() => new Map([["DEV100", {}], ["QA100", {}]]))
+vi.mock("../../config", () => ({
+  connectedRoots: vi.fn(() => new Map([["DEV100", {}], ["QA100", {}]]))
 }))
 
-jest.mock("../../adt/conections", () => ({
-  getOrCreateClient: jest.fn()
+vi.mock("../../adt/conections", () => ({
+  getOrCreateClient: vi.fn()
 }))
 
-jest.mock("../../lib", () => ({
-  cache: jest.fn((fn: Function) => {
+vi.mock("../../lib", () => ({
+  cache: vi.fn((fn: Function) => {
     const map = new Map()
     return {
       get: (k: any) => {
@@ -45,12 +45,12 @@ jest.mock("../../lib", () => ({
   })
 }))
 
-jest.mock("./commands", () => ({
-  openCommand: jest.fn((uri: any) => ({ command: "open", title: "open", arguments: [uri] }))
+vi.mock("./commands", () => ({
+  openCommand: vi.fn((uri: any) => ({ command: "open", title: "open", arguments: [uri] }))
 }))
 
-jest.mock("./fsProvider", () => ({
-  adtProfileUri: jest.fn((item: any) => `adt://profile/${item.id}`)
+vi.mock("./fsProvider", () => ({
+  adtProfileUri: vi.fn((item: any) => `adt://profile/${item.id}`)
 }))
 
 import { TraceRunItem, tracesProvider, findRun } from "./views"
@@ -197,8 +197,8 @@ describe("tracesProvider", () => {
 describe("findRun", () => {
   it("returns undefined when client is not connected and no runs cached", async () => {
     const { getOrCreateClient } = require("../../adt/conections")
-    ;(getOrCreateClient as jest.Mock).mockResolvedValue({
-      tracesList: jest.fn().mockResolvedValue({ runs: [] })
+    ;(getOrCreateClient as Mock).mockResolvedValue({
+      tracesList: vi.fn().mockResolvedValue({ runs: [] })
     })
 
     const result = await findRun("DEV100", "nonexistent")

@@ -3,7 +3,7 @@
  * Covers FavItem, FavouritesProvider and the fixold/fixoldu helpers (via Favourite).
  */
 
-jest.mock(
+vi.mock(
   "vscode",
   () => {
     return {
@@ -18,17 +18,17 @@ jest.mock(
         }
       },
       TreeItemCollapsibleState: { None: 0, Collapsed: 1, Expanded: 2 },
-      EventEmitter: jest.fn().mockImplementation(() => ({
+      EventEmitter: vi.fn().mockImplementation(() => ({
         event: {},
-        fire: jest.fn()
+        fire: vi.fn()
       })),
       Uri: {
-        parse: jest.fn((s: string) => ({
+        parse: vi.fn((s: string) => ({
           toString: () => s,
           authority: s.replace(/.*?:\/\//, "").split("/")[0] ?? "",
           path: "/" + (s.split("/").slice(3).join("/") || ""),
           scheme: s.split(":")[0],
-          with: jest.fn(({ path }: any) => ({
+          with: vi.fn(({ path }: any) => ({
             toString: () => `adt://dev100${path}`,
             authority: "dev100",
             path
@@ -44,17 +44,17 @@ jest.mock(
   { virtual: true }
 )
 
-jest.mock(
+vi.mock(
   "fs-jetpack",
   () => ({
-    path: jest.fn((...parts: string[]) => parts.join("/")),
-    fileAsync: jest.fn(),
-    readAsync: jest.fn().mockResolvedValue(null)
+    path: vi.fn((...parts: string[]) => parts.join("/")),
+    fileAsync: vi.fn(),
+    readAsync: vi.fn().mockResolvedValue(null)
   }),
   { virtual: true }
 )
 
-jest.mock(
+vi.mock(
   "../lib",
   () => ({
     NSSLASH: "/",
@@ -63,24 +63,24 @@ jest.mock(
   { virtual: true }
 )
 
-jest.mock(
+vi.mock(
   "../adt/conections",
   () => ({
-    uriRoot: jest.fn(() => ({
-      getNodeAsync: jest.fn().mockResolvedValue(undefined)
+    uriRoot: vi.fn(() => ({
+      getNodeAsync: vi.fn().mockResolvedValue(undefined)
     })),
-    getRoot: jest.fn(),
+    getRoot: vi.fn(),
     ADTSCHEME: "adt"
   }),
   { virtual: true }
 )
 
-jest.mock(
+vi.mock(
   "abapfs",
   () => ({
-    isAbapFolder: jest.fn(),
-    isAbapStat: jest.fn(),
-    isFolder: jest.fn()
+    isAbapFolder: vi.fn(),
+    isAbapStat: vi.fn(),
+    isFolder: vi.fn()
   }),
   { virtual: true }
 )
@@ -234,7 +234,7 @@ describe("FavouritesProvider", () => {
       { uri: { authority: "dev100", scheme: "adt", toString: () => "adt://dev100" } }
     ]
     const { readAsync } = require("fs-jetpack")
-    ;(readAsync as jest.Mock).mockResolvedValueOnce([
+    ;(readAsync as Mock).mockResolvedValueOnce([
       [
         "dev100",
         [

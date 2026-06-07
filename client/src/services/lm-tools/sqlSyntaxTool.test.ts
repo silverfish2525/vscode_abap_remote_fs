@@ -1,27 +1,27 @@
-jest.mock("vscode", () => ({
-  LanguageModelToolResult: jest.fn().mockImplementation((parts: any[]) => ({ parts })),
-  LanguageModelTextPart: jest.fn().mockImplementation((text: string) => ({ text })),
-  MarkdownString: jest.fn().mockImplementation((text: string) => ({ text })),
-  lm: { registerTool: jest.fn(() => ({ dispose: jest.fn() })) }
+vi.mock("vscode", () => ({
+  LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
+  LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
+  MarkdownString: vi.fn().mockImplementation((text: string) => ({ text })),
+  lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) }
 }), { virtual: true })
 
-jest.mock("../../adt/conections", () => ({}))
-jest.mock("../telemetry", () => ({ logTelemetry: jest.fn() }))
-jest.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: jest.fn(() => ({ dispose: jest.fn() }))
+vi.mock("../../adt/conections", () => ({}))
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("./toolRegistry", () => ({
+  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() }))
 }))
-jest.mock("../abapCopilotLogger", () => ({
-  logCommands: { error: jest.fn() }
+vi.mock("../abapCopilotLogger", () => ({
+  logCommands: { error: vi.fn() }
 }))
-jest.mock("../../extension", () => ({
+vi.mock("../../extension", () => ({
   context: { extensionPath: "/ext" }
 }))
-jest.mock("path", () => ({
+vi.mock("path", () => ({
   join: (...args: string[]) => args.join("/")
 }))
-jest.mock("fs", () => ({
-  existsSync: jest.fn(),
-  readFileSync: jest.fn()
+vi.mock("fs", () => ({
+  existsSync: vi.fn(),
+  readFileSync: vi.fn()
 }))
 
 import { GetABAPSQLSyntaxTool } from "./sqlSyntaxTool"
@@ -39,7 +39,7 @@ describe("GetABAPSQLSyntaxTool", () => {
 
   beforeEach(() => {
     tool = new GetABAPSQLSyntaxTool()
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   describe("prepareInvocation", () => {
@@ -57,38 +57,38 @@ describe("GetABAPSQLSyntaxTool", () => {
 
   describe("invoke", () => {
     it("logs telemetry", async () => {
-      ;(fs.existsSync as jest.Mock).mockReturnValue(true)
-      ;(fs.readFileSync as jest.Mock).mockReturnValue("# ABAP SQL Syntax\n## SELECT")
+      ;(fs.existsSync as Mock).mockReturnValue(true)
+      ;(fs.readFileSync as Mock).mockReturnValue("# ABAP SQL Syntax\n## SELECT")
       await tool.invoke(makeOptions(), mockToken)
       expect(logTelemetry).toHaveBeenCalledWith("tool_get_abap_sql_syntax_called")
     })
 
     it("returns SQL syntax content from file", async () => {
       const content = "# ABAP SQL Syntax Guide\n## SELECT statement\nABCD"
-      ;(fs.existsSync as jest.Mock).mockReturnValue(true)
-      ;(fs.readFileSync as jest.Mock).mockReturnValue(content)
+      ;(fs.existsSync as Mock).mockReturnValue(true)
+      ;(fs.readFileSync as Mock).mockReturnValue(content)
       const result: any = await tool.invoke(makeOptions(), mockToken)
       expect(result.parts[0].text).toContain("ABAP SQL Syntax")
       expect(result.parts[0].text).toContain(content)
     })
 
     it("includes important warning header", async () => {
-      ;(fs.existsSync as jest.Mock).mockReturnValue(true)
-      ;(fs.readFileSync as jest.Mock).mockReturnValue("content")
+      ;(fs.existsSync as Mock).mockReturnValue(true)
+      ;(fs.readFileSync as Mock).mockReturnValue("content")
       const result: any = await tool.invoke(makeOptions(), mockToken)
       expect(result.parts[0].text).toContain("IMPORTANT")
     })
 
     it("throws when syntax file not found", async () => {
-      ;(fs.existsSync as jest.Mock).mockReturnValue(false)
+      ;(fs.existsSync as Mock).mockReturnValue(false)
       await expect(tool.invoke(makeOptions(), mockToken)).rejects.toThrow(
         "Failed to load ABAP SQL syntax documentation"
       )
     })
 
     it("throws when file read fails", async () => {
-      ;(fs.existsSync as jest.Mock).mockReturnValue(true)
-      ;(fs.readFileSync as jest.Mock).mockImplementation(() => {
+      ;(fs.existsSync as Mock).mockReturnValue(true)
+      ;(fs.readFileSync as Mock).mockImplementation(() => {
         throw new Error("read error")
       })
       await expect(tool.invoke(makeOptions(), mockToken)).rejects.toThrow(
@@ -97,8 +97,8 @@ describe("GetABAPSQLSyntaxTool", () => {
     })
 
     it("reads from correct path (extensionPath + client/dist/media/sql_syntax.md)", async () => {
-      ;(fs.existsSync as jest.Mock).mockReturnValue(true)
-      ;(fs.readFileSync as jest.Mock).mockReturnValue("content")
+      ;(fs.existsSync as Mock).mockReturnValue(true)
+      ;(fs.readFileSync as Mock).mockReturnValue("content")
       await tool.invoke(makeOptions(), mockToken)
       expect(fs.existsSync).toHaveBeenCalledWith(expect.stringContaining("sql_syntax.md"))
     })

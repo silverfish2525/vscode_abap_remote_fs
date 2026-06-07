@@ -4,23 +4,23 @@
  * API key validation logic, and exported server lifecycle functions.
  */
 
-jest.mock(
+vi.mock(
   "vscode",
   () => ({
     workspace: {
-      getConfiguration: jest.fn().mockReturnValue({
-        get: jest.fn((key: string, defaultVal: any) => defaultVal),
-        update: jest.fn()
+      getConfiguration: vi.fn().mockReturnValue({
+        get: vi.fn((key: string, defaultVal: any) => defaultVal),
+        update: vi.fn()
       }),
       workspaceFolders: []
     },
-    lm: { tools: [], invokeTool: jest.fn() },
+    lm: { tools: [], invokeTool: vi.fn() },
     window: {
-      showInformationMessage: jest.fn(),
-      showErrorMessage: jest.fn(),
-      showWarningMessage: jest.fn()
+      showInformationMessage: vi.fn(),
+      showErrorMessage: vi.fn(),
+      showWarningMessage: vi.fn()
     },
-    CancellationTokenSource: jest.fn().mockImplementation(() => ({ token: {} })),
+    CancellationTokenSource: vi.fn().mockImplementation(() => ({ token: {} })),
     LanguageModelTextPart: class {
       constructor(public value: string) {}
     }
@@ -28,36 +28,36 @@ jest.mock(
   { virtual: true }
 )
 
-jest.mock("./funMessenger", () => ({
+vi.mock("./funMessenger", () => ({
   funWindow: {
-    showInformationMessage: jest.fn(),
-    showErrorMessage: jest.fn(),
-    showWarningMessage: jest.fn()
+    showInformationMessage: vi.fn(),
+    showErrorMessage: vi.fn(),
+    showWarningMessage: vi.fn()
   }
 }))
 
-jest.mock("../lib", () => ({
-  log: jest.fn()
+vi.mock("../lib", () => ({
+  log: vi.fn()
 }))
 
-jest.mock("./lm-tools/toolRegistry", () => ({
-  toolRegistry: { get: jest.fn().mockReturnValue(undefined) }
+vi.mock("./lm-tools/toolRegistry", () => ({
+  toolRegistry: { get: vi.fn().mockReturnValue(undefined) }
 }))
 
 // Mock MCP SDK modules
-jest.mock(
+vi.mock(
   "@modelcontextprotocol/sdk/server/mcp.js",
-  () => ({ McpServer: jest.fn().mockImplementation(() => ({ registerTool: jest.fn(), connect: jest.fn() })) }),
+  () => ({ McpServer: vi.fn().mockImplementation(() => ({ registerTool: vi.fn(), connect: vi.fn() })) }),
   { virtual: true }
 )
-jest.mock(
+vi.mock(
   "@modelcontextprotocol/sdk/server/streamableHttp.js",
-  () => ({ StreamableHTTPServerTransport: jest.fn() }),
+  () => ({ StreamableHTTPServerTransport: vi.fn() }),
   { virtual: true }
 )
-jest.mock(
+vi.mock(
   "@modelcontextprotocol/sdk/types.js",
-  () => ({ isInitializeRequest: jest.fn().mockReturnValue(false) }),
+  () => ({ isInitializeRequest: vi.fn().mockReturnValue(false) }),
   { virtual: true }
 )
 
@@ -67,16 +67,16 @@ import { initializeMcpServer, getMcpServerStatus, jsonSchemaPropertyToZod, jsonS
 describe("mcpServer", () => {
   const mockContext = {
     subscriptions: [] as any[],
-    globalState: { get: jest.fn(), update: jest.fn() },
+    globalState: { get: vi.fn(), update: vi.fn() },
     extensionPath: "/fake/path"
   } as any
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockContext.subscriptions = []
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue({
-      get: jest.fn((key: string, defaultVal: any) => defaultVal),
-      update: jest.fn()
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue({
+      get: vi.fn((key: string, defaultVal: any) => defaultVal),
+      update: vi.fn()
     })
   })
 
@@ -104,8 +104,8 @@ describe("mcpServer", () => {
 
   describe("initializeMcpServer", () => {
     it("resolves without throwing when autoStart=false", async () => {
-      ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue({
-        get: jest.fn((key: string, def: any) => {
+      ;(vscode.workspace.getConfiguration as Mock).mockReturnValue({
+        get: vi.fn((key: string, def: any) => {
           if (key === "autoStart") return false
           return def
         })
@@ -114,8 +114,8 @@ describe("mcpServer", () => {
     })
 
     it("does not start server when autoStart=false", async () => {
-      ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue({
-        get: jest.fn((key: string, def: any) => {
+      ;(vscode.workspace.getConfiguration as Mock).mockReturnValue({
+        get: vi.fn((key: string, def: any) => {
           if (key === "autoStart") return false
           return def
         })
@@ -147,15 +147,15 @@ describe("mcpServer internals - jsonSchemaToZod converter", () => {
 describe("mcpServer - API key validation logic", () => {
   it("allows access when no API key configured (backwards compat)", async () => {
     // When apiKey is empty string, validateApiKey should return true
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue({
-      get: jest.fn((key: string, def: any) => {
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue({
+      get: vi.fn((key: string, def: any) => {
         if (key === "apiKey") return ""
         return def
       })
     })
     // The module-level warning flag resets would require server restart
     // Verify indirectly via initializeMcpServer with autoStart=false not throwing
-    const ctx = { subscriptions: [] as any[], globalState: { get: jest.fn(), update: jest.fn() } } as any
+    const ctx = { subscriptions: [] as any[], globalState: { get: vi.fn(), update: vi.fn() } } as any
     await expect(initializeMcpServer(ctx)).resolves.not.toThrow()
   })
 })
@@ -359,8 +359,8 @@ describe("validateApiKey", () => {
   }
 
   it("returns true when no API key is configured (empty string)", () => {
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue({
-      get: jest.fn((key: string, def: any) => {
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue({
+      get: vi.fn((key: string, def: any) => {
         if (key === "apiKey") return ""
         return def
       })
@@ -369,8 +369,8 @@ describe("validateApiKey", () => {
   })
 
   it("returns false when API key is configured but no Authorization header", () => {
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue({
-      get: jest.fn((key: string, def: any) => {
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue({
+      get: vi.fn((key: string, def: any) => {
         if (key === "apiKey") return "my-secret-key"
         return def
       })
@@ -379,8 +379,8 @@ describe("validateApiKey", () => {
   })
 
   it("returns true for valid Bearer token", () => {
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue({
-      get: jest.fn((key: string, def: any) => {
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue({
+      get: vi.fn((key: string, def: any) => {
         if (key === "apiKey") return "my-secret-key"
         return def
       })
@@ -389,8 +389,8 @@ describe("validateApiKey", () => {
   })
 
   it("returns true for valid plain token (no Bearer prefix)", () => {
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue({
-      get: jest.fn((key: string, def: any) => {
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue({
+      get: vi.fn((key: string, def: any) => {
         if (key === "apiKey") return "my-secret-key"
         return def
       })
@@ -399,8 +399,8 @@ describe("validateApiKey", () => {
   })
 
   it("returns false for wrong API key", () => {
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue({
-      get: jest.fn((key: string, def: any) => {
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue({
+      get: vi.fn((key: string, def: any) => {
         if (key === "apiKey") return "correct-key"
         return def
       })
@@ -409,8 +409,8 @@ describe("validateApiKey", () => {
   })
 
   it("returns false when token length differs from configured key", () => {
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue({
-      get: jest.fn((key: string, def: any) => {
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue({
+      get: vi.fn((key: string, def: any) => {
         if (key === "apiKey") return "short"
         return def
       })
@@ -419,8 +419,8 @@ describe("validateApiKey", () => {
   })
 
   it("uses constant-time comparison (same-length wrong key still rejected)", () => {
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue({
-      get: jest.fn((key: string, def: any) => {
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue({
+      get: vi.fn((key: string, def: any) => {
         if (key === "apiKey") return "abcde"
         return def
       })

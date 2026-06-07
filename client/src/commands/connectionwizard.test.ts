@@ -1,66 +1,66 @@
-jest.mock("vscode", () => ({
+vi.mock("vscode", () => ({
   ConfigurationTarget: { Global: 1, Workspace: 2 },
-  QuickPickItem: jest.fn(),
+  QuickPickItem: vi.fn(),
   Uri: {
-    parse: jest.fn((s: string) => ({ toString: () => s }))
+    parse: vi.fn((s: string) => ({ toString: () => s }))
   },
   workspace: {
     fs: {
-      readFile: jest.fn()
+      readFile: vi.fn()
     },
-    getConfiguration: jest.fn()
+    getConfiguration: vi.fn()
   }
 }), { virtual: true })
 
-jest.mock("abap_cloud_platform", () => ({
-  cfInfo: jest.fn(),
-  cfPasswordGrant: jest.fn(),
-  cfCodeGrant: jest.fn(),
-  cfOrganizations: jest.fn(),
-  cfSpaces: jest.fn(),
-  cfServiceInstances: jest.fn(),
-  cfServices: jest.fn(),
-  cfInstanceServiceKeys: jest.fn(),
-  cfInstanceServiceKeyCreate: jest.fn(),
-  getAbapSystemInfo: jest.fn(),
-  getAbapUserInfo: jest.fn(),
-  isAbapEntity: jest.fn(),
-  isAbapServiceKey: jest.fn(),
-  loginServer: jest.fn()
+vi.mock("abap_cloud_platform", () => ({
+  cfInfo: vi.fn(),
+  cfPasswordGrant: vi.fn(),
+  cfCodeGrant: vi.fn(),
+  cfOrganizations: vi.fn(),
+  cfSpaces: vi.fn(),
+  cfServiceInstances: vi.fn(),
+  cfServices: vi.fn(),
+  cfInstanceServiceKeys: vi.fn(),
+  cfInstanceServiceKeyCreate: vi.fn(),
+  getAbapSystemInfo: vi.fn(),
+  getAbapUserInfo: vi.fn(),
+  isAbapEntity: vi.fn(),
+  isAbapServiceKey: vi.fn(),
+  loginServer: vi.fn()
 }))
 
-jest.mock("client-oauth2", () => ({}))
+vi.mock("client-oauth2", () => ({}))
 
-jest.mock("fp-ts/lib/function", () => ({
-  pipe: jest.fn((...args: any[]) => {
+vi.mock("fp-ts/lib/function", () => ({
+  pipe: vi.fn((...args: any[]) => {
     // Pass-through: call first arg if function, else return it
     return args[0]
   })
 }))
 
-jest.mock("fp-ts/lib/TaskEither", () => ({
-  bind: jest.fn(),
-  chain: jest.fn(),
-  map: jest.fn()
+vi.mock("fp-ts/lib/TaskEither", () => ({
+  bind: vi.fn(),
+  chain: vi.fn(),
+  map: vi.fn()
 }))
 
-jest.mock("../config", () => ({
-  saveNewRemote: jest.fn(),
-  validateNewConfigId: jest.fn(() => jest.fn())
+vi.mock("../config", () => ({
+  saveNewRemote: vi.fn(),
+  validateNewConfigId: vi.fn(() => vi.fn())
 }))
 
-jest.mock("../lib", () => ({
-  after: jest.fn(),
-  askConfirmation: jest.fn(),
-  inputBox: jest.fn(),
-  isString: jest.fn((x: any) => typeof x === "string"),
-  openDialog: jest.fn(),
-  quickPick: jest.fn(),
-  rfsChainE: jest.fn(),
-  rfsExtract: jest.fn(),
-  rfsTaskEither: jest.fn((v: any) => async () => ({ _tag: "Right", right: v })),
-  rfsTryCatch: jest.fn(),
-  rfsWrap: jest.fn()
+vi.mock("../lib", () => ({
+  after: vi.fn(),
+  askConfirmation: vi.fn(),
+  inputBox: vi.fn(),
+  isString: vi.fn((x: any) => typeof x === "string"),
+  openDialog: vi.fn(),
+  quickPick: vi.fn(),
+  rfsChainE: vi.fn(),
+  rfsExtract: vi.fn(),
+  rfsTaskEither: vi.fn((v: any) => async () => ({ _tag: "Right", right: v })),
+  rfsTryCatch: vi.fn(),
+  rfsWrap: vi.fn()
 }))
 
 // createConnection is the only export we can meaningfully test at integration level
@@ -76,13 +76,13 @@ describe("createConnection", () => {
   test("returns a promise when called", async () => {
     const { quickPick } = require("../lib")
     // Simulate user cancelling the source selection
-    ;(quickPick as jest.Mock).mockImplementation(async () => {
+    ;(quickPick as Mock).mockImplementation(async () => {
       throw new Error("Cancelled")
     })
 
     // Should not throw, it wraps errors via rfsExtract
     const { rfsExtract } = require("../lib")
-    ;(rfsExtract as jest.Mock).mockReturnValue(undefined)
+    ;(rfsExtract as Mock).mockReturnValue(undefined)
 
     const result = createConnection()
     expect(result).toBeInstanceOf(Promise)

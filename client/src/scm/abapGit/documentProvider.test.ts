@@ -1,6 +1,6 @@
-jest.mock("vscode", () => ({
+vi.mock("vscode", () => ({
   Uri: {
-    parse: jest.fn((s: string) => ({
+    parse: vi.fn((s: string) => ({
       scheme: s.split("://")[0] || "ABAPGIT",
       authority: s.split("://")[1]?.split("?")[0] || "",
       query: s.split("?")[1] || "",
@@ -8,24 +8,24 @@ jest.mock("vscode", () => ({
     }))
   },
   workspace: {
-    registerTextDocumentContentProvider: jest.fn()
+    registerTextDocumentContentProvider: vi.fn()
   }
 }), { virtual: true })
 
-jest.mock("./scm", () => ({
-  scmKey: jest.fn((auth: string, key: string) => `abapGit_${auth}_${key}`),
-  scmData: jest.fn()
+vi.mock("./scm", () => ({
+  scmKey: vi.fn((auth: string, key: string) => `abapGit_${auth}_${key}`),
+  scmData: vi.fn()
 }))
 
-jest.mock("../../lib", () => ({
-  atob: jest.fn((s: string) => Buffer.from(s, "base64").toString("utf-8")),
-  btoa: jest.fn((s: string) => Buffer.from(s).toString("base64"))
+vi.mock("../../lib", () => ({
+  atob: vi.fn((s: string) => Buffer.from(s, "base64").toString("utf-8")),
+  btoa: vi.fn((s: string) => Buffer.from(s).toString("base64"))
 }))
 
-jest.mock("abap-adt-api", () => ({}))
+vi.mock("abap-adt-api", () => ({}))
 
-jest.mock("../../adt/conections", () => ({
-  getClient: jest.fn()
+vi.mock("../../adt/conections", () => ({
+  getClient: vi.fn()
 }))
 
 import { gitUrl } from "./documentProvider"
@@ -46,7 +46,7 @@ describe("gitUrl", () => {
 
   it("encodes key and path in query", () => {
     const { Uri } = require("vscode")
-    const mockBtoa = btoa as jest.Mock
+    const mockBtoa = btoa as Mock
     const data: any = { connId: "conn1", repo: { key: "ZREPOKEY" } }
     const file: any = { name: "foo.abap" }
     const path = "/sap/bc/adt/path"
@@ -61,7 +61,7 @@ describe("gitUrl", () => {
     const data: any = { connId: "dev100", repo: { key: "ZPKG" } }
     const file: any = { name: "test.abap" }
     gitUrl(data, "/path", file)
-    const uriStr = (Uri.parse as jest.Mock).mock.calls.at(-1)?.[0] as string
+    const uriStr = (Uri.parse as Mock).mock.calls.at(-1)?.[0] as string
     expect(uriStr).toContain("dev100")
   })
 })
@@ -78,37 +78,37 @@ describe("GitDocProvider.provideTextDocumentContent", () => {
 
   it("throws for non-ABAPGIT scheme URIs", async () => {
     // Import the module to get access to the provider instance via workspace mock
-    const registeredProvider = (require("vscode").workspace.registerTextDocumentContentProvider as jest.Mock).mock.calls[0][1]
+    const registeredProvider = (require("vscode").workspace.registerTextDocumentContentProvider as Mock).mock.calls[0][1]
     const badUri: any = { scheme: "file", query: "", authority: "" }
     await expect(registeredProvider.provideTextDocumentContent(badUri)).rejects.toThrow("Unexpected URI scheme")
   })
 
   it("throws for invalid (missing key) URLs", async () => {
-    const mockAtob = atob as jest.Mock
+    const mockAtob = atob as Mock
     mockAtob.mockReturnValueOnce(JSON.stringify({ key: "", path: "/path" }))
-    const mockScmData = scmData as jest.Mock
+    const mockScmData = scmData as Mock
     mockScmData.mockReturnValue(undefined)
 
-    const registeredProvider = (require("vscode").workspace.registerTextDocumentContentProvider as jest.Mock).mock.calls[0][1]
+    const registeredProvider = (require("vscode").workspace.registerTextDocumentContentProvider as Mock).mock.calls[0][1]
     const uri: any = { scheme: "ABAPGIT", query: "xxx", authority: "conn" }
     await expect(registeredProvider.provideTextDocumentContent(uri)).rejects.toThrow("Invalid URL")
   })
 
   it("calls getObjectSource with correct path when valid", async () => {
-    const mockAtob = atob as jest.Mock
+    const mockAtob = atob as Mock
     mockAtob.mockReturnValueOnce(JSON.stringify({ key: "ZPKG", path: "/sap/bc/adt/path" }))
 
-    const mockScmData = scmData as jest.Mock
-    const mockGetObjectSource = jest.fn().mockResolvedValue("ABAP source code")
+    const mockScmData = scmData as Mock
+    const mockGetObjectSource = vi.fn().mockResolvedValue("ABAP source code")
     const { getClient } = require("../../adt/conections")
-    ;(getClient as jest.Mock).mockReturnValue({ getObjectSource: mockGetObjectSource })
+    ;(getClient as Mock).mockReturnValue({ getObjectSource: mockGetObjectSource })
     mockScmData.mockReturnValue({
       credentials: { user: "user1", password: "pass1" },
       repo: { key: "ZPKG" }
     })
-    ;(require("./scm").scmKey as jest.Mock).mockReturnValue("abapGit_conn_ZPKG")
+    ;(require("./scm").scmKey as Mock).mockReturnValue("abapGit_conn_ZPKG")
 
-    const registeredProvider = (require("vscode").workspace.registerTextDocumentContentProvider as jest.Mock).mock.calls[0][1]
+    const registeredProvider = (require("vscode").workspace.registerTextDocumentContentProvider as Mock).mock.calls[0][1]
     const uri: any = { scheme: "ABAPGIT", query: "xxx", authority: "conn" }
     const result = await registeredProvider.provideTextDocumentContent(uri)
     expect(mockGetObjectSource).toHaveBeenCalledWith(
@@ -119,18 +119,18 @@ describe("GitDocProvider.provideTextDocumentContent", () => {
   })
 
   it("encodes # as %23 in path before calling getObjectSource", async () => {
-    const mockAtob = atob as jest.Mock
+    const mockAtob = atob as Mock
     mockAtob.mockReturnValueOnce(JSON.stringify({ key: "ZPKG", path: "/sap/path/with#hash" }))
 
-    const mockGetObjectSource = jest.fn().mockResolvedValue("")
+    const mockGetObjectSource = vi.fn().mockResolvedValue("")
     const { getClient } = require("../../adt/conections")
-    ;(getClient as jest.Mock).mockReturnValue({ getObjectSource: mockGetObjectSource })
-    ;(scmData as jest.Mock).mockReturnValue({
+    ;(getClient as Mock).mockReturnValue({ getObjectSource: mockGetObjectSource })
+    ;(scmData as Mock).mockReturnValue({
       credentials: undefined,
       repo: { key: "ZPKG" }
     })
 
-    const registeredProvider = (require("vscode").workspace.registerTextDocumentContentProvider as jest.Mock).mock.calls[0][1]
+    const registeredProvider = (require("vscode").workspace.registerTextDocumentContentProvider as Mock).mock.calls[0][1]
     const uri: any = { scheme: "ABAPGIT", query: "xxx", authority: "conn" }
     await registeredProvider.provideTextDocumentContent(uri)
     const calledPath = mockGetObjectSource.mock.calls[0]?.[0] as string

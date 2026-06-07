@@ -1,28 +1,28 @@
 // Tests for fs/FsProvider.ts
-jest.mock("vscode", () => {
+vi.mock("vscode", () => {
   const EventEmitter = class {
-    event = jest.fn()
-    fire = jest.fn()
+    event = vi.fn()
+    fire = vi.fn()
   }
   const FileChangeType = { Created: 1, Changed: 2, Deleted: 3 }
   const FileType = { Unknown: 0, File: 1, Directory: 2 }
   const Disposable = class { constructor(public fn?: () => void) { this.dispose = fn ?? (() => {}) }; dispose: () => void }
   const FileSystemError = {
-    FileNotFound: jest.fn(msg => Object.assign(new Error(msg), { name: "FileNotFound (FileSystemError)" })),
-    NoPermissions: jest.fn(msg => new Error(msg)),
-    Unavailable: jest.fn(msg => new Error(msg))
+    FileNotFound: vi.fn(msg => Object.assign(new Error(msg), { name: "FileNotFound (FileSystemError)" })),
+    NoPermissions: vi.fn(msg => new Error(msg)),
+    Unavailable: vi.fn(msg => new Error(msg))
   }
   const TextDocumentSaveReason = { Manual: 1, AfterDelay: 2, FocusOut: 3 }
   const workspace = {
     textDocuments: [],
-    getConfiguration: jest.fn(() => ({
-      get: jest.fn(() => true),
-      update: jest.fn()
+    getConfiguration: vi.fn(() => ({
+      get: vi.fn(() => true),
+      update: vi.fn()
     }))
   }
-  const commands = { executeCommand: jest.fn() }
+  const commands = { executeCommand: vi.fn() }
   const Uri = {
-    parse: jest.fn((s: string) => ({
+    parse: vi.fn((s: string) => ({
       scheme: s.split("://")[0] || "file",
       authority: "",
       path: "/" + (s.split("://")[1] || s),
@@ -36,54 +36,54 @@ jest.mock("vscode", () => {
   }
 }, { virtual: true })
 
-jest.mock("../adt/conections", () => ({
-  getOrCreateRoot: jest.fn(),
+vi.mock("../adt/conections", () => ({
+  getOrCreateRoot: vi.fn(),
   ADTSCHEME: "adt"
 }))
 
-jest.mock("../lib", () => ({
-  after: jest.fn(),
-  caughtToString: jest.fn(e => String(e)),
-  log: Object.assign(jest.fn(), { debug: jest.fn() })
+vi.mock("../lib", () => ({
+  after: vi.fn(),
+  caughtToString: vi.fn(e => String(e)),
+  log: Object.assign(vi.fn(), { debug: vi.fn() })
 }))
 
-jest.mock("abapfs", () => ({
-  isAbapFile: jest.fn(() => false),
-  isAbapFolder: jest.fn(() => false),
-  isFolder: jest.fn(() => false)
+vi.mock("abapfs", () => ({
+  isAbapFile: vi.fn(() => false),
+  isAbapFolder: vi.fn(() => false),
+  isFolder: vi.fn(() => false)
 }))
 
-jest.mock("../listeners", () => ({
-  getSaveReason: jest.fn(),
-  clearSaveReason: jest.fn()
+vi.mock("../listeners", () => ({
+  getSaveReason: vi.fn(),
+  clearSaveReason: vi.fn()
 }))
 
-jest.mock("../adt/AdtTransports", () => ({
-  selectTransportIfNeeded: jest.fn()
+vi.mock("../adt/AdtTransports", () => ({
+  selectTransportIfNeeded: vi.fn()
 }))
 
-jest.mock("./LocalFsProvider", () => {
-  const LocalFsProvider: any = jest.fn().mockImplementation(() => ({
-    onDidChangeFile: jest.fn(() => ({ event: jest.fn() })),
-    watch: jest.fn(() => ({ dispose: jest.fn() })),
-    stat: jest.fn(),
-    readFile: jest.fn(),
-    readDirectory: jest.fn(),
-    writeFile: jest.fn(),
-    createDirectory: jest.fn(),
-    delete: jest.fn(),
-    rename: jest.fn()
+vi.mock("./LocalFsProvider", () => {
+  const LocalFsProvider: any = vi.fn().mockImplementation(() => ({
+    onDidChangeFile: vi.fn(() => ({ event: vi.fn() })),
+    watch: vi.fn(() => ({ dispose: vi.fn() })),
+    stat: vi.fn(),
+    readFile: vi.fn(),
+    readDirectory: vi.fn(),
+    writeFile: vi.fn(),
+    createDirectory: vi.fn(),
+    delete: vi.fn(),
+    rename: vi.fn()
   }))
-  LocalFsProvider.useLocalStorage = jest.fn(() => false)
+  LocalFsProvider.useLocalStorage = vi.fn(() => false)
   return { LocalFsProvider }
 })
 
-jest.mock("abap-adt-api", () => ({ isHttpError: jest.fn() }))
-jest.mock("abapfs/out/lockManager", () => ({ ReloginError: { isReloginError: jest.fn() } }))
-jest.mock("../services/funMessenger", () => ({
+vi.mock("abap-adt-api", () => ({ isHttpError: vi.fn() }))
+vi.mock("abapfs/out/lockManager", () => ({ ReloginError: { isReloginError: vi.fn() } }))
+vi.mock("../services/funMessenger", () => ({
   funWindow: {
-    showInformationMessage: jest.fn(),
-    showWarningMessage: jest.fn(),
+    showInformationMessage: vi.fn(),
+    showWarningMessage: vi.fn(),
     visibleTextEditors: []
   }
 }))
@@ -103,9 +103,9 @@ const makeUri = (path = "/test", scheme = "adt", authority = "host") => ({
 const makeContext = () => {
   const provider = new (LocalFsProvider as any)()
   return {
-    subscriptions: [] as { push: jest.Mock }[],
+    subscriptions: [] as { push: Mock }[],
     _provider: provider,
-    push: jest.fn()
+    push: vi.fn()
   } as any
 }
 
@@ -119,22 +119,22 @@ describe("FsProvider", () => {
   let context: any
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     resetFsProvider()
     context = {
-      subscriptions: { push: jest.fn() }
+      subscriptions: { push: vi.fn() }
     }
     // Mock localProvider.onDidChangeFile to return a function
-    ;(LocalFsProvider as jest.Mock).mockImplementation(() => ({
-      onDidChangeFile: jest.fn(),
-      watch: jest.fn(() => ({ dispose: jest.fn() })),
-      stat: jest.fn(),
-      readFile: jest.fn(),
-      readDirectory: jest.fn(),
-      writeFile: jest.fn(),
-      createDirectory: jest.fn(),
-      delete: jest.fn(),
-      rename: jest.fn()
+    ;(LocalFsProvider as Mock).mockImplementation(() => ({
+      onDidChangeFile: vi.fn(),
+      watch: vi.fn(() => ({ dispose: vi.fn() })),
+      stat: vi.fn(),
+      readFile: vi.fn(),
+      readDirectory: vi.fn(),
+      writeFile: vi.fn(),
+      createDirectory: vi.fn(),
+      delete: vi.fn(),
+      rename: vi.fn()
     }))
   })
 
@@ -156,7 +156,7 @@ describe("FsProvider", () => {
 
     it("returns existing instance even if new context provided", () => {
       const a = FsProvider.get(context)
-      const b = FsProvider.get({ subscriptions: { push: jest.fn() } } as any)
+      const b = FsProvider.get({ subscriptions: { push: vi.fn() } } as any)
       expect(a).toBe(b)
     })
   })
@@ -170,10 +170,10 @@ describe("FsProvider", () => {
 
   describe("watch", () => {
     it("delegates to localProvider when useLocalStorage returns true", () => {
-      ;(LocalFsProvider.useLocalStorage as jest.Mock).mockReturnValue(true)
+      ;(LocalFsProvider.useLocalStorage as Mock).mockReturnValue(true)
       const instance = FsProvider.get(context)
       const uri = makeUri("/.hidden")
-      const mockWatch = jest.fn(() => ({ dispose: jest.fn() }))
+      const mockWatch = vi.fn(() => ({ dispose: vi.fn() }))
       ;(instance as any).localProvider.watch = mockWatch
 
       instance.watch(uri, { recursive: false, excludes: [] })
@@ -182,7 +182,7 @@ describe("FsProvider", () => {
     })
 
     it("returns a no-op Disposable for remote URIs", () => {
-      ;(LocalFsProvider.useLocalStorage as jest.Mock).mockReturnValue(false)
+      ;(LocalFsProvider.useLocalStorage as Mock).mockReturnValue(false)
       const instance = FsProvider.get(context)
       const uri = makeUri("/sap/bc/adt/program")
 
@@ -195,7 +195,7 @@ describe("FsProvider", () => {
   describe("notifyChanges", () => {
     it("fires the event emitter with changes", () => {
       const instance = FsProvider.get(context)
-      const spy = jest.spyOn((instance as any).pEventEmitter, "fire")
+      const spy = vi.spyOn((instance as any).pEventEmitter, "fire")
       const changes = [{ type: 2, uri: makeUri("/changed") }]
 
       instance.notifyChanges(changes as any)
@@ -206,9 +206,9 @@ describe("FsProvider", () => {
 
   describe("createDirectory", () => {
     it("delegates to localProvider for local URIs", () => {
-      ;(LocalFsProvider.useLocalStorage as jest.Mock).mockReturnValue(true)
+      ;(LocalFsProvider.useLocalStorage as Mock).mockReturnValue(true)
       const instance = FsProvider.get(context)
-      const mockCreate = jest.fn()
+      const mockCreate = vi.fn()
       ;(instance as any).localProvider.createDirectory = mockCreate
 
       const uri = makeUri("/.hidden")
@@ -218,7 +218,7 @@ describe("FsProvider", () => {
     })
 
     it("throws NoPermissions for remote URIs", () => {
-      ;(LocalFsProvider.useLocalStorage as jest.Mock).mockReturnValue(false)
+      ;(LocalFsProvider.useLocalStorage as Mock).mockReturnValue(false)
       const instance = FsProvider.get(context)
 
       const uri = makeUri("/sap/bc/adt/program")
@@ -228,9 +228,9 @@ describe("FsProvider", () => {
 
   describe("rename", () => {
     it("delegates to localProvider for local URIs", () => {
-      ;(LocalFsProvider.useLocalStorage as jest.Mock).mockReturnValue(true)
+      ;(LocalFsProvider.useLocalStorage as Mock).mockReturnValue(true)
       const instance = FsProvider.get(context)
-      const mockRename = jest.fn()
+      const mockRename = vi.fn()
       ;(instance as any).localProvider.rename = mockRename
 
       const oldUri = makeUri("/.hidden")
@@ -241,7 +241,7 @@ describe("FsProvider", () => {
     })
 
     it("throws for remote URIs", () => {
-      ;(LocalFsProvider.useLocalStorage as jest.Mock).mockReturnValue(false)
+      ;(LocalFsProvider.useLocalStorage as Mock).mockReturnValue(false)
       const instance = FsProvider.get(context)
 
       const oldUri = makeUri("/old")
@@ -252,10 +252,10 @@ describe("FsProvider", () => {
 
   describe("readFile", () => {
     it("delegates to localProvider for local URIs", async () => {
-      ;(LocalFsProvider.useLocalStorage as jest.Mock).mockReturnValue(true)
+      ;(LocalFsProvider.useLocalStorage as Mock).mockReturnValue(true)
       const instance = FsProvider.get(context)
       const content = new Uint8Array([72, 101, 108, 108, 111])
-      const mockReadFile = jest.fn().mockResolvedValue(content)
+      const mockReadFile = vi.fn().mockResolvedValue(content)
       ;(instance as any).localProvider.readFile = mockReadFile
 
       const uri = makeUri("/.hidden")
@@ -266,13 +266,13 @@ describe("FsProvider", () => {
     })
 
     it("throws Unavailable when no ABAP file found", async () => {
-      ;(LocalFsProvider.useLocalStorage as jest.Mock).mockReturnValue(false)
+      ;(LocalFsProvider.useLocalStorage as Mock).mockReturnValue(false)
       const { getOrCreateRoot } = require("../adt/conections")
       const { isAbapFile } = require("abapfs")
-      ;(getOrCreateRoot as jest.Mock).mockResolvedValue({
-        getNodeAsync: jest.fn().mockResolvedValue(null)
+      ;(getOrCreateRoot as Mock).mockResolvedValue({
+        getNodeAsync: vi.fn().mockResolvedValue(null)
       })
-      ;(isAbapFile as jest.Mock).mockReturnValue(false)
+      ;(isAbapFile as Mock).mockReturnValue(false)
 
       const instance = FsProvider.get(context)
       const uri = makeUri("/sap/bc/adt/prog")
@@ -283,10 +283,10 @@ describe("FsProvider", () => {
 
   describe("stat", () => {
     it("delegates to localProvider for local URIs", async () => {
-      ;(LocalFsProvider.useLocalStorage as jest.Mock).mockReturnValue(true)
+      ;(LocalFsProvider.useLocalStorage as Mock).mockReturnValue(true)
       const instance = FsProvider.get(context)
       const mockStat = { type: 1, ctime: 0, mtime: 0, size: 100 }
-      const mockStatFn = jest.fn().mockResolvedValue(mockStat)
+      const mockStatFn = vi.fn().mockResolvedValue(mockStat)
       ;(instance as any).localProvider.stat = mockStatFn
 
       const uri = makeUri("/.hidden")
@@ -296,10 +296,10 @@ describe("FsProvider", () => {
     })
 
     it("throws FileNotFound when node not found", async () => {
-      ;(LocalFsProvider.useLocalStorage as jest.Mock).mockReturnValue(false)
+      ;(LocalFsProvider.useLocalStorage as Mock).mockReturnValue(false)
       const { getOrCreateRoot } = require("../adt/conections")
-      ;(getOrCreateRoot as jest.Mock).mockResolvedValue({
-        getNodeAsync: jest.fn().mockResolvedValue(null)
+      ;(getOrCreateRoot as Mock).mockResolvedValue({
+        getNodeAsync: vi.fn().mockResolvedValue(null)
       })
 
       const instance = FsProvider.get(context)

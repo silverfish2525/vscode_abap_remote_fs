@@ -1,6 +1,6 @@
-jest.mock("vscode", () => ({
+vi.mock("vscode", () => ({
   lm: {
-    registerTool: jest.fn(() => ({ dispose: jest.fn() }))
+    registerTool: vi.fn(() => ({ dispose: vi.fn() }))
   }
 }), { virtual: true })
 
@@ -16,7 +16,7 @@ describe("toolRegistry", () => {
   })
 
   test("stores tools by name", () => {
-    const fakeTool = { invoke: jest.fn() } as any
+    const fakeTool = { invoke: vi.fn() } as any
     toolRegistry.set("test-tool", fakeTool)
     expect(toolRegistry.get("test-tool")).toBe(fakeTool)
   })
@@ -25,7 +25,7 @@ describe("toolRegistry", () => {
 describe("registerToolWithRegistry", () => {
   test("adds tool to registry and registers with vscode.lm", () => {
     const vscode = require("vscode")
-    const fakeTool = { invoke: jest.fn() } as any
+    const fakeTool = { invoke: vi.fn() } as any
     const disposable = registerToolWithRegistry("my-tool", fakeTool)
 
     expect(toolRegistry.get("my-tool")).toBe(fakeTool)
@@ -35,8 +35,8 @@ describe("registerToolWithRegistry", () => {
   })
 
   test("overwrites existing tool with same name", () => {
-    const tool1 = { invoke: jest.fn(), id: 1 } as any
-    const tool2 = { invoke: jest.fn(), id: 2 } as any
+    const tool1 = { invoke: vi.fn(), id: 1 } as any
+    const tool2 = { invoke: vi.fn(), id: 2 } as any
 
     registerToolWithRegistry("dup", tool1)
     registerToolWithRegistry("dup", tool2)

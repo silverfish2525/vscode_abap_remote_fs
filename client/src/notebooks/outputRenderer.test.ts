@@ -1,10 +1,10 @@
-jest.mock("vscode", () => {
+vi.mock("vscode", () => {
   const mockCellOutputItem = {
-    text: jest.fn((value: string, mime: string) => ({ data: Buffer.from(value), mime })),
-    json: jest.fn((value: unknown) => ({ data: Buffer.from(JSON.stringify(value)), mime: "application/json" })),
-    error: jest.fn((err: any) => ({ data: Buffer.from(JSON.stringify(err)), mime: "application/vnd.code.notebook.error" })),
+    text: vi.fn((value: string, mime: string) => ({ data: Buffer.from(value), mime })),
+    json: vi.fn((value: unknown) => ({ data: Buffer.from(JSON.stringify(value)), mime: "application/json" })),
+    error: vi.fn((err: any) => ({ data: Buffer.from(JSON.stringify(err)), mime: "application/vnd.code.notebook.error" })),
   }
-  const mockNotebookCellOutput = jest.fn().mockImplementation((items: any[]) => ({ items }))
+  const mockNotebookCellOutput = vi.fn().mockImplementation((items: any[]) => ({ items }))
   return {
     NotebookCellOutput: mockNotebookCellOutput,
     NotebookCellOutputItem: mockCellOutputItem,
@@ -16,7 +16,7 @@ import type { CellResult } from "./types"
 import { DISPLAY_ROW_LIMIT } from "./types"
 
 describe("renderSqlOutput", () => {
-  beforeEach(() => jest.clearAllMocks())
+  beforeEach(() => vi.clearAllMocks())
 
   test("returns text output for empty result array", () => {
     const result: CellResult = { result: [], rowCount: 0, columns: [] }
@@ -146,7 +146,7 @@ describe("renderSqlOutput", () => {
 })
 
 describe("renderJsOutput", () => {
-  beforeEach(() => jest.clearAllMocks())
+  beforeEach(() => vi.clearAllMocks())
 
   test("renders undefined result as 'undefined' text", () => {
     const result: CellResult = { result: undefined }
@@ -254,7 +254,7 @@ describe("renderJsOutput", () => {
 })
 
 describe("renderErrorOutput", () => {
-  beforeEach(() => jest.clearAllMocks())
+  beforeEach(() => vi.clearAllMocks())
 
   test("renders Error object with its message prefixed by ❌", () => {
     const err = new Error("something went wrong")

@@ -1,32 +1,32 @@
-jest.mock("vscode", () => ({
+vi.mock("vscode", () => ({
   Uri: {
-    file: jest.fn((p: string) => ({ scheme: "file", fsPath: p, toString: () => `file://${p}` })),
-    parse: jest.fn((s: string) => ({ scheme: "file", toString: () => s }))
+    file: vi.fn((p: string) => ({ scheme: "file", fsPath: p, toString: () => `file://${p}` })),
+    parse: vi.fn((s: string) => ({ scheme: "file", toString: () => s }))
   },
   workspace: {
     fs: {
-      readFile: jest.fn(),
-      writeFile: jest.fn()
+      readFile: vi.fn(),
+      writeFile: vi.fn()
     }
   }
 }), { virtual: true })
-jest.mock("../../../lib", () => ({
-  log: jest.fn(),
-  caughtToString: jest.fn((e: any) => String(e))
+vi.mock("../../../lib", () => ({
+  log: vi.fn(),
+  caughtToString: vi.fn((e: any) => String(e))
 }))
-jest.mock("../../../services/funMessenger", () => ({
+vi.mock("../../../services/funMessenger", () => ({
   funWindow: {
-    showSaveDialog: jest.fn(),
-    showOpenDialog: jest.fn(),
-    showErrorMessage: jest.fn(),
-    showWarningMessage: jest.fn()
+    showSaveDialog: vi.fn(),
+    showOpenDialog: vi.fn(),
+    showErrorMessage: vi.fn(),
+    showWarningMessage: vi.fn()
   }
 }))
-jest.mock("os", () => ({
-  homedir: jest.fn(() => "/home/user")
+vi.mock("os", () => ({
+  homedir: vi.fn(() => "/home/user")
 }))
-jest.mock("path", () => ({
-  join: jest.fn((...parts: string[]) => parts.join("/"))
+vi.mock("path", () => ({
+  join: vi.fn((...parts: string[]) => parts.join("/"))
 }))
 
 import { saveRecording, loadRecording, loadRecordingFromUri } from "./recordingIO"
@@ -34,11 +34,11 @@ import { workspace, Uri } from "vscode"
 import { funWindow as window } from "../../../services/funMessenger"
 import type { DebugRecording } from "./types"
 
-const mockWriteFile = workspace.fs.writeFile as jest.MockedFunction<typeof workspace.fs.writeFile>
-const mockReadFile = workspace.fs.readFile as jest.MockedFunction<typeof workspace.fs.readFile>
-const mockShowSaveDialog = window.showSaveDialog as jest.MockedFunction<typeof window.showSaveDialog>
-const mockShowOpenDialog = window.showOpenDialog as jest.MockedFunction<typeof window.showOpenDialog>
-const mockShowErrorMessage = window.showErrorMessage as jest.MockedFunction<typeof window.showErrorMessage>
+const mockWriteFile = workspace.fs.writeFile as MockedFunction<typeof workspace.fs.writeFile>
+const mockReadFile = workspace.fs.readFile as MockedFunction<typeof workspace.fs.readFile>
+const mockShowSaveDialog = window.showSaveDialog as MockedFunction<typeof window.showSaveDialog>
+const mockShowOpenDialog = window.showOpenDialog as MockedFunction<typeof window.showOpenDialog>
+const mockShowErrorMessage = window.showErrorMessage as MockedFunction<typeof window.showErrorMessage>
 
 function makeRecording(overrides: Partial<DebugRecording> = {}): DebugRecording {
   return {
@@ -71,7 +71,7 @@ function makeRecording(overrides: Partial<DebugRecording> = {}): DebugRecording 
 
 describe("saveRecording", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   test("returns undefined when user cancels dialog", async () => {
@@ -127,7 +127,7 @@ describe("saveRecording", () => {
 
 describe("loadRecording", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   test("returns undefined when user cancels dialog", async () => {
@@ -166,7 +166,7 @@ describe("loadRecording", () => {
 
 describe("loadRecordingFromUri", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   test("parses valid recording file", async () => {

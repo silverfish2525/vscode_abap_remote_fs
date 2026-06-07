@@ -1,21 +1,21 @@
-jest.mock("vscode", () => ({
-  LanguageModelToolResult: jest.fn().mockImplementation((parts: any[]) => ({ parts })),
-  LanguageModelTextPart: jest.fn().mockImplementation((text: string) => ({ text })),
-  MarkdownString: jest.fn().mockImplementation((text: string) => ({ text })),
-  lm: { registerTool: jest.fn(() => ({ dispose: jest.fn() })) }
+vi.mock("vscode", () => ({
+  LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
+  LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
+  MarkdownString: vi.fn().mockImplementation((text: string) => ({ text })),
+  lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) }
 }), { virtual: true })
 
-jest.mock("../../adt/conections", () => ({}))
-jest.mock("../telemetry", () => ({ logTelemetry: jest.fn() }))
-jest.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: jest.fn(() => ({ dispose: jest.fn() }))
+vi.mock("../../adt/conections", () => ({}))
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("./toolRegistry", () => ({
+  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() }))
 }))
-jest.mock("../MermaidWebviewManager", () => ({
+vi.mock("../MermaidWebviewManager", () => ({
   MermaidWebviewManager: {
-    getInstance: jest.fn()
+    getInstance: vi.fn()
   }
 }))
-jest.mock("../MermaidDocumentation", () => ({
+vi.mock("../MermaidDocumentation", () => ({
   MERMAID_DOCUMENTATION: {
     flowchart: { description: "Flowchart description", syntax: "graph TD", keywords: ["graph", "flowchart"], examples: ["graph TD\nA-->B"] },
     sequence: { description: "Sequence description", syntax: "sequenceDiagram", keywords: ["sequenceDiagram"], examples: [] }
@@ -38,9 +38,9 @@ function makeOptions(input: any = {}) {
 }
 
 const mockWebviewManager = {
-  renderDiagram: jest.fn(),
-  validateSyntax: jest.fn(),
-  detectDiagramType: jest.fn()
+  renderDiagram: vi.fn(),
+  validateSyntax: vi.fn(),
+  detectDiagramType: vi.fn()
 }
 
 describe("CreateMermaidDiagramTool", () => {
@@ -48,8 +48,8 @@ describe("CreateMermaidDiagramTool", () => {
 
   beforeEach(() => {
     tool = new CreateMermaidDiagramTool()
-    jest.clearAllMocks()
-    ;(MermaidWebviewManager.getInstance as jest.Mock).mockReturnValue(mockWebviewManager)
+    vi.clearAllMocks()
+    ;(MermaidWebviewManager.getInstance as Mock).mockReturnValue(mockWebviewManager)
   })
 
   describe("prepareInvocation", () => {
@@ -142,8 +142,8 @@ describe("ValidateMermaidSyntaxTool", () => {
 
   beforeEach(() => {
     tool = new ValidateMermaidSyntaxTool()
-    jest.clearAllMocks()
-    ;(MermaidWebviewManager.getInstance as jest.Mock).mockReturnValue(mockWebviewManager)
+    vi.clearAllMocks()
+    ;(MermaidWebviewManager.getInstance as Mock).mockReturnValue(mockWebviewManager)
   })
 
   describe("prepareInvocation", () => {
@@ -200,7 +200,7 @@ describe("GetMermaidDocumentationTool", () => {
 
   beforeEach(() => {
     tool = new GetMermaidDocumentationTool()
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   describe("prepareInvocation", () => {
@@ -247,8 +247,8 @@ describe("DetectMermaidDiagramTypeTool", () => {
 
   beforeEach(() => {
     tool = new DetectMermaidDiagramTypeTool()
-    jest.clearAllMocks()
-    ;(MermaidWebviewManager.getInstance as jest.Mock).mockReturnValue(mockWebviewManager)
+    vi.clearAllMocks()
+    ;(MermaidWebviewManager.getInstance as Mock).mockReturnValue(mockWebviewManager)
   })
 
   describe("prepareInvocation", () => {

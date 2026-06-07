@@ -1,4 +1,4 @@
-jest.mock("vscode", () => ({
+vi.mock("vscode", () => ({
   FileSystemError: {
     FileNotFound: (msg: string) => new Error(`FileNotFound: ${msg}`)
   },
@@ -6,26 +6,26 @@ jest.mock("vscode", () => ({
     workspaceFolders: undefined
   },
   Uri: {
-    parse: jest.fn((s: string) => ({ scheme: s.split("://")[0], authority: s.split("://")[1]?.split("/")[0], toString: () => s }))
+    parse: vi.fn((s: string) => ({ scheme: s.split("://")[0], authority: s.split("://")[1]?.split("/")[0], toString: () => s }))
   }
 }), { virtual: true })
 
-jest.mock("../config", () => ({
-  RemoteManager: { get: jest.fn() },
-  createClient: jest.fn()
+vi.mock("../config", () => ({
+  RemoteManager: { get: vi.fn() },
+  createClient: vi.fn()
 }))
 
-jest.mock("./debugger", () => ({ LogOutPendingDebuggers: jest.fn().mockResolvedValue([]) }))
-jest.mock("../services/sapSystemValidator", () => ({
+vi.mock("./debugger", () => ({ LogOutPendingDebuggers: vi.fn().mockResolvedValue([]) }))
+vi.mock("../services/sapSystemValidator", () => ({
   SapSystemValidator: {
-    getInstance: jest.fn().mockReturnValue({ validateSystemAccess: jest.fn().mockResolvedValue(undefined) })
+    getInstance: vi.fn().mockReturnValue({ validateSystemAccess: vi.fn().mockResolvedValue(undefined) })
   }
 }))
-jest.mock("../fs/LocalFsProvider", () => ({
-  LocalFsProvider: { useLocalStorage: jest.fn().mockReturnValue(false) }
+vi.mock("../fs/LocalFsProvider", () => ({
+  LocalFsProvider: { useLocalStorage: vi.fn().mockReturnValue(false) }
 }))
-jest.mock("../lib", () => ({ log: jest.fn() }))
-jest.mock("abapfs", () => ({}))
+vi.mock("../lib", () => ({ log: vi.fn() }))
+vi.mock("abapfs", () => ({}))
 
 import { ADTSCHEME, ADTURIPATTERN, abapUri, getClient, getRoot, rootIsConnected } from "./conections"
 

@@ -1,21 +1,21 @@
-jest.mock("vscode", () => ({
-  LanguageModelToolResult: jest.fn().mockImplementation((parts: any[]) => ({ parts })),
-  LanguageModelTextPart: jest.fn().mockImplementation((text: string) => ({ text })),
-  MarkdownString: jest.fn().mockImplementation((text: string) => ({ text })),
-  lm: { registerTool: jest.fn(() => ({ dispose: jest.fn() })) }
+vi.mock("vscode", () => ({
+  LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
+  LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
+  MarkdownString: vi.fn().mockImplementation((text: string) => ({ text })),
+  lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) }
 }), { virtual: true })
 
-jest.mock("../../adt/conections", () => ({
-  getClient: jest.fn(),
-  getOrCreateRoot: jest.fn()
+vi.mock("../../adt/conections", () => ({
+  getClient: vi.fn(),
+  getOrCreateRoot: vi.fn()
 }))
-jest.mock("../telemetry", () => ({ logTelemetry: jest.fn() }))
-jest.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: jest.fn(() => ({ dispose: jest.fn() }))
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("./toolRegistry", () => ({
+  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() }))
 }))
-jest.mock("../abapSearchService", () => ({ getSearchService: jest.fn() }))
-jest.mock("./shared", () => ({
-  getOptimalObjectURI: jest.fn((type: string, uri: string) => uri + "/source/main")
+vi.mock("../abapSearchService", () => ({ getSearchService: vi.fn() }))
+vi.mock("./shared", () => ({
+  getOptimalObjectURI: vi.fn((type: string, uri: string) => uri + "/source/main")
 }))
 
 import { ABAPWhereUsedTool } from "./whereUsedTool"
@@ -29,10 +29,10 @@ function makeOptions(input: any = {}) {
   return { input } as any
 }
 
-const mockSearcher = { searchObjects: jest.fn() }
-const mockUsageReferences = jest.fn()
-const mockUsageReferenceSnippets = jest.fn()
-const mockGetObjectSource = jest.fn()
+const mockSearcher = { searchObjects: vi.fn() }
+const mockUsageReferences = vi.fn()
+const mockUsageReferenceSnippets = vi.fn()
+const mockGetObjectSource = vi.fn()
 const mockClient = {
   getObjectSource: mockGetObjectSource,
   statelessClone: {
@@ -60,9 +60,9 @@ describe("ABAPWhereUsedTool", () => {
 
   beforeEach(() => {
     tool = new ABAPWhereUsedTool()
-    jest.clearAllMocks()
-    ;(getSearchService as jest.Mock).mockReturnValue(mockSearcher)
-    ;(getClient as jest.Mock).mockReturnValue(mockClient)
+    vi.clearAllMocks()
+    ;(getSearchService as Mock).mockReturnValue(mockSearcher)
+    ;(getClient as Mock).mockReturnValue(mockClient)
     mockGetObjectSource.mockResolvedValue("REPORT ztest.\nWRITE 'hello'.\n")
     mockUsageReferences.mockResolvedValue([])
     mockUsageReferenceSnippets.mockResolvedValue([])
@@ -180,7 +180,7 @@ describe("ABAPWhereUsedTool", () => {
     })
 
     it("wraps errors from client calls", async () => {
-      ;(getClient as jest.Mock).mockImplementation(() => {
+      ;(getClient as Mock).mockImplementation(() => {
         throw new Error("where-used service down")
       })
       mockSearcher.searchObjects.mockResolvedValue([

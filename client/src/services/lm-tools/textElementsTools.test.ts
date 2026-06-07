@@ -1,31 +1,31 @@
-jest.mock("vscode", () => ({
-  LanguageModelToolResult: jest.fn().mockImplementation((parts: any[]) => ({ parts })),
-  LanguageModelTextPart: jest.fn().mockImplementation((text: string) => ({ text })),
-  MarkdownString: jest.fn().mockImplementation((value: string) => ({ value })),
-  lm: { registerTool: jest.fn(() => ({ dispose: jest.fn() })) }
+vi.mock("vscode", () => ({
+  LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
+  LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
+  MarkdownString: vi.fn().mockImplementation((value: string) => ({ value })),
+  lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) }
 }), { virtual: true })
 
-jest.mock("../../adt/conections", () => ({
-  getClient: jest.fn(),
-  abapUri: jest.fn()
+vi.mock("../../adt/conections", () => ({
+  getClient: vi.fn(),
+  abapUri: vi.fn()
 }))
-jest.mock("../telemetry", () => ({ logTelemetry: jest.fn() }))
-jest.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }))
-jest.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: jest.fn(() => ({ dispose: jest.fn() }))
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }))
+vi.mock("./toolRegistry", () => ({
+  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() }))
 }))
-jest.mock("../abapCopilotLogger", () => ({
-  logCommands: { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+vi.mock("../abapCopilotLogger", () => ({
+  logCommands: { info: vi.fn(), error: vi.fn(), warn: vi.fn() }
 }))
-jest.mock("abap-adt-api", () => ({
+vi.mock("abap-adt-api", () => ({
   session_types: { stateful: "stateful", stateless: "stateless" }
 }))
-jest.mock("../../adt/textElements", () => ({
-  getTextElementsSafe: jest.fn(),
-  updateTextElementsWithTransport: jest.fn()
+vi.mock("../../adt/textElements", () => ({
+  getTextElementsSafe: vi.fn(),
+  updateTextElementsWithTransport: vi.fn()
 }))
-jest.mock("../../commands/textElementsCommands", () => ({
-  openTextElementsInSapGui: jest.fn()
+vi.mock("../../commands/textElementsCommands", () => ({
+  openTextElementsInSapGui: vi.fn()
 }))
 
 import { ManageTextElementsTool } from "./textElementsTools"
@@ -46,8 +46,8 @@ describe("ManageTextElementsTool", () => {
 
   beforeEach(() => {
     tool = new ManageTextElementsTool()
-    jest.clearAllMocks()
-    ;(getClient as jest.Mock).mockReturnValue(mockClient)
+    vi.clearAllMocks()
+    ;(getClient as Mock).mockReturnValue(mockClient)
     ;(window as any).activeTextEditor = undefined
     mockClient.stateful = undefined
   })
@@ -134,7 +134,7 @@ describe("ManageTextElementsTool", () => {
   // =========================================================================
   describe("invoke read action", () => {
     it("calls getTextElementsSafe with correct params", async () => {
-      ;(getTextElementsSafe as jest.Mock).mockResolvedValue({
+      ;(getTextElementsSafe as Mock).mockResolvedValue({
         programName: "ZREPORT",
         textElements: [{ id: "001", text: "Hello", maxLength: 20 }]
       })
@@ -152,7 +152,7 @@ describe("ManageTextElementsTool", () => {
     })
 
     it("reports empty text elements", async () => {
-      ;(getTextElementsSafe as jest.Mock).mockResolvedValue({
+      ;(getTextElementsSafe as Mock).mockResolvedValue({
         programName: "ZREPORT",
         textElements: []
       })
@@ -166,7 +166,7 @@ describe("ManageTextElementsTool", () => {
     })
 
     it("logs telemetry on invocation", async () => {
-      ;(getTextElementsSafe as jest.Mock).mockResolvedValue({ programName: "ZTEST", textElements: [] })
+      ;(getTextElementsSafe as Mock).mockResolvedValue({ programName: "ZTEST", textElements: [] })
 
       await tool.invoke(
         makeOptions({ objectName: "ZTEST", objectType: "PROGRAM", action: "read", connectionId: "dev100" }),
@@ -182,7 +182,7 @@ describe("ManageTextElementsTool", () => {
   // =========================================================================
   describe("invoke connectionId resolution", () => {
     it("lowercases connectionId", async () => {
-      ;(getTextElementsSafe as jest.Mock).mockResolvedValue({ programName: "ZTEST", textElements: [] })
+      ;(getTextElementsSafe as Mock).mockResolvedValue({ programName: "ZTEST", textElements: [] })
 
       await tool.invoke(
         makeOptions({ objectName: "ZTEST", objectType: "PROGRAM", action: "read", connectionId: "DEV100" }),
@@ -205,7 +205,7 @@ describe("ManageTextElementsTool", () => {
       ;(window as any).activeTextEditor = {
         document: { uri: { authority: "local", scheme: "file" } }
       }
-      ;(abapUri as jest.Mock).mockReturnValue(false)
+      ;(abapUri as Mock).mockReturnValue(false)
 
       await expect(
         tool.invoke(
@@ -219,8 +219,8 @@ describe("ManageTextElementsTool", () => {
       ;(window as any).activeTextEditor = {
         document: { uri: { authority: "dev100", scheme: "adt" } }
       }
-      ;(abapUri as jest.Mock).mockReturnValue(true)
-      ;(getTextElementsSafe as jest.Mock).mockResolvedValue({ programName: "ZTEST", textElements: [] })
+      ;(abapUri as Mock).mockReturnValue(true)
+      ;(getTextElementsSafe as Mock).mockResolvedValue({ programName: "ZTEST", textElements: [] })
 
       await tool.invoke(
         makeOptions({ objectName: "ZTEST", objectType: "PROGRAM", action: "read" }),
@@ -231,7 +231,7 @@ describe("ManageTextElementsTool", () => {
     })
 
     it("throws when getClient returns null", async () => {
-      ;(getClient as jest.Mock).mockReturnValue(null)
+      ;(getClient as Mock).mockReturnValue(null)
 
       await expect(
         tool.invoke(
@@ -271,11 +271,11 @@ describe("ManageTextElementsTool", () => {
     })
 
     it("calls updateTextElementsWithTransport for create with merged elements", async () => {
-      ;(getTextElementsSafe as jest.Mock).mockResolvedValue({
+      ;(getTextElementsSafe as Mock).mockResolvedValue({
         programName: "ZREPORT",
         textElements: [{ id: "001", text: "Existing" }]
       })
-      ;(updateTextElementsWithTransport as jest.Mock).mockResolvedValue(undefined)
+      ;(updateTextElementsWithTransport as Mock).mockResolvedValue(undefined)
 
       const result: any = await tool.invoke(
         makeOptions({
@@ -300,11 +300,11 @@ describe("ManageTextElementsTool", () => {
     })
 
     it("update action overwrites existing elements by ID", async () => {
-      ;(getTextElementsSafe as jest.Mock).mockResolvedValue({
+      ;(getTextElementsSafe as Mock).mockResolvedValue({
         programName: "ZREPORT",
         textElements: [{ id: "001", text: "Old Text" }, { id: "002", text: "Keep This" }]
       })
-      ;(updateTextElementsWithTransport as jest.Mock).mockResolvedValue(undefined)
+      ;(updateTextElementsWithTransport as Mock).mockResolvedValue(undefined)
 
       await tool.invoke(
         makeOptions({
@@ -316,7 +316,7 @@ describe("ManageTextElementsTool", () => {
       )
 
       // Should merge: updated 001 + existing 002
-      const calledElements = (updateTextElementsWithTransport as jest.Mock).mock.calls[0][2]
+      const calledElements = (updateTextElementsWithTransport as Mock).mock.calls[0][2]
       expect(calledElements).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ id: "001", text: "New Text" }),
@@ -326,8 +326,8 @@ describe("ManageTextElementsTool", () => {
     })
 
     it("proceeds with provided elements when reading existing fails", async () => {
-      ;(getTextElementsSafe as jest.Mock).mockRejectedValue(new Error("Read failed"))
-      ;(updateTextElementsWithTransport as jest.Mock).mockResolvedValue(undefined)
+      ;(getTextElementsSafe as Mock).mockRejectedValue(new Error("Read failed"))
+      ;(updateTextElementsWithTransport as Mock).mockResolvedValue(undefined)
 
       const result: any = await tool.invoke(
         makeOptions({
@@ -349,8 +349,8 @@ describe("ManageTextElementsTool", () => {
     })
 
     it("sets client to stateful mode for create/update", async () => {
-      ;(getTextElementsSafe as jest.Mock).mockResolvedValue({ programName: "ZREPORT", textElements: [] })
-      ;(updateTextElementsWithTransport as jest.Mock).mockResolvedValue(undefined)
+      ;(getTextElementsSafe as Mock).mockResolvedValue({ programName: "ZREPORT", textElements: [] })
+      ;(updateTextElementsWithTransport as Mock).mockResolvedValue(undefined)
 
       await tool.invoke(
         makeOptions({
@@ -366,8 +366,8 @@ describe("ManageTextElementsTool", () => {
     })
 
     it("includes TEXT-xxx usage hints in create response", async () => {
-      ;(getTextElementsSafe as jest.Mock).mockResolvedValue({ programName: "ZREPORT", textElements: [] })
-      ;(updateTextElementsWithTransport as jest.Mock).mockResolvedValue(undefined)
+      ;(getTextElementsSafe as Mock).mockResolvedValue({ programName: "ZREPORT", textElements: [] })
+      ;(updateTextElementsWithTransport as Mock).mockResolvedValue(undefined)
 
       const result: any = await tool.invoke(
         makeOptions({
@@ -387,7 +387,7 @@ describe("ManageTextElementsTool", () => {
   // =========================================================================
   describe("invoke error handling", () => {
     it("wraps SAP API errors with action context", async () => {
-      ;(getTextElementsSafe as jest.Mock).mockRejectedValue(new Error("SAP connection timeout"))
+      ;(getTextElementsSafe as Mock).mockRejectedValue(new Error("SAP connection timeout"))
 
       await expect(
         tool.invoke(
@@ -398,8 +398,8 @@ describe("ManageTextElementsTool", () => {
     })
 
     it("wraps updateTextElements errors with action context", async () => {
-      ;(getTextElementsSafe as jest.Mock).mockResolvedValue({ programName: "ZREPORT", textElements: [] })
-      ;(updateTextElementsWithTransport as jest.Mock).mockRejectedValue(new Error("Lock failed"))
+      ;(getTextElementsSafe as Mock).mockResolvedValue({ programName: "ZREPORT", textElements: [] })
+      ;(updateTextElementsWithTransport as Mock).mockRejectedValue(new Error("Lock failed"))
 
       await expect(
         tool.invoke(
@@ -422,7 +422,7 @@ describe("ManageTextElementsTool", () => {
     })
 
     it("handles Resource does not exist error with SAP GUI fallback", async () => {
-      ;(getTextElementsSafe as jest.Mock).mockRejectedValue(new Error("Resource /foo does not exist"))
+      ;(getTextElementsSafe as Mock).mockRejectedValue(new Error("Resource /foo does not exist"))
       const { openTextElementsInSapGui } = require("../../commands/textElementsCommands")
 
       const result: any = await tool.invoke(
@@ -435,7 +435,7 @@ describe("ManageTextElementsTool", () => {
     })
 
     it("uses correct file extension for CLASS in SAP GUI fallback", async () => {
-      ;(getTextElementsSafe as jest.Mock).mockRejectedValue(new Error("Resource /bar does not exist"))
+      ;(getTextElementsSafe as Mock).mockRejectedValue(new Error("Resource /bar does not exist"))
       const { openTextElementsInSapGui } = require("../../commands/textElementsCommands")
 
       await tool.invoke(
@@ -447,7 +447,7 @@ describe("ManageTextElementsTool", () => {
     })
 
     it("uses correct file extension for FUNCTION_GROUP in SAP GUI fallback", async () => {
-      ;(getTextElementsSafe as jest.Mock).mockRejectedValue(new Error("Resource /baz does not exist"))
+      ;(getTextElementsSafe as Mock).mockRejectedValue(new Error("Resource /baz does not exist"))
       const { openTextElementsInSapGui } = require("../../commands/textElementsCommands")
 
       await tool.invoke(
@@ -464,7 +464,7 @@ describe("ManageTextElementsTool", () => {
   // =========================================================================
   describe("edge cases", () => {
     it("handles maxLength in text elements display", async () => {
-      ;(getTextElementsSafe as jest.Mock).mockResolvedValue({
+      ;(getTextElementsSafe as Mock).mockResolvedValue({
         programName: "ZREPORT",
         textElements: [{ id: "001", text: "Long Text", maxLength: 132 }]
       })
@@ -478,7 +478,7 @@ describe("ManageTextElementsTool", () => {
     })
 
     it("handles text element without maxLength", async () => {
-      ;(getTextElementsSafe as jest.Mock).mockResolvedValue({
+      ;(getTextElementsSafe as Mock).mockResolvedValue({
         programName: "ZREPORT",
         textElements: [{ id: "001", text: "Short" }]
       })
@@ -492,14 +492,14 @@ describe("ManageTextElementsTool", () => {
     })
 
     it("create merges new elements with existing without duplicates", async () => {
-      ;(getTextElementsSafe as jest.Mock).mockResolvedValue({
+      ;(getTextElementsSafe as Mock).mockResolvedValue({
         programName: "ZREPORT",
         textElements: [
           { id: "001", text: "First" },
           { id: "002", text: "Second" }
         ]
       })
-      ;(updateTextElementsWithTransport as jest.Mock).mockResolvedValue(undefined)
+      ;(updateTextElementsWithTransport as Mock).mockResolvedValue(undefined)
 
       await tool.invoke(
         makeOptions({
@@ -513,7 +513,7 @@ describe("ManageTextElementsTool", () => {
         mockToken
       )
 
-      const calledElements = (updateTextElementsWithTransport as jest.Mock).mock.calls[0][2]
+      const calledElements = (updateTextElementsWithTransport as Mock).mock.calls[0][2]
       // Should have 3 unique elements: 001 (kept), 002 (updated), 003 (new)
       expect(calledElements).toHaveLength(3)
       const ids = calledElements.map((e: any) => e.id)
@@ -526,7 +526,7 @@ describe("ManageTextElementsTool", () => {
     })
 
     it("handles multiple text elements in result display", async () => {
-      ;(getTextElementsSafe as jest.Mock).mockResolvedValue({
+      ;(getTextElementsSafe as Mock).mockResolvedValue({
         programName: "ZREPORT",
         textElements: [
           { id: "001", text: "Alpha" },

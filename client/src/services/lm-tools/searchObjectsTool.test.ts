@@ -1,17 +1,17 @@
-jest.mock("vscode", () => ({
-  LanguageModelToolResult: jest.fn().mockImplementation((parts: any[]) => ({ parts })),
-  LanguageModelTextPart: jest.fn().mockImplementation((text: string) => ({ text })),
-  MarkdownString: jest.fn().mockImplementation((text: string) => ({ text })),
-  lm: { registerTool: jest.fn(() => ({ dispose: jest.fn() })) }
+vi.mock("vscode", () => ({
+  LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
+  LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
+  MarkdownString: vi.fn().mockImplementation((text: string) => ({ text })),
+  lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) }
 }), { virtual: true })
 
-jest.mock("../../adt/conections", () => ({}))
-jest.mock("../telemetry", () => ({ logTelemetry: jest.fn() }))
-jest.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: jest.fn(() => ({ dispose: jest.fn() }))
+vi.mock("../../adt/conections", () => ({}))
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("./toolRegistry", () => ({
+  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() }))
 }))
-jest.mock("../abapSearchService", () => ({ getSearchService: jest.fn() }))
-jest.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }))
+vi.mock("../abapSearchService", () => ({ getSearchService: vi.fn() }))
+vi.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }))
 
 import { SearchABAPObjectsTool } from "./searchObjectsTool"
 import { getSearchService } from "../abapSearchService"
@@ -24,15 +24,15 @@ function makeOptions(input: any = {}) {
   return { input } as any
 }
 
-const mockSearcher = { searchObjects: jest.fn() }
+const mockSearcher = { searchObjects: vi.fn() }
 
 describe("SearchABAPObjectsTool", () => {
   let tool: SearchABAPObjectsTool
 
   beforeEach(() => {
     tool = new SearchABAPObjectsTool()
-    jest.clearAllMocks()
-    ;(getSearchService as jest.Mock).mockReturnValue(mockSearcher)
+    vi.clearAllMocks()
+    ;(getSearchService as Mock).mockReturnValue(mockSearcher)
     ;(window as any).activeTextEditor = undefined
   })
 
@@ -137,7 +137,7 @@ describe("SearchABAPObjectsTool", () => {
         document: { uri: { scheme: "adt", authority: "dev100" } }
       }
       // abapUri mock - need to mock it
-      jest.doMock("../../adt/conections", () => ({
+      vi.doMock("../../adt/conections", () => ({
         abapUri: () => true
       }))
       mockSearcher.searchObjects.mockResolvedValue([])

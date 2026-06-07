@@ -1,16 +1,16 @@
 const mockChannel = {
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
-  trace: jest.fn(),
-  appendLine: jest.fn(),
-  append: jest.fn()
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  debug: vi.fn(),
+  trace: vi.fn(),
+  appendLine: vi.fn(),
+  append: vi.fn()
 }
 
-const mockCreateOutputChannel = jest.fn().mockReturnValue(mockChannel)
+const mockCreateOutputChannel = vi.fn().mockReturnValue(mockChannel)
 
-jest.mock("../services/funMessenger", () => ({
+vi.mock("../services/funMessenger", () => ({
   funWindow: {
     createOutputChannel: mockCreateOutputChannel
   }

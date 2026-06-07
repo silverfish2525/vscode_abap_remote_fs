@@ -1,17 +1,17 @@
-jest.mock("vscode", () => ({
-  LanguageModelToolResult: jest.fn().mockImplementation((parts: any[]) => ({ parts })),
-  LanguageModelTextPart: jest.fn().mockImplementation((text: string) => ({ text })),
-  MarkdownString: jest.fn().mockImplementation((text: string) => ({ text })),
-  lm: { registerTool: jest.fn(() => ({ dispose: jest.fn() })) }
+vi.mock("vscode", () => ({
+  LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
+  LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
+  MarkdownString: vi.fn().mockImplementation((text: string) => ({ text })),
+  lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) }
 }), { virtual: true })
 
-jest.mock("../../adt/conections", () => ({
-  getClient: jest.fn(),
-  getOrCreateRoot: jest.fn()
+vi.mock("../../adt/conections", () => ({
+  getClient: vi.fn(),
+  getOrCreateRoot: vi.fn()
 }))
-jest.mock("../telemetry", () => ({ logTelemetry: jest.fn() }))
-jest.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: jest.fn(() => ({ dispose: jest.fn() }))
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("./toolRegistry", () => ({
+  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() }))
 }))
 
 import { GetAbapObjectWorkspaceUriTool } from "./getWorkspaceUriTool"
@@ -24,17 +24,17 @@ function makeOptions(input: any = {}) {
   return { input } as any
 }
 
-const mockClient = { searchObject: jest.fn() }
-const mockRoot = { findByAdtUri: jest.fn() }
+const mockClient = { searchObject: vi.fn() }
+const mockRoot = { findByAdtUri: vi.fn() }
 
 describe("GetAbapObjectWorkspaceUriTool", () => {
   let tool: GetAbapObjectWorkspaceUriTool
 
   beforeEach(() => {
     tool = new GetAbapObjectWorkspaceUriTool()
-    jest.clearAllMocks()
-    ;(getClient as jest.Mock).mockReturnValue(mockClient)
-    ;(getOrCreateRoot as jest.Mock).mockResolvedValue(mockRoot)
+    vi.clearAllMocks()
+    ;(getClient as Mock).mockReturnValue(mockClient)
+    ;(getOrCreateRoot as Mock).mockResolvedValue(mockRoot)
   })
 
   describe("prepareInvocation", () => {

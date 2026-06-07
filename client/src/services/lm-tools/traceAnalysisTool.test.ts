@@ -1,15 +1,15 @@
-jest.mock("vscode", () => ({
-  LanguageModelToolResult: jest.fn().mockImplementation((parts: any[]) => ({ parts })),
-  LanguageModelTextPart: jest.fn().mockImplementation((text: string) => ({ text })),
-  MarkdownString: jest.fn().mockImplementation((text: string) => ({ text })),
-  lm: { registerTool: jest.fn(() => ({ dispose: jest.fn() })) }
+vi.mock("vscode", () => ({
+  LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
+  LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
+  MarkdownString: vi.fn().mockImplementation((text: string) => ({ text })),
+  lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) }
 }), { virtual: true })
 
-jest.mock("../../adt/conections", () => ({ getClient: jest.fn() }))
-jest.mock("../telemetry", () => ({ logTelemetry: jest.fn() }))
-jest.mock("../abapCopilotLogger", () => ({ logCommands: { error: jest.fn() } }))
-jest.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: jest.fn(() => ({ dispose: jest.fn() }))
+vi.mock("../../adt/conections", () => ({ getClient: vi.fn() }))
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("../abapCopilotLogger", () => ({ logCommands: { error: vi.fn() } }))
+vi.mock("./toolRegistry", () => ({
+  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() }))
 }))
 
 import { ABAPTraceAnalysisTool } from "./traceAnalysisTool"
@@ -23,8 +23,8 @@ function makeOptions(input: any = {}) {
 }
 
 const mockClient = {
-  getAbapTraceRunList: jest.fn(),
-  getAbapTraceConfigurations: jest.fn()
+  getAbapTraceRunList: vi.fn(),
+  getAbapTraceConfigurations: vi.fn()
 }
 
 describe("ABAPTraceAnalysisTool", () => {
@@ -32,8 +32,8 @@ describe("ABAPTraceAnalysisTool", () => {
 
   beforeEach(() => {
     tool = new ABAPTraceAnalysisTool()
-    jest.clearAllMocks()
-    ;(getClient as jest.Mock).mockReturnValue(mockClient)
+    vi.clearAllMocks()
+    ;(getClient as Mock).mockReturnValue(mockClient)
   })
 
   describe("prepareInvocation", () => {
@@ -88,7 +88,7 @@ describe("ABAPTraceAnalysisTool", () => {
 
   describe("invoke", () => {
     it("logs telemetry", async () => {
-      mockClient.getAbapTraceRunList = jest.fn().mockResolvedValue([])
+      mockClient.getAbapTraceRunList = vi.fn().mockResolvedValue([])
       await tool.invoke(
         makeOptions({ action: "list_runs", connectionId: "dev100" }),
         mockToken
@@ -99,7 +99,7 @@ describe("ABAPTraceAnalysisTool", () => {
     })
 
     it("normalizes connectionId to lowercase", async () => {
-      mockClient.getAbapTraceRunList = jest.fn().mockResolvedValue([])
+      mockClient.getAbapTraceRunList = vi.fn().mockResolvedValue([])
       await tool.invoke(
         makeOptions({ action: "list_runs", connectionId: "DEV100" }),
         mockToken
@@ -135,7 +135,7 @@ describe("ABAPTraceAnalysisTool", () => {
     })
 
     it("wraps client errors", async () => {
-      ;(getClient as jest.Mock).mockImplementation(() => {
+      ;(getClient as Mock).mockImplementation(() => {
         throw new Error("connection error")
       })
       await expect(
@@ -147,7 +147,7 @@ describe("ABAPTraceAnalysisTool", () => {
     })
 
     it("uses maxResults default of 20", async () => {
-      mockClient.getAbapTraceRunList = jest.fn().mockResolvedValue([])
+      mockClient.getAbapTraceRunList = vi.fn().mockResolvedValue([])
       await tool.invoke(
         makeOptions({ action: "list_runs", connectionId: "dev100" }),
         mockToken

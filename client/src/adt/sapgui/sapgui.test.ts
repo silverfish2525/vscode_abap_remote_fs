@@ -1,7 +1,7 @@
-jest.mock("vscode", () => ({
+vi.mock("vscode", () => ({
   ProgressLocation: { Notification: 15 },
   Uri: {
-    parse: jest.fn((s: string) => {
+    parse: vi.fn((s: string) => {
       const [scheme, rest] = s.split("://")
       const qIdx = rest?.indexOf("?") ?? -1
       const authority = rest?.substring(0, qIdx === -1 ? rest.indexOf("/") : Math.min(qIdx, rest.indexOf("/") === -1 ? qIdx : rest.indexOf("/"))) ?? ""
@@ -10,7 +10,7 @@ jest.mock("vscode", () => ({
         scheme,
         authority,
         path,
-        with: jest.fn((opts: any) => ({
+        with: vi.fn((opts: any) => ({
           scheme: opts.scheme ?? scheme,
           authority: opts.authority ?? authority,
           path: opts.path ?? path,
@@ -22,58 +22,58 @@ jest.mock("vscode", () => ({
     })
   },
   commands: {
-    executeCommand: jest.fn()
+    executeCommand: vi.fn()
   },
   extensions: {
-    getExtension: jest.fn()
+    getExtension: vi.fn()
   }
 }), { virtual: true })
 
-jest.mock("../../config", () => ({
+vi.mock("../../config", () => ({
   RemoteManager: {
-    get: jest.fn()
+    get: vi.fn()
   }
 }))
 
-jest.mock("tmp-promise", () => ({
-  file: jest.fn().mockResolvedValue({
+vi.mock("tmp-promise", () => ({
+  file: vi.fn().mockResolvedValue({
     path: "/tmp/test.sap",
     fd: 3,
-    cleanup: jest.fn()
+    cleanup: vi.fn()
   })
 }))
 
-jest.mock("fs-jetpack", () => ({
-  writeAsync: jest.fn().mockResolvedValue(undefined)
+vi.mock("fs-jetpack", () => ({
+  writeAsync: vi.fn().mockResolvedValue(undefined)
 }))
 
-jest.mock("../../lib", () => ({
-  log: jest.fn()
+vi.mock("../../lib", () => ({
+  log: vi.fn()
 }))
 
-jest.mock("fs", () => ({
-  closeSync: jest.fn()
+vi.mock("fs", () => ({
+  closeSync: vi.fn()
 }))
 
-jest.mock("open", () => jest.fn().mockResolvedValue(undefined))
+vi.mock("open", () => vi.fn().mockResolvedValue(undefined))
 
-jest.mock("../../services/funMessenger", () => ({
+vi.mock("../../services/funMessenger", () => ({
   funWindow: {
-    withProgress: jest.fn()
+    withProgress: vi.fn()
   }
 }))
 
-jest.mock("../conections", () => ({
-  getClient: jest.fn()
+vi.mock("../conections", () => ({
+  getClient: vi.fn()
 }))
 
-jest.mock("abapobject", () => ({
-  isAbapClassInclude: jest.fn()
+vi.mock("abapobject", () => ({
+  isAbapClassInclude: vi.fn()
 }))
 
-jest.mock("../../views/sapgui/SapGuiPanel", () => ({
+vi.mock("../../views/sapgui/SapGuiPanel", () => ({
   SapGuiPanel: {
-    createOrShow: jest.fn()
+    createOrShow: vi.fn()
   }
 }))
 
@@ -89,8 +89,8 @@ import { funWindow as window } from "../../services/funMessenger"
 import { isAbapClassInclude } from "abapobject"
 import * as vscode from "vscode"
 
-const mockRemoteManager = RemoteManager as jest.Mocked<typeof RemoteManager>
-const mockIsAbapClassInclude = isAbapClassInclude as jest.MockedFunction<typeof isAbapClassInclude>
+const mockRemoteManager = RemoteManager as Mocked<typeof RemoteManager>
+const mockIsAbapClassInclude = isAbapClassInclude as MockedFunction<typeof isAbapClassInclude>
 
 function makeConfig(overrides: any = {}) {
   return {
@@ -110,8 +110,8 @@ function makeConfig(overrides: any = {}) {
 }
 
 beforeEach(() => {
-  jest.clearAllMocks()
-  ;(window.withProgress as jest.Mock).mockImplementation((_opts: any, fn: Function) => fn())
+  vi.clearAllMocks()
+  ;(window.withProgress as Mock).mockImplementation((_opts: any, fn: Function) => fn())
 })
 
 describe("SapGui.create", () => {
@@ -266,24 +266,24 @@ describe("showInGuiCb", () => {
 
 describe("executeInGui", () => {
   const mockClientWithTicket = {
-    reentranceTicket: jest.fn().mockResolvedValue("TICKET123")
+    reentranceTicket: vi.fn().mockResolvedValue("TICKET123")
   }
 
   beforeEach(() => {
     mockIsAbapClassInclude.mockReturnValue(false)
-    ;(RemoteManager.get as jest.Mock).mockReturnValue({
-      byId: jest.fn().mockReturnValue(makeConfig())
+    ;(RemoteManager.get as Mock).mockReturnValue({
+      byId: vi.fn().mockReturnValue(makeConfig())
     })
     const { getClient } = require("../conections")
-    ;(getClient as jest.Mock).mockReturnValue(mockClientWithTicket)
-    ;(window.withProgress as jest.Mock).mockImplementation(async (_opts: any, fn: Function) => fn())
+    ;(getClient as Mock).mockReturnValue(mockClientWithTicket)
+    ;(window.withProgress as Mock).mockImplementation(async (_opts: any, fn: Function) => fn())
   })
 
   test("builds SE38 command for PROG/P type", async () => {
     const object = { type: "PROG/P", name: "ZTEST", sapGuiUri: "/uri" }
     let capturedCmd: SapGuiCommand | undefined
 
-    ;(window.withProgress as jest.Mock).mockImplementation(async (_opts: any, fn: Function) => {
+    ;(window.withProgress as Mock).mockImplementation(async (_opts: any, fn: Function) => {
       const config = makeConfig()
       const sapGui = SapGui.create(config as any)
       const origStartGui = sapGui.startGui.bind(sapGui)
@@ -311,21 +311,21 @@ describe("executeInGui", () => {
 
 describe("runInSapGui", () => {
   test("returns early when config not found", async () => {
-    ;(RemoteManager.get as jest.Mock).mockReturnValue({
-      byId: jest.fn().mockReturnValue(undefined)
+    ;(RemoteManager.get as Mock).mockReturnValue({
+      byId: vi.fn().mockReturnValue(undefined)
     })
-    ;(window.withProgress as jest.Mock).mockImplementation(async (_opts: any, fn: Function) => fn())
+    ;(window.withProgress as Mock).mockImplementation(async (_opts: any, fn: Function) => fn())
 
     const result = await runInSapGui("unknown", () => undefined)
     expect(result).toBeUndefined()
   })
 
   test("calls getCmd and returns when cmd is undefined", async () => {
-    ;(RemoteManager.get as jest.Mock).mockReturnValue({
-      byId: jest.fn().mockReturnValue(makeConfig())
+    ;(RemoteManager.get as Mock).mockReturnValue({
+      byId: vi.fn().mockReturnValue(makeConfig())
     })
-    ;(window.withProgress as jest.Mock).mockImplementation(async (_opts: any, fn: Function) => fn())
-    const getCmdMock = jest.fn().mockResolvedValue(undefined)
+    ;(window.withProgress as Mock).mockImplementation(async (_opts: any, fn: Function) => fn())
+    const getCmdMock = vi.fn().mockResolvedValue(undefined)
 
     await runInSapGui("dev100", getCmdMock)
     expect(getCmdMock).toHaveBeenCalled()
@@ -335,14 +335,14 @@ describe("runInSapGui", () => {
     const config = makeConfig({
       sapGui: { server: "srv", systemNumber: "00", routerString: "", guiType: "WEBGUI_UNSAFE", client: "100" }
     })
-    ;(RemoteManager.get as jest.Mock).mockReturnValue({
-      byId: jest.fn().mockReturnValue(config)
+    ;(RemoteManager.get as Mock).mockReturnValue({
+      byId: vi.fn().mockReturnValue(config)
     })
     const { getClient } = require("../conections")
-    ;(getClient as jest.Mock).mockReturnValue({
-      reentranceTicket: jest.fn().mockResolvedValue("T123")
+    ;(getClient as Mock).mockReturnValue({
+      reentranceTicket: vi.fn().mockResolvedValue("T123")
     })
-    ;(window.withProgress as jest.Mock).mockImplementation(async (_opts: any, fn: Function) => fn())
+    ;(window.withProgress as Mock).mockImplementation(async (_opts: any, fn: Function) => fn())
 
     const cmd: SapGuiCommand = {
       type: "Transaction",

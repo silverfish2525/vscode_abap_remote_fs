@@ -3,8 +3,8 @@
  * Covers TtlCache, helper functions, and ObjectPropertyProvider.
  */
 
-jest.mock("vscode", () => {
-  const mockDisposable = { dispose: jest.fn() }
+vi.mock("vscode", () => {
+  const mockDisposable = { dispose: vi.fn() }
   return {
     TreeItem: class TreeItem {
       public description: any
@@ -20,84 +20,84 @@ jest.mock("vscode", () => {
     },
     TreeItemCollapsibleState: { None: 0, Collapsed: 1, Expanded: 2 },
     TreeItemCheckboxState: { Checked: 1, Unchecked: 0 },
-    ThemeIcon: jest.fn((id: string) => ({ id })),
-    EventEmitter: jest.fn().mockImplementation(() => ({
+    ThemeIcon: vi.fn((id: string) => ({ id })),
+    EventEmitter: vi.fn().mockImplementation(() => ({
       event: {},
-      fire: jest.fn(),
+      fire: vi.fn(),
     })),
     commands: {
-      registerCommand: jest.fn(() => mockDisposable),
+      registerCommand: vi.fn(() => mockDisposable),
     },
     workspace: {
-      onDidSaveTextDocument: jest.fn(() => mockDisposable),
-      onDidCloseTextDocument: jest.fn(() => mockDisposable),
+      onDidSaveTextDocument: vi.fn(() => mockDisposable),
+      onDidCloseTextDocument: vi.fn(() => mockDisposable),
     },
     Uri: {
-      parse: jest.fn((s: string) => ({
+      parse: vi.fn((s: string) => ({
         toString: () => s,
         authority: s.replace(/.*?:\/\//, "").split("/")[0] ?? "",
         path: "/" + (s.split("/").slice(3).join("/") || ""),
         scheme: s.split(":")[0],
       })),
     },
-    Disposable: { from: jest.fn() },
+    Disposable: { from: vi.fn() },
   }
 }, { virtual: true })
 
-jest.mock("abap-adt-api", () => ({
+vi.mock("abap-adt-api", () => ({
   TransportInfo: {},
   MainInclude: {},
   Revision: {},
 }), { virtual: true })
 
-jest.mock("abapfs", () => ({
-  isAbapStat: jest.fn(),
+vi.mock("abapfs", () => ({
+  isAbapStat: vi.fn(),
 }), { virtual: true })
 
-jest.mock("abapfs/out/lockObject", () => ({
+vi.mock("abapfs/out/lockObject", () => ({
   LockStatus: {},
 }), { virtual: true })
 
-jest.mock("abapobject", () => ({
+vi.mock("abapobject", () => ({
   AbapObject: {},
 }), { virtual: true })
 
-jest.mock("../commands", () => ({
+vi.mock("../commands", () => ({
   AbapFsCommands: {
     transportOpenGui: "abapfs.transportOpenGui",
   },
 }), { virtual: true })
 
-jest.mock("../adt/conections", () => ({
-  getClient: jest.fn(),
-  uriRoot: jest.fn(),
-  abapUri: jest.fn((uri: any) => uri?.scheme === "adt"),
+vi.mock("../adt/conections", () => ({
+  getClient: vi.fn(),
+  uriRoot: vi.fn(),
+  abapUri: vi.fn((uri: any) => uri?.scheme === "adt"),
 }), { virtual: true })
 
-jest.mock("../lib", () => ({
-  caughtToString: jest.fn((e: any) => String(e)),
-  log: jest.fn(),
+vi.mock("../lib", () => ({
+  caughtToString: vi.fn((e: any) => String(e)),
+  log: vi.fn(),
 }), { virtual: true })
 
-jest.mock("../scm/abaprevisions/abaprevisionservice", () => ({
-  AbapRevisionService: { get: jest.fn() },
-  revLabel: jest.fn((rev: any, fallback: string) => rev.versionTitle || fallback),
+vi.mock("../scm/abaprevisions/abaprevisionservice", () => ({
+  AbapRevisionService: { get: vi.fn() },
+  revLabel: vi.fn((rev: any, fallback: string) => rev.versionTitle || fallback),
 }), { virtual: true })
 
-jest.mock("../scm/abaprevisions/documentprovider", () => ({
-  revisionUri: jest.fn((uri: any, rev: any) => uri),
+vi.mock("../scm/abaprevisions/documentprovider", () => ({
+  revisionUri: vi.fn((uri: any, rev: any) => uri),
 }), { virtual: true })
 
-jest.mock("./transports", () => ({
-  readTransports: jest.fn(),
+vi.mock("./transports", () => ({
+  readTransports: vi.fn(),
 }), { virtual: true })
 
-jest.mock("../services/funMessenger", () => ({
+vi.mock("../services/funMessenger", () => ({
   funWindow: {
     activeTextEditor: undefined,
-    showInformationMessage: jest.fn(),
-    showErrorMessage: jest.fn(),
-    onDidChangeActiveTextEditor: jest.fn(() => ({ dispose: jest.fn() })),
+    showInformationMessage: vi.fn(),
+    showErrorMessage: vi.fn(),
+    onDidChangeActiveTextEditor: vi.fn(() => ({ dispose: vi.fn() })),
   },
 }), { virtual: true })
 
@@ -106,12 +106,12 @@ import { ObjectPropertyProvider } from "./objectProperties"
 import { funWindow as window } from "../services/funMessenger"
 import { abapUri } from "../adt/conections"
 
-const mockedWindow = window as jest.Mocked<typeof window>
-const mockedAbapUri = abapUri as jest.Mock
+const mockedWindow = window as Mocked<typeof window>
+const mockedAbapUri = abapUri as Mock
 
 describe("ObjectPropertyProvider", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     // Reset singleton
     ;(ObjectPropertyProvider as any).instance = undefined
   })
@@ -157,8 +157,8 @@ describe("ObjectPropertyProvider", () => {
       description: undefined,
       message: undefined,
       visible: true,
-      onDidChangeVisibility: jest.fn(() => ({ dispose: jest.fn() })),
-      onDidChangeCheckboxState: jest.fn(() => ({ dispose: jest.fn() })),
+      onDidChangeVisibility: vi.fn(() => ({ dispose: vi.fn() })),
+      onDidChangeCheckboxState: vi.fn(() => ({ dispose: vi.fn() })),
     } as any
     expect(() => provider.bindView(mockView)).not.toThrow()
     expect(mockView.onDidChangeVisibility).toHaveBeenCalled()
@@ -210,8 +210,8 @@ describe("ObjectPropertyProvider", () => {
     const provider = ObjectPropertyProvider.get()
     const mockView = {
       visible: true,
-      onDidChangeVisibility: jest.fn(() => ({ dispose: jest.fn() })),
-      onDidChangeCheckboxState: jest.fn(() => ({ dispose: jest.fn() })),
+      onDidChangeVisibility: vi.fn(() => ({ dispose: vi.fn() })),
+      onDidChangeCheckboxState: vi.fn(() => ({ dispose: vi.fn() })),
     } as any
     provider.bindView(mockView)
     ;(mockedWindow as any).activeTextEditor = undefined

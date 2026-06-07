@@ -2,38 +2,38 @@
 // The module uses module-level state (fileFindings map) that is populated via the atcProvider event.
 // We focus tests on the pure data-transformation function getATCDecorations.
 
-jest.mock("vscode", () => {
-  const Range = jest.fn((start: any, end: any) => ({ start, end }))
-  const Position = jest.fn((line: number, character: number) => ({ line, character }))
+vi.mock("vscode", () => {
+  const Range = vi.fn((start: any, end: any) => ({ start, end }))
+  const Position = vi.fn((line: number, character: number) => ({ line, character }))
   return {
     Range,
     Position,
     DecorationOptions: {},
     workspace: {
-      onDidChangeTextDocument: jest.fn(),
-      onDidSaveTextDocument: jest.fn(),
-      onDidCloseTextDocument: jest.fn()
+      onDidChangeTextDocument: vi.fn(),
+      onDidSaveTextDocument: vi.fn(),
+      onDidCloseTextDocument: vi.fn()
     }
   }
 }, { virtual: true })
 
-jest.mock("../../services/funMessenger", () => ({
+vi.mock("../../services/funMessenger", () => ({
   funWindow: {
     activeTextEditor: undefined,
-    createTextEditorDecorationType: jest.fn(() => ({})),
-    onDidChangeActiveTextEditor: jest.fn()
+    createTextEditorDecorationType: vi.fn(() => ({})),
+    onDidChangeActiveTextEditor: vi.fn()
   }
 }))
 
-jest.mock(".", () => ({
+vi.mock(".", () => ({
   atcProvider: {
-    onDidChangeTreeData: jest.fn(),
-    findings: jest.fn().mockReturnValue([])
+    onDidChangeTreeData: vi.fn(),
+    findings: vi.fn().mockReturnValue([])
   }
 }))
 
-jest.mock("./view", () => ({
-  hasExemption: jest.fn((f: any) => !!f.exemptionApproval)
+vi.mock("./view", () => ({
+  hasExemption: vi.fn((f: any) => !!f.exemptionApproval)
 }))
 
 import { getATCDecorations } from "./decorations"

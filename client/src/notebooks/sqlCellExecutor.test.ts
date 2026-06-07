@@ -1,5 +1,5 @@
-jest.mock("./interpolation", () => ({
-  interpolateSql: jest.fn((sql: string) => sql),
+vi.mock("./interpolation", () => ({
+  interpolateSql: vi.fn((sql: string) => sql),
 }), { virtual: false })
 
 import { executeSqlCell } from "./sqlCellExecutor"
@@ -7,11 +7,11 @@ import { interpolateSql } from "./interpolation"
 import { DEFAULT_MAX_ROWS } from "./types"
 import type { CellResult } from "./types"
 
-const mockInterpolateSql = interpolateSql as jest.Mock
+const mockInterpolateSql = interpolateSql as Mock
 
 function makeClient(runQueryResult?: any): any {
   return {
-    runQuery: jest.fn().mockResolvedValue(runQueryResult ?? {
+    runQuery: vi.fn().mockResolvedValue(runQueryResult ?? {
       columns: [{ name: "MATNR", type: "C" }],
       values: [{ MATNR: "MAT001" }],
     }),
@@ -20,7 +20,7 @@ function makeClient(runQueryResult?: any): any {
 
 describe("executeSqlCell — happy paths", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockInterpolateSql.mockImplementation((sql: string) => sql)
   })
 
@@ -97,7 +97,7 @@ describe("executeSqlCell — happy paths", () => {
   })
 
   test("returns empty result when client returns null", async () => {
-    const client = { runQuery: jest.fn().mockResolvedValue(null) }
+    const client = { runQuery: vi.fn().mockResolvedValue(null) }
     const result = await executeSqlCell("SELECT * FROM mara", client as any, 0, new Map())
     expect(result.result).toEqual([])
     expect(result.rowCount).toBe(0)
@@ -105,7 +105,7 @@ describe("executeSqlCell — happy paths", () => {
   })
 
   test("returns empty result when client returns object without columns", async () => {
-    const client = { runQuery: jest.fn().mockResolvedValue({}) }
+    const client = { runQuery: vi.fn().mockResolvedValue({}) }
     const result = await executeSqlCell("SELECT * FROM mara", client as any, 0, new Map())
     expect(result.result).toEqual([])
     expect(result.rowCount).toBe(0)
@@ -173,7 +173,7 @@ describe("executeSqlCell — happy paths", () => {
 
 describe("executeSqlCell — validation errors", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockInterpolateSql.mockImplementation((sql: string) => sql)
   })
 

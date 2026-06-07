@@ -4,35 +4,35 @@
  * CollectionItem, TransportItem, and TransportsProvider structure.
  */
 
-jest.mock("vscode", () => {
-  const mockDisposable = { dispose: jest.fn() }
+vi.mock("vscode", () => {
+  const mockDisposable = { dispose: vi.fn() }
   return {
     TreeItem: class TreeItem {
       constructor(public label: string, public collapsibleState?: number) {}
     },
     TreeItemCollapsibleState: { None: 0, Collapsed: 1, Expanded: 2 },
-    EventEmitter: jest.fn().mockImplementation(() => ({
-      event: jest.fn(),
-      fire: jest.fn(),
+    EventEmitter: vi.fn().mockImplementation(() => ({
+      event: vi.fn(),
+      fire: vi.fn(),
     })),
     workspace: {
       workspaceFolders: [],
-      onDidChangeWorkspaceFolders: jest.fn(() => mockDisposable),
+      onDidChangeWorkspaceFolders: vi.fn(() => mockDisposable),
     },
     Uri: {
-      parse: jest.fn((s: string) => ({ toString: () => s, authority: s.split("//")[1]?.split("/")[0] || "", scheme: s.split(":")[0] })),
+      parse: vi.fn((s: string) => ({ toString: () => s, authority: s.split("//")[1]?.split("/")[0] || "", scheme: s.split(":")[0] })),
     },
     ProgressLocation: { Notification: 15 },
-    commands: { executeCommand: jest.fn() },
-    env: { openExternal: jest.fn() },
+    commands: { executeCommand: vi.fn() },
+    env: { openExternal: vi.fn() },
   }
 }, { virtual: true })
 
-jest.mock("../adt/operations/AdtObjectCreator", () => ({
+vi.mock("../adt/operations/AdtObjectCreator", () => ({
   PACKAGE: "DEVC/K",
 }), { virtual: true })
 
-jest.mock("../commands", () => ({
+vi.mock("../commands", () => ({
   command: () => (target: any, key: string, descriptor: any) => descriptor,
   AbapFsCommands: {
     releaseTransport: "abapfs.releaseTransport",
@@ -43,68 +43,68 @@ jest.mock("../commands", () => ({
   },
 }), { virtual: true })
 
-jest.mock("../services/funMessenger", () => ({
+vi.mock("../services/funMessenger", () => ({
   funWindow: {
-    withProgress: jest.fn(),
-    showErrorMessage: jest.fn(),
-    showInformationMessage: jest.fn(),
+    withProgress: vi.fn(),
+    showErrorMessage: vi.fn(),
+    showInformationMessage: vi.fn(),
   },
 }), { virtual: true })
 
-jest.mock("../lib", () => ({
-  caughtToString: jest.fn((e: any) => String(e)),
-  withp: jest.fn((_: string, fn: () => Promise<any>) => fn()),
+vi.mock("../lib", () => ({
+  caughtToString: vi.fn((e: any) => String(e)),
+  withp: vi.fn((_: string, fn: () => Promise<any>) => fn()),
 }), { virtual: true })
 
-jest.mock("../adt/conections", () => ({
-  getClient: jest.fn(),
+vi.mock("../adt/conections", () => ({
+  getClient: vi.fn(),
   ADTSCHEME: "adt",
-  getOrCreateClient: jest.fn(),
-  getRoot: jest.fn(),
+  getOrCreateClient: vi.fn(),
+  getRoot: vi.fn(),
 }), { virtual: true })
 
-jest.mock("abapfs", () => ({
-  isFolder: jest.fn(),
-  isAbapStat: jest.fn(),
-  isAbapFolder: jest.fn(),
+vi.mock("abapfs", () => ({
+  isFolder: vi.fn(),
+  isAbapStat: vi.fn(),
+  isAbapFolder: vi.fn(),
   PathItem: {},
 }), { virtual: true })
 
-jest.mock("../adt/operations/AdtObjectFinder", () => ({
-  createUri: jest.fn(),
+vi.mock("../adt/operations/AdtObjectFinder", () => ({
+  createUri: vi.fn(),
 }), { virtual: true })
 
-jest.mock("../scm/abaprevisions", () => ({
+vi.mock("../scm/abaprevisions", () => ({
   AbapScm: {},
-  displayRevDiff: jest.fn(),
+  displayRevDiff: vi.fn(),
 }), { virtual: true })
 
-jest.mock("../scm/abaprevisions/abaprevisionservice", () => ({
-  AbapRevisionService: { get: jest.fn() },
+vi.mock("../scm/abaprevisions/abaprevisionservice", () => ({
+  AbapRevisionService: { get: vi.fn() },
 }), { virtual: true })
 
-jest.mock("../adt/sapgui/sapgui", () => ({
-  runInSapGui: jest.fn(),
-  showInGuiCb: jest.fn(),
+vi.mock("../adt/sapgui/sapgui", () => ({
+  runInSapGui: vi.fn(),
+  showInGuiCb: vi.fn(),
 }), { virtual: true })
 
-jest.mock("./abaptestcockpit", () => ({
+vi.mock("./abaptestcockpit", () => ({
   atcProvider: {},
 }), { virtual: true })
 
-jest.mock("./utilities", () => ({
-  pickUser: jest.fn(),
+vi.mock("./utilities", () => ({
+  pickUser: vi.fn(),
 }), { virtual: true })
 
 import { readTransports, TransportsProvider } from "./transports"
 import { getClient, getOrCreateClient, ADTSCHEME } from "../adt/conections"
 
-const mockedGetClient = getClient as jest.Mock
-const mockedGetOrCreateClient = getOrCreateClient as jest.Mock
+const mockedGetClient = getClient as Mock
+const mockedGetOrCreateClient = getOrCreateClient as Mock
 
 describe("readTransports", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it("uses transportsByConfig when hasTransportConfig is true", async () => {
@@ -115,11 +115,11 @@ describe("readTransports", () => {
     const mockTransports = [{ "tm:number": "TR001" }]
 
     const mockClient = {
-      hasTransportConfig: jest.fn().mockResolvedValue(true),
-      transportConfigurations: jest.fn().mockResolvedValue([mockConfig]),
-      getTransportConfiguration: jest.fn().mockResolvedValue(mockFullConfig),
-      setTransportsConfig: jest.fn().mockResolvedValue(undefined),
-      transportsByConfig: jest.fn().mockResolvedValue(mockTransports),
+      hasTransportConfig: vi.fn().mockResolvedValue(true),
+      transportConfigurations: vi.fn().mockResolvedValue([mockConfig]),
+      getTransportConfiguration: vi.fn().mockResolvedValue(mockFullConfig),
+      setTransportsConfig: vi.fn().mockResolvedValue(undefined),
+      transportsByConfig: vi.fn().mockResolvedValue(mockTransports),
     }
     mockedGetClient.mockReturnValue(mockClient)
 
@@ -136,11 +136,11 @@ describe("readTransports", () => {
     const mockFullConfig = { User: "DIFFERENTUSER" }
 
     const mockClient = {
-      hasTransportConfig: jest.fn().mockResolvedValue(true),
-      transportConfigurations: jest.fn().mockResolvedValue([mockConfig]),
-      getTransportConfiguration: jest.fn().mockResolvedValue(mockFullConfig),
-      setTransportsConfig: jest.fn().mockResolvedValue(undefined),
-      transportsByConfig: jest.fn().mockResolvedValue([]),
+      hasTransportConfig: vi.fn().mockResolvedValue(true),
+      transportConfigurations: vi.fn().mockResolvedValue([mockConfig]),
+      getTransportConfiguration: vi.fn().mockResolvedValue(mockFullConfig),
+      setTransportsConfig: vi.fn().mockResolvedValue(undefined),
+      transportsByConfig: vi.fn().mockResolvedValue([]),
     }
     mockedGetClient.mockReturnValue(mockClient)
 
@@ -156,11 +156,11 @@ describe("readTransports", () => {
     const mockFullConfig = { User: "MYUSER" }
 
     const mockClient = {
-      hasTransportConfig: jest.fn().mockResolvedValue(true),
-      transportConfigurations: jest.fn().mockResolvedValue([mockConfig]),
-      getTransportConfiguration: jest.fn().mockResolvedValue(mockFullConfig),
-      setTransportsConfig: jest.fn(),
-      transportsByConfig: jest.fn().mockResolvedValue([]),
+      hasTransportConfig: vi.fn().mockResolvedValue(true),
+      transportConfigurations: vi.fn().mockResolvedValue([mockConfig]),
+      getTransportConfiguration: vi.fn().mockResolvedValue(mockFullConfig),
+      setTransportsConfig: vi.fn(),
+      transportsByConfig: vi.fn().mockResolvedValue([]),
     }
     mockedGetClient.mockReturnValue(mockClient)
 
@@ -171,8 +171,8 @@ describe("readTransports", () => {
   it("falls back to userTransports when hasTransportConfig is false", async () => {
     const mockTransports = [{ "tm:number": "TR002" }]
     const mockClient = {
-      hasTransportConfig: jest.fn().mockResolvedValue(false),
-      userTransports: jest.fn().mockResolvedValue(mockTransports),
+      hasTransportConfig: vi.fn().mockResolvedValue(false),
+      userTransports: vi.fn().mockResolvedValue(mockTransports),
     }
     mockedGetClient.mockReturnValue(mockClient)
 
@@ -185,14 +185,14 @@ describe("readTransports", () => {
     const mockLink = "http://sap/transport-link-new"
     const mockConfig = { link: mockLink, etag: "new" }
     const mockClient = {
-      hasTransportConfig: jest.fn().mockResolvedValue(true),
-      transportConfigurations: jest.fn()
+      hasTransportConfig: vi.fn().mockResolvedValue(true),
+      transportConfigurations: vi.fn()
         .mockResolvedValueOnce([]) // first call returns empty
         .mockResolvedValueOnce([mockConfig]), // second call after create
-      createTransportsConfig: jest.fn().mockResolvedValue(undefined),
-      getTransportConfiguration: jest.fn().mockResolvedValue({ User: "USER1" }),
-      setTransportsConfig: jest.fn().mockResolvedValue(undefined),
-      transportsByConfig: jest.fn().mockResolvedValue([]),
+      createTransportsConfig: vi.fn().mockResolvedValue(undefined),
+      getTransportConfiguration: vi.fn().mockResolvedValue({ User: "USER1" }),
+      setTransportsConfig: vi.fn().mockResolvedValue(undefined),
+      transportsByConfig: vi.fn().mockResolvedValue([]),
     }
     mockedGetClient.mockReturnValue(mockClient)
 
@@ -203,12 +203,12 @@ describe("readTransports", () => {
 
   it("throws when transport config cannot be created", async () => {
     const mockClient = {
-      hasTransportConfig: jest.fn().mockResolvedValue(true),
-      transportConfigurations: jest.fn().mockResolvedValue([]),
-      createTransportsConfig: jest.fn().mockResolvedValue(undefined),
+      hasTransportConfig: vi.fn().mockResolvedValue(true),
+      transportConfigurations: vi.fn().mockResolvedValue([]),
+      createTransportsConfig: vi.fn().mockResolvedValue(undefined),
     }
     // Make second call return empty too
-    ;(mockClient.transportConfigurations as jest.Mock).mockResolvedValue([])
+    ;(mockClient.transportConfigurations as Mock).mockResolvedValue([])
     mockedGetClient.mockReturnValue(mockClient)
 
     await expect(readTransports("dev100", "user1")).rejects.toThrow(
@@ -219,7 +219,7 @@ describe("readTransports", () => {
 
 describe("TransportsProvider", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     // Reset singleton
     ;(TransportsProvider as any).instance = undefined
   })
@@ -257,7 +257,7 @@ describe("TransportsProvider", () => {
     ;(TransportsProvider as any).instance = undefined
     const provider = TransportsProvider.get()
     const mockChild = { label: "child" } as any
-    const element = { getChildren: jest.fn().mockResolvedValue([mockChild]) } as any
+    const element = { getChildren: vi.fn().mockResolvedValue([mockChild]) } as any
     const result = await provider.getChildren(element)
     expect(element.getChildren).toHaveBeenCalled()
     expect(result).toEqual([mockChild])

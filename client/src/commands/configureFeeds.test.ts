@@ -1,44 +1,44 @@
-jest.mock("vscode", () => ({
+vi.mock("vscode", () => ({
   ViewColumn: { Active: 1, One: 2 },
   workspace: {
-    getConfiguration: jest.fn()
+    getConfiguration: vi.fn()
   }
 }), { virtual: true })
 
-jest.mock("../services/funMessenger", () => ({
+vi.mock("../services/funMessenger", () => ({
   funWindow: {
-    createWebviewPanel: jest.fn(),
-    showErrorMessage: jest.fn(),
-    showInformationMessage: jest.fn()
+    createWebviewPanel: vi.fn(),
+    showErrorMessage: vi.fn(),
+    showInformationMessage: vi.fn()
   }
 }))
 
-jest.mock("../config", () => ({
-  connectedRoots: jest.fn()
+vi.mock("../config", () => ({
+  connectedRoots: vi.fn()
 }))
 
-jest.mock("../adt/conections", () => ({
-  getOrCreateClient: jest.fn()
+vi.mock("../adt/conections", () => ({
+  getOrCreateClient: vi.fn()
 }))
 
-jest.mock("../services/feeds/feedParsers", () => ({
-  toFeedMetadata: jest.fn((f: any) => ({ title: f.title, href: f.href }))
+vi.mock("../services/feeds/feedParsers", () => ({
+  toFeedMetadata: vi.fn((f: any) => ({ title: f.title, href: f.href }))
 }))
 
-jest.mock("../extension", () => ({
+vi.mock("../extension", () => ({
   context: { extensionPath: "/fake/ext" }
 }))
 
-jest.mock("path", () => ({
+vi.mock("path", () => ({
   join: (...args: string[]) => args.join("/")
 }))
 
-jest.mock("fs", () => ({
-  readFileSync: jest.fn(() => "<html></html>")
+vi.mock("fs", () => ({
+  readFileSync: vi.fn(() => "<html></html>")
 }))
 
-jest.mock("../services/telemetry", () => ({
-  logTelemetry: jest.fn()
+vi.mock("../services/telemetry", () => ({
+  logTelemetry: vi.fn()
 }))
 
 import { configureFeedsCommand } from "./configureFeeds"
@@ -47,28 +47,28 @@ import { connectedRoots } from "../config"
 import { getOrCreateClient } from "../adt/conections"
 import * as vscode from "vscode"
 
-const mockWindow = window as jest.Mocked<typeof window>
-const mockConnectedRoots = connectedRoots as jest.MockedFunction<typeof connectedRoots>
-const mockGetOrCreateClient = getOrCreateClient as jest.MockedFunction<typeof getOrCreateClient>
+const mockWindow = window as Mocked<typeof window>
+const mockConnectedRoots = connectedRoots as MockedFunction<typeof connectedRoots>
+const mockGetOrCreateClient = getOrCreateClient as MockedFunction<typeof getOrCreateClient>
 
 function makeMockPanel() {
   const listeners: { [cmd: string]: ((msg: any) => void)[] } = {}
   const disposeListeners: (() => void)[] = []
   return {
-    reveal: jest.fn(),
-    dispose: jest.fn(),
+    reveal: vi.fn(),
+    dispose: vi.fn(),
     webview: {
       html: "",
-      onDidReceiveMessage: jest.fn((cb: (msg: any) => void) => {
+      onDidReceiveMessage: vi.fn((cb: (msg: any) => void) => {
         listeners["message"] = listeners["message"] || []
         listeners["message"].push(cb)
-        return { dispose: jest.fn() }
+        return { dispose: vi.fn() }
       }),
-      postMessage: jest.fn()
+      postMessage: vi.fn()
     },
-    onDidDispose: jest.fn((cb: () => void) => {
+    onDidDispose: vi.fn((cb: () => void) => {
       disposeListeners.push(cb)
-      return { dispose: jest.fn() }
+      return { dispose: vi.fn() }
     }),
     _triggerMessage: async (msg: any) => {
       const promises = (listeners["message"] || []).map(l => l(msg))
@@ -79,7 +79,7 @@ function makeMockPanel() {
 }
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   // Reset module-level currentPanel by re-importing fresh module
   // We do this by requiring and accessing the module cache
 })
@@ -99,7 +99,7 @@ describe("configureFeedsCommand", () => {
   test("creates a new webview panel", async () => {
     const panel = makeMockPanel()
     lastPanel = panel
-    ;(mockWindow.createWebviewPanel as jest.Mock).mockReturnValue(panel)
+    ;(mockWindow.createWebviewPanel as Mock).mockReturnValue(panel)
 
     await configureFeedsCommand()
 
@@ -114,7 +114,7 @@ describe("configureFeedsCommand", () => {
   test("reveals existing panel if already open", async () => {
     const panel = makeMockPanel()
     lastPanel = panel
-    ;(mockWindow.createWebviewPanel as jest.Mock).mockReturnValue(panel)
+    ;(mockWindow.createWebviewPanel as Mock).mockReturnValue(panel)
 
     await configureFeedsCommand()
     await configureFeedsCommand()
@@ -127,7 +127,7 @@ describe("configureFeedsCommand", () => {
     const panel1 = makeMockPanel()
     const panel2 = makeMockPanel()
     lastPanel = panel2
-    ;(mockWindow.createWebviewPanel as jest.Mock)
+    ;(mockWindow.createWebviewPanel as Mock)
       .mockReturnValueOnce(panel1)
       .mockReturnValueOnce(panel2)
 
@@ -141,7 +141,7 @@ describe("configureFeedsCommand", () => {
   test("handles loadSystems message by posting system IDs", async () => {
     const panel = makeMockPanel()
     lastPanel = panel
-    ;(mockWindow.createWebviewPanel as jest.Mock).mockReturnValue(panel)
+    ;(mockWindow.createWebviewPanel as Mock).mockReturnValue(panel)
     const roots = new Map([
       ["dev100", {}],
       ["qas100", {}]
@@ -162,15 +162,15 @@ describe("configureFeedsCommand", () => {
   test("handles loadFeeds message", async () => {
     const panel = makeMockPanel()
     lastPanel = panel
-    ;(mockWindow.createWebviewPanel as jest.Mock).mockReturnValue(panel)
+    ;(mockWindow.createWebviewPanel as Mock).mockReturnValue(panel)
     const mockClient = {
-      feeds: jest.fn().mockResolvedValue([
+      feeds: vi.fn().mockResolvedValue([
         { title: "Dumps Feed", href: "/sap/bc/adt/runtime/dumps/feeds" }
       ])
     }
     mockGetOrCreateClient.mockResolvedValue(mockClient as any)
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue({
-      get: jest.fn().mockReturnValue({})
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue({
+      get: vi.fn().mockReturnValue({})
     })
 
     await configureFeedsCommand()
@@ -185,7 +185,7 @@ describe("configureFeedsCommand", () => {
   test("handles bulkAction message without crashing", async () => {
     const panel = makeMockPanel()
     lastPanel = panel
-    ;(mockWindow.createWebviewPanel as jest.Mock).mockReturnValue(panel)
+    ;(mockWindow.createWebviewPanel as Mock).mockReturnValue(panel)
 
     await configureFeedsCommand()
     // Should not throw
@@ -194,10 +194,10 @@ describe("configureFeedsCommand", () => {
 
   test("panel HTML is set from file content", async () => {
     const fs = require("fs")
-    ;(fs.readFileSync as jest.Mock).mockReturnValue("<html>feeds</html>")
+    ;(fs.readFileSync as Mock).mockReturnValue("<html>feeds</html>")
     const panel = makeMockPanel()
     lastPanel = panel
-    ;(mockWindow.createWebviewPanel as jest.Mock).mockReturnValue(panel)
+    ;(mockWindow.createWebviewPanel as Mock).mockReturnValue(panel)
 
     await configureFeedsCommand()
 

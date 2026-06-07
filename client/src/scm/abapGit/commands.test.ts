@@ -1,31 +1,31 @@
-jest.mock("vscode", () => ({
-  commands: { executeCommand: jest.fn() },
+vi.mock("vscode", () => ({
+  commands: { executeCommand: vi.fn() },
   Uri: {
-    parse: jest.fn((s: string) => ({
+    parse: vi.fn((s: string) => ({
       toString: () => s,
       path: s.replace(/^\w+:\/\/[^/]*/, ""),
       authority: "",
       scheme: "adt"
     })),
-    file: jest.fn((s: string) => ({ toString: () => s, fsPath: s }))
+    file: vi.fn((s: string) => ({ toString: () => s, fsPath: s }))
   },
-  SourceControlResourceGroup: jest.fn(),
-  SourceControlResourceState: jest.fn(),
-  SourceControl: jest.fn(),
-  Memento: jest.fn(),
-  QuickPickItem: jest.fn()
+  SourceControlResourceGroup: vi.fn(),
+  SourceControlResourceState: vi.fn(),
+  SourceControl: vi.fn(),
+  Memento: vi.fn(),
+  QuickPickItem: vi.fn()
 }), { virtual: true })
 
-jest.mock("../../services/funMessenger", () => ({
+vi.mock("../../services/funMessenger", () => ({
   funWindow: {
-    showQuickPick: jest.fn(),
-    showErrorMessage: jest.fn(),
-    showInformationMessage: jest.fn(),
-    withProgress: jest.fn((_opts: any, cb: any) => cb())
+    showQuickPick: vi.fn(),
+    showErrorMessage: vi.fn(),
+    showInformationMessage: vi.fn(),
+    withProgress: vi.fn((_opts: any, cb: any) => cb())
   }
 }))
 
-jest.mock("../../commands", () => ({
+vi.mock("../../commands", () => ({
   AbapFsCommands: {
     agitRefresh: "abapfs.refreshAbapGit",
     agitPush: "abapfs.agitPush",
@@ -35,82 +35,82 @@ jest.mock("../../commands", () => ({
     agitresetPwd: "abapfs.agitresetPwd",
     agitBranch: "abapfs.switchBranch"
   },
-  command: jest.fn(() => jest.fn())
+  command: vi.fn(() => vi.fn())
 }))
 
-jest.mock("./scm", () => ({
-  refresh: jest.fn(),
-  fromSC: jest.fn(),
-  AgResState: jest.fn(),
-  isAgResState: jest.fn(),
-  fromGroup: jest.fn(),
+vi.mock("./scm", () => ({
+  refresh: vi.fn(),
+  fromSC: vi.fn(),
+  AgResState: vi.fn(),
+  isAgResState: vi.fn(),
+  fromGroup: vi.fn(),
   UNSTAGED: "unstaged",
   STAGED: "staged",
   IGNORED: "ignored",
-  fileUri: jest.fn((f: any) => ({ toString: () => f.name || "file" })),
-  scmData: jest.fn(),
-  scmKey: jest.fn()
+  fileUri: vi.fn((f: any) => ({ toString: () => f.name || "file" })),
+  scmData: vi.fn(),
+  scmKey: vi.fn()
 }))
 
-jest.mock("../../lib", () => ({
-  after: jest.fn().mockResolvedValue(undefined),
-  simpleInputBox: jest.fn(),
-  chainTaskTransformers: jest.fn(),
-  fieldReplacer: jest.fn(),
-  withp: jest.fn((_msg: string, cb: any) => cb()),
-  createTaskTransformer: jest.fn(),
-  createStore: jest.fn().mockReturnValue({ get: jest.fn(), update: jest.fn() }),
-  inputBox: jest.fn(),
-  quickPick: jest.fn(),
-  caughtToString: jest.fn((e: any) => String(e)),
-  askConfirmation: jest.fn()
+vi.mock("../../lib", () => ({
+  after: vi.fn().mockResolvedValue(undefined),
+  simpleInputBox: vi.fn(),
+  chainTaskTransformers: vi.fn(),
+  fieldReplacer: vi.fn(),
+  withp: vi.fn((_msg: string, cb: any) => cb()),
+  createTaskTransformer: vi.fn(),
+  createStore: vi.fn().mockReturnValue({ get: vi.fn(), update: vi.fn() }),
+  inputBox: vi.fn(),
+  quickPick: vi.fn(),
+  caughtToString: vi.fn((e: any) => String(e)),
+  askConfirmation: vi.fn()
 }))
 
-jest.mock("fp-ts/lib/Option", () => ({
-  map: jest.fn(),
-  isNone: jest.fn().mockReturnValue(true),
+vi.mock("fp-ts/lib/Option", () => ({
+  map: vi.fn(),
+  isNone: vi.fn().mockReturnValue(true),
   none: undefined,
-  fromEither: jest.fn(),
-  isSome: jest.fn().mockReturnValue(false),
-  fromNullable: jest.fn(),
-  some: jest.fn((v: any) => ({ _tag: "Some", value: v }))
+  fromEither: vi.fn(),
+  isSome: vi.fn().mockReturnValue(false),
+  fromNullable: vi.fn(),
+  some: vi.fn((v: any) => ({ _tag: "Some", value: v }))
 }))
 
-jest.mock("./credentials", () => ({
-  dataCredentials: jest.fn(),
-  listPasswords: jest.fn().mockResolvedValue([]),
-  deletePassword: jest.fn(),
-  deleteDefaultUser: jest.fn()
+vi.mock("./credentials", () => ({
+  dataCredentials: vi.fn(),
+  listPasswords: vi.fn().mockResolvedValue([]),
+  deletePassword: vi.fn(),
+  deleteDefaultUser: vi.fn()
 }))
 
-jest.mock("../../extension", () => ({
+vi.mock("../../extension", () => ({
   context: {
-    globalState: { get: jest.fn(), update: jest.fn() },
-    asAbsolutePath: jest.fn((s: string) => s)
+    globalState: { get: vi.fn(), update: vi.fn() },
+    asAbsolutePath: vi.fn((s: string) => s)
   }
 }))
 
-jest.mock("../../adt/AdtTransports", () => ({
-  selectTransport: jest.fn()
+vi.mock("../../adt/AdtTransports", () => ({
+  selectTransport: vi.fn()
 }))
 
-jest.mock("../../config", () => ({
-  pickAdtRoot: jest.fn()
+vi.mock("../../config", () => ({
+  pickAdtRoot: vi.fn()
 }))
 
-jest.mock("fp-ts/lib/Either", () => ({
-  isRight: jest.fn().mockReturnValue(false),
-  isLeft: jest.fn().mockReturnValue(true)
+vi.mock("fp-ts/lib/Either", () => ({
+  isRight: vi.fn().mockReturnValue(false),
+  isLeft: vi.fn().mockReturnValue(true)
 }))
 
-jest.mock("../../views/abapgit", () => ({
-  confirmPull: jest.fn(),
-  packageUri: jest.fn()
+vi.mock("../../views/abapgit", () => ({
+  confirmPull: vi.fn(),
+  packageUri: vi.fn()
 }))
 
-jest.mock("../../adt/conections", () => ({
-  getClient: jest.fn(),
-  uriRoot: jest.fn()
+vi.mock("../../adt/conections", () => ({
+  getClient: vi.fn(),
+  uriRoot: vi.fn()
 }))
 
 import { isAgResState, fromGroup, STAGED, UNSTAGED, IGNORED } from "./scm"
@@ -120,19 +120,19 @@ import { funWindow as window } from "../../services/funMessenger"
 require("./commands")
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
 })
 
 describe("abapGit scm commands", () => {
   describe("transfer logic", () => {
     it("isAgResState returns true for valid state objects", () => {
       // Test the mock passthrough
-      ;(isAgResState as unknown as jest.Mock).mockReturnValue(true)
+      ;(isAgResState as unknown as Mock).mockReturnValue(true)
       expect(isAgResState({ data: { connId: "x" }, resourceUri: {} })).toBe(true)
     })
 
     it("isAgResState returns false for invalid objects", () => {
-      ;(isAgResState as unknown as jest.Mock).mockReturnValue(false)
+      ;(isAgResState as unknown as Mock).mockReturnValue(false)
       expect(isAgResState(null)).toBe(false)
       expect(isAgResState({})).toBe(false)
     })

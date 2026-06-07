@@ -1,9 +1,9 @@
-jest.mock("vscode", () => ({
-  window: { createOutputChannel: () => ({ info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(), trace: jest.fn() }) }
+vi.mock("vscode", () => ({
+  window: { createOutputChannel: () => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn(), trace: vi.fn() }) }
 }), { virtual: true })
 
-jest.mock("../../lib", () => ({
-  log: Object.assign(jest.fn(), { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(), trace: jest.fn() })
+vi.mock("../../lib", () => ({
+  log: Object.assign(vi.fn(), { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn(), trace: vi.fn() })
 }))
 
 import { joinData } from "./dataFetcher"

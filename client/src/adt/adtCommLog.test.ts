@@ -1,16 +1,16 @@
-jest.mock("vscode", () => ({}), { virtual: true })
-jest.mock("../extension", () => ({ context: { extensionPath: "/fake/ext" } }))
-jest.mock("../langClient", () => ({ client: { sendNotification: jest.fn().mockResolvedValue(undefined) } }))
-jest.mock("../lib", () => ({ ignore: jest.fn() }))
-jest.mock("../commands", () => ({
+vi.mock("vscode", () => ({}), { virtual: true })
+vi.mock("../extension", () => ({ context: { extensionPath: "/fake/ext" } }))
+vi.mock("../langClient", () => ({ client: { sendNotification: vi.fn().mockResolvedValue(undefined) } }))
+vi.mock("../lib", () => ({ ignore: vi.fn() }))
+vi.mock("../commands", () => ({
   AbapFsCommands: { activateCommLog: "activateCommLog", deactivateCommLog: "deactivateCommLog" },
   command: () => (_t: any, _k: string, desc: PropertyDescriptor) => desc
 }))
-jest.mock("../config", () => ({ pickAdtRoot: jest.fn() }))
-jest.mock("./conections", () => ({ ADTSCHEME: "adt" }))
-jest.mock("../services/telemetry", () => ({ logTelemetry: jest.fn() }))
-jest.mock("path", () => ({ join: (...args: string[]) => args.join("/") }))
-jest.mock("fs", () => ({ readFileSync: jest.fn().mockReturnValue("<html></html>") }))
+vi.mock("../config", () => ({ pickAdtRoot: vi.fn() }))
+vi.mock("./conections", () => ({ ADTSCHEME: "adt" }))
+vi.mock("../services/telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("path", () => ({ join: (...args: string[]) => args.join("/") }))
+vi.mock("fs", () => ({ readFileSync: vi.fn().mockReturnValue("<html></html>") }))
 
 import { addLogEntry, getLogEntries, CallLogger, AdtLogEntry } from "./adtCommLog"
 

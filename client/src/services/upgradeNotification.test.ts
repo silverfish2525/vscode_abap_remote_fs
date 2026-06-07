@@ -1,23 +1,23 @@
-jest.mock("vscode", () => ({
-  env: { openExternal: jest.fn() },
-  Uri: { parse: jest.fn(url => ({ toString: () => url })) },
+vi.mock("vscode", () => ({
+  env: { openExternal: vi.fn() },
+  Uri: { parse: vi.fn(url => ({ toString: () => url })) },
   StatusBarAlignment: { Left: 1, Right: 2 },
-  commands: { registerCommand: jest.fn().mockReturnValue({ dispose: jest.fn() }) }
+  commands: { registerCommand: vi.fn().mockReturnValue({ dispose: vi.fn() }) }
 }), { virtual: true })
 
-jest.mock("./funMessenger", () => {
+vi.mock("./funMessenger", () => {
   const mockStatusBarItem = {
     text: "",
     tooltip: "",
     command: "",
-    show: jest.fn(),
-    hide: jest.fn(),
-    dispose: jest.fn()
+    show: vi.fn(),
+    hide: vi.fn(),
+    dispose: vi.fn()
   }
   return {
     funWindow: {
-      createStatusBarItem: jest.fn().mockReturnValue(mockStatusBarItem),
-      showInformationMessage: jest.fn().mockResolvedValue(undefined)
+      createStatusBarItem: vi.fn().mockReturnValue(mockStatusBarItem),
+      showInformationMessage: vi.fn().mockResolvedValue(undefined)
     }
   }
 })
@@ -26,19 +26,19 @@ import * as vscode from "vscode"
 import { checkUpgradeNotification } from "./upgradeNotification"
 import { funWindow as window } from "./funMessenger"
 
-const mockCreateStatusBarItem = window.createStatusBarItem as jest.Mock
-const mockShowInfoMessage = window.showInformationMessage as jest.Mock
-const mockEnvOpenExternal = vscode.env.openExternal as jest.Mock
-const mockRegisterCommand = vscode.commands.registerCommand as jest.Mock
+const mockCreateStatusBarItem = window.createStatusBarItem as Mock
+const mockShowInfoMessage = window.showInformationMessage as Mock
+const mockEnvOpenExternal = vscode.env.openExternal as Mock
+const mockRegisterCommand = vscode.commands.registerCommand as Mock
 
 function makeStatusBarItem() {
   return {
     text: "",
     tooltip: "",
     command: "",
-    show: jest.fn(),
-    hide: jest.fn(),
-    dispose: jest.fn()
+    show: vi.fn(),
+    hide: vi.fn(),
+    dispose: vi.fn()
   }
 }
 
@@ -51,8 +51,8 @@ function makeContext(lastVersion?: string, upgradeDismissed?: boolean) {
   return {
     extension: { packageJSON: { version: "2.1.0" } },
     globalState: {
-      get: jest.fn((key: string) => state[key]),
-      update: jest.fn((key: string, value: any) => {
+      get: vi.fn((key: string) => state[key]),
+      update: vi.fn((key: string, value: any) => {
         state[key] = value
       })
     },
@@ -61,14 +61,14 @@ function makeContext(lastVersion?: string, upgradeDismissed?: boolean) {
 }
 
 beforeEach(() => {
-  jest.clearAllMocks()
-  jest.useFakeTimers()
+  vi.clearAllMocks()
+  vi.useFakeTimers()
   const item = makeStatusBarItem()
   mockCreateStatusBarItem.mockReturnValue(item)
 })
 
 afterEach(() => {
-  jest.useRealTimers()
+  vi.useRealTimers()
 })
 
 describe("checkUpgradeNotification", () => {
@@ -104,7 +104,7 @@ describe("checkUpgradeNotification", () => {
     const ctx = makeContext("1.5.0")
     checkUpgradeNotification(ctx)
 
-    const updateCalls = (ctx.globalState.update as jest.Mock).mock.calls
+    const updateCalls = (ctx.globalState.update as Mock).mock.calls
     const versionUpdate = updateCalls.find((c: any[]) => c[0] === "abapfs.lastVersion")
     expect(versionUpdate).toBeDefined()
     expect(versionUpdate![1]).toBe("2.1.0")
@@ -114,7 +114,7 @@ describe("checkUpgradeNotification", () => {
     const ctx = makeContext("2.0.5")
     checkUpgradeNotification(ctx)
 
-    const updateCalls = (ctx.globalState.update as jest.Mock).mock.calls
+    const updateCalls = (ctx.globalState.update as Mock).mock.calls
     const versionUpdate = updateCalls.find((c: any[]) => c[0] === "abapfs.lastVersion")
     expect(versionUpdate![1]).toBe("2.1.0")
   })
@@ -203,9 +203,9 @@ describe("checkUpgradeNotification", () => {
     checkUpgradeNotification(ctx)
 
     const initialText = item.text
-    jest.advanceTimersByTime(1500)
+    vi.advanceTimersByTime(1500)
     const textAfterBlink = item.text
-    jest.advanceTimersByTime(1500)
+    vi.advanceTimersByTime(1500)
     const textAfterSecondBlink = item.text
 
     // Should have cycled

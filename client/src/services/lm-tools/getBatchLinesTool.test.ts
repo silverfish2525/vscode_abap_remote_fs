@@ -1,23 +1,23 @@
-jest.mock("vscode", () => ({
-  LanguageModelToolResult: jest.fn().mockImplementation((parts: any[]) => ({ parts })),
-  LanguageModelTextPart: jest.fn().mockImplementation((text: string) => ({ text })),
-  MarkdownString: jest.fn().mockImplementation((text: string) => ({ text })),
-  lm: { registerTool: jest.fn(() => ({ dispose: jest.fn() })) }
+vi.mock("vscode", () => ({
+  LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
+  LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
+  MarkdownString: vi.fn().mockImplementation((text: string) => ({ text })),
+  lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) }
 }), { virtual: true })
 
-jest.mock("../../adt/conections", () => ({
-  getClient: jest.fn(),
-  abapUri: jest.fn()
+vi.mock("../../adt/conections", () => ({
+  getClient: vi.fn(),
+  abapUri: vi.fn()
 }))
-jest.mock("../telemetry", () => ({ logTelemetry: jest.fn() }))
-jest.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: jest.fn(() => ({ dispose: jest.fn() }))
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("./toolRegistry", () => ({
+  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() }))
 }))
-jest.mock("../abapSearchService", () => ({ getSearchService: jest.fn() }))
-jest.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }))
-jest.mock("./shared", () => ({
-  getOptimalObjectURI: jest.fn((type: string, uri: string) => uri + "/source/main"),
-  resolveCorrectURI: jest.fn((uri: string) => Promise.resolve(uri))
+vi.mock("../abapSearchService", () => ({ getSearchService: vi.fn() }))
+vi.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }))
+vi.mock("./shared", () => ({
+  getOptimalObjectURI: vi.fn((type: string, uri: string) => uri + "/source/main"),
+  resolveCorrectURI: vi.fn((uri: string) => Promise.resolve(uri))
 }))
 
 import { GetBatchLinesTool } from "./getBatchLinesTool"
@@ -32,17 +32,17 @@ function makeOptions(input: any = {}) {
   return { input } as any
 }
 
-const mockSearcher = { searchObjects: jest.fn() }
-const mockClient = { getObjectSource: jest.fn() }
+const mockSearcher = { searchObjects: vi.fn() }
+const mockClient = { getObjectSource: vi.fn() }
 
 describe("GetBatchLinesTool", () => {
   let tool: GetBatchLinesTool
 
   beforeEach(() => {
     tool = new GetBatchLinesTool()
-    jest.clearAllMocks()
-    ;(getSearchService as jest.Mock).mockReturnValue(mockSearcher)
-    ;(getClient as jest.Mock).mockReturnValue(mockClient)
+    vi.clearAllMocks()
+    ;(getSearchService as Mock).mockReturnValue(mockSearcher)
+    ;(getClient as Mock).mockReturnValue(mockClient)
     ;(window as any).activeTextEditor = undefined
   })
 

@@ -1,4 +1,4 @@
-jest.mock("../../adt/conections", () => ({}))
+vi.mock("../../adt/conections", () => ({}))
 import { sanitizeObjectName } from "./shared"
 
 describe("sanitizeObjectName", () => {

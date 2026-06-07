@@ -2,13 +2,13 @@
  * Tests for heartbeatWatchlist.ts
  */
 
-jest.mock("vscode", () => ({
+vi.mock("vscode", () => ({
   workspace: {
     workspaceFolders: undefined
   }
 }), { virtual: true })
 
-jest.mock("../../lib", () => ({ log: jest.fn() }))
+vi.mock("../../lib", () => ({ log: vi.fn() }))
 
 import * as fs from "fs"
 import * as path from "path"
@@ -63,7 +63,7 @@ beforeEach(() => {
   tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "hb-wl-"))
   vscode = require("vscode")
   setWorkspaceFolder(tmpDir)
-  jest.clearAllMocks()
+  vi.clearAllMocks()
 })
 
 afterEach(() => {
@@ -456,12 +456,12 @@ describe("HeartbeatWatchlist.getEnabledTasks / getAllTasks", () => {
 
 describe("HeartbeatWatchlist.getDueTasks", () => {
   beforeEach(() => {
-    jest.useFakeTimers()
-    jest.setSystemTime(new Date("2024-06-15T10:00:00Z"))
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date("2024-06-15T10:00:00Z"))
   })
 
   afterEach(() => {
-    jest.useRealTimers()
+    vi.useRealTimers()
   })
 
   test("returns task with no startAt or expiresAt", () => {
@@ -511,12 +511,12 @@ describe("HeartbeatWatchlist.getDueTasks", () => {
 
 describe("HeartbeatWatchlist.getScheduledTasks", () => {
   beforeEach(() => {
-    jest.useFakeTimers()
-    jest.setSystemTime(new Date("2024-06-15T10:00:00Z"))
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date("2024-06-15T10:00:00Z"))
   })
 
   afterEach(() => {
-    jest.useRealTimers()
+    vi.useRealTimers()
   })
 
   test("returns tasks with future startAt", () => {
@@ -541,12 +541,12 @@ describe("HeartbeatWatchlist.getScheduledTasks", () => {
 
 describe("HeartbeatWatchlist.formatForPrompt", () => {
   beforeEach(() => {
-    jest.useFakeTimers()
-    jest.setSystemTime(new Date("2024-06-15T10:00:00Z"))
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date("2024-06-15T10:00:00Z"))
   })
 
   afterEach(() => {
-    jest.useRealTimers()
+    vi.useRealTimers()
   })
 
   test("returns 'No monitoring tasks' when empty", () => {

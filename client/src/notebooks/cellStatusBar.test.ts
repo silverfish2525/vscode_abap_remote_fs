@@ -1,35 +1,35 @@
-jest.mock("../services/funMessenger", () => ({
+vi.mock("../services/funMessenger", () => ({
   funWindow: {
-    showWarningMessage: jest.fn(),
-    showQuickPick: jest.fn(),
-    showInputBox: jest.fn(),
-    showErrorMessage: jest.fn(),
-    createOutputChannel: jest.fn(() => ({
-      info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(), trace: jest.fn(),
+    showWarningMessage: vi.fn(),
+    showQuickPick: vi.fn(),
+    showInputBox: vi.fn(),
+    showErrorMessage: vi.fn(),
+    createOutputChannel: vi.fn(() => ({
+      info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn(), trace: vi.fn(),
     })),
   },
 }), { virtual: false })
-jest.mock("vscode", () => {
-  const NotebookCellStatusBarItem = jest.fn().mockImplementation((text: string, alignment: any) => ({
+vi.mock("vscode", () => {
+  const NotebookCellStatusBarItem = vi.fn().mockImplementation((text: string, alignment: any) => ({
     text, alignment, tooltip: undefined as string | undefined, command: undefined as any
   }))
   return {
     NotebookCellStatusBarItem,
     NotebookCellStatusBarAlignment: { Right: 2, Left: 1 },
     NotebookEdit: {
-      updateCellMetadata: jest.fn((index: number, meta: any) => ({ index, meta })),
+      updateCellMetadata: vi.fn((index: number, meta: any) => ({ index, meta })),
     },
-    WorkspaceEdit: jest.fn().mockImplementation(() => ({
-      set: jest.fn(),
+    WorkspaceEdit: vi.fn().mockImplementation(() => ({
+      set: vi.fn(),
     })),
     notebooks: {
-      registerNotebookCellStatusBarItemProvider: jest.fn(() => ({ dispose: jest.fn() })),
+      registerNotebookCellStatusBarItemProvider: vi.fn(() => ({ dispose: vi.fn() })),
     },
     commands: {
-      registerCommand: jest.fn(() => ({ dispose: jest.fn() })),
+      registerCommand: vi.fn(() => ({ dispose: vi.fn() })),
     },
     workspace: {
-      applyEdit: jest.fn().mockResolvedValue(true),
+      applyEdit: vi.fn().mockResolvedValue(true),
     },
   }
 }, { virtual: true })
@@ -54,7 +54,7 @@ describe("SqlCellStatusBarProvider", () => {
 
   beforeEach(() => {
     provider = new SqlCellStatusBarProvider()
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   test("returns undefined for non-SQL cells", () => {
@@ -113,7 +113,7 @@ describe("SqlCellStatusBarProvider", () => {
 })
 
 describe("registerCellStatusBar", () => {
-  beforeEach(() => jest.clearAllMocks())
+  beforeEach(() => vi.clearAllMocks())
 
   test("registers the provider and command on the context subscriptions", () => {
     const disposables: any[] = []
@@ -123,14 +123,14 @@ describe("registerCellStatusBar", () => {
   })
 
   test("registers notebook cell status bar provider", () => {
-    const context = { subscriptions: { push: jest.fn() } } as any
+    const context = { subscriptions: { push: vi.fn() } } as any
     registerCellStatusBar(context)
     const vscode = require("vscode")
     expect(vscode.notebooks.registerNotebookCellStatusBarItemProvider).toHaveBeenCalled()
   })
 
   test("registers the abapfs.notebookSetCellMaxRows command", () => {
-    const context = { subscriptions: { push: jest.fn() } } as any
+    const context = { subscriptions: { push: vi.fn() } } as any
     registerCellStatusBar(context)
     const vscode = require("vscode")
     expect(vscode.commands.registerCommand).toHaveBeenCalledWith(
@@ -144,13 +144,13 @@ describe("abapfs.notebookSetCellMaxRows command handler", () => {
   let commandHandler: Function
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     const vscode = require("vscode")
     vscode.commands.registerCommand.mockImplementation((_cmd: string, fn: Function) => {
       commandHandler = fn
-      return { dispose: jest.fn() }
+      return { dispose: vi.fn() }
     })
-    const context = { subscriptions: { push: jest.fn() } } as any
+    const context = { subscriptions: { push: vi.fn() } } as any
     registerCellStatusBar(context)
   })
 

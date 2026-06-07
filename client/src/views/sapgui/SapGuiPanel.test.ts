@@ -3,66 +3,66 @@
  * Primarily tests the public static getTransactionInfo method and createOrShow.
  */
 
-jest.mock("vscode", () => ({
+vi.mock("vscode", () => ({
   ViewColumn: { One: 1, Beside: 2, Active: -1 },
   Uri: {
-    parse: jest.fn((s: string) => ({ toString: () => s, fsPath: s })),
-    file: jest.fn((p: string) => ({ fsPath: p, toString: () => `file://${p}` })),
+    parse: vi.fn((s: string) => ({ toString: () => s, fsPath: s })),
+    file: vi.fn((p: string) => ({ fsPath: p, toString: () => `file://${p}` })),
   },
   workspace: {
-    getConfiguration: jest.fn(() => ({
-      get: jest.fn(() => false), // useIntegratedBrowser = false by default
+    getConfiguration: vi.fn(() => ({
+      get: vi.fn(() => false), // useIntegratedBrowser = false by default
     })),
-    fs: { writeFile: jest.fn() },
+    fs: { writeFile: vi.fn() },
   },
-  commands: { executeCommand: jest.fn() },
+  commands: { executeCommand: vi.fn() },
 }), { virtual: true })
 
-jest.mock("../../services/funMessenger", () => ({
+vi.mock("../../services/funMessenger", () => ({
   funWindow: {
     activeTextEditor: undefined,
-    createWebviewPanel: jest.fn(),
-    showErrorMessage: jest.fn(),
-    showWarningMessage: jest.fn(),
+    createWebviewPanel: vi.fn(),
+    showErrorMessage: vi.fn(),
+    showWarningMessage: vi.fn(),
   },
 }), { virtual: true })
 
-jest.mock("../../lib", () => ({
-  log: jest.fn(),
+vi.mock("../../lib", () => ({
+  log: vi.fn(),
 }), { virtual: true })
 
-jest.mock("../../config", () => ({
+vi.mock("../../config", () => ({
   RemoteManager: {
-    get: jest.fn(() => ({
-      byId: jest.fn(),
+    get: vi.fn(() => ({
+      byId: vi.fn(),
     })),
   },
 }), { virtual: true })
 
-jest.mock("../../adt/sapgui/sapgui", () => ({
-  runInSapGui: jest.fn(),
+vi.mock("../../adt/sapgui/sapgui", () => ({
+  runInSapGui: vi.fn(),
 }), { virtual: true })
 
 import { SapGuiPanel } from "./SapGuiPanel"
 import { funWindow as window } from "../../services/funMessenger"
 import { RemoteManager } from "../../config"
 
-const mockedWindow = window as jest.Mocked<typeof window>
-const mockedRemoteManager = RemoteManager as jest.Mocked<typeof RemoteManager>
+const mockedWindow = window as Mocked<typeof window>
+const mockedRemoteManager = RemoteManager as Mocked<typeof RemoteManager>
 
 function makePanelMock() {
   const panel = {
     webview: {
       html: "",
-      postMessage: jest.fn(),
-      onDidReceiveMessage: jest.fn((cb: any) => { cb({ command: "nonexistent" }); return { dispose: jest.fn() } }),
-      asWebviewUri: jest.fn((uri: any) => uri),
+      postMessage: vi.fn(),
+      onDidReceiveMessage: vi.fn((cb: any) => { cb({ command: "nonexistent" }); return { dispose: vi.fn() } }),
+      asWebviewUri: vi.fn((uri: any) => uri),
       cspSource: "vscode-webview:",
     },
-    reveal: jest.fn(),
-    dispose: jest.fn(),
-    onDidDispose: jest.fn((cb: any) => { return { dispose: jest.fn() } }),
-    onDidChangeViewState: jest.fn((cb: any) => { return { dispose: jest.fn() } }),
+    reveal: vi.fn(),
+    dispose: vi.fn(),
+    onDidDispose: vi.fn((cb: any) => { return { dispose: vi.fn() } }),
+    onDidChangeViewState: vi.fn((cb: any) => { return { dispose: vi.fn() } }),
     visible: true,
     viewColumn: 1,
   }
@@ -148,14 +148,14 @@ describe("SapGuiPanel.getTransactionInfo", () => {
 
 describe("SapGuiPanel.createOrShow", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     // Reset internal panels map
     ;(SapGuiPanel as any).currentPanels = new Map()
   })
 
   it("creates new panel for new object", () => {
     const mockPanel = makePanelMock()
-    ;(mockedWindow.createWebviewPanel as jest.Mock).mockReturnValue(mockPanel)
+    ;(mockedWindow.createWebviewPanel as Mock).mockReturnValue(mockPanel)
     const { Uri } = require("vscode")
     const client = { username: "USER1" } as any
     const instance = SapGuiPanel.createOrShow(Uri.parse("/ext"), client, "dev100", "ZPROG", "PROG/P")
@@ -170,11 +170,11 @@ describe("SapGuiPanel.createOrShow", () => {
 
   it("reveals existing panel for same object", () => {
     const mockPanel = makePanelMock()
-    ;(mockedWindow.createWebviewPanel as jest.Mock).mockReturnValue(mockPanel)
+    ;(mockedWindow.createWebviewPanel as Mock).mockReturnValue(mockPanel)
     const { Uri } = require("vscode")
     const client = { username: "USER1" } as any
     SapGuiPanel.createOrShow(Uri.parse("/ext"), client, "dev100", "ZPROG", "PROG/P")
-    ;(mockedWindow.createWebviewPanel as jest.Mock).mockClear()
+    ;(mockedWindow.createWebviewPanel as Mock).mockClear()
     SapGuiPanel.createOrShow(Uri.parse("/ext"), client, "dev100", "ZPROG", "PROG/P")
     // Should NOT create a new panel, should reveal the existing one
     expect(mockedWindow.createWebviewPanel).not.toHaveBeenCalled()
@@ -182,7 +182,7 @@ describe("SapGuiPanel.createOrShow", () => {
   })
 
   it("creates separate panels for different objects", () => {
-    ;(mockedWindow.createWebviewPanel as jest.Mock)
+    ;(mockedWindow.createWebviewPanel as Mock)
       .mockReturnValueOnce(makePanelMock())
       .mockReturnValueOnce(makePanelMock())
     const { Uri } = require("vscode")
@@ -195,15 +195,15 @@ describe("SapGuiPanel.createOrShow", () => {
 
 describe("SapGuiPanel.buildWebGuiUrl", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     ;(SapGuiPanel as any).currentPanels = new Map()
   })
 
   it("generates correct WebGUI URL for PROG/P", async () => {
     const mockPanel = makePanelMock()
-    ;(mockedWindow.createWebviewPanel as jest.Mock).mockReturnValue(mockPanel)
-    ;(mockedRemoteManager.get as jest.Mock).mockReturnValue({
-      byId: jest.fn().mockReturnValue({
+    ;(mockedWindow.createWebviewPanel as Mock).mockReturnValue(mockPanel)
+    ;(mockedRemoteManager.get as Mock).mockReturnValue({
+      byId: vi.fn().mockReturnValue({
         url: "https://myserver:8443/sap/bc/adt",
         client: "100",
         language: "DE",
@@ -226,9 +226,9 @@ describe("SapGuiPanel.buildWebGuiUrl", () => {
 
   it("defaults language to EN if not set", async () => {
     const mockPanel = makePanelMock()
-    ;(mockedWindow.createWebviewPanel as jest.Mock).mockReturnValue(mockPanel)
-    ;(mockedRemoteManager.get as jest.Mock).mockReturnValue({
-      byId: jest.fn().mockReturnValue({
+    ;(mockedWindow.createWebviewPanel as Mock).mockReturnValue(mockPanel)
+    ;(mockedRemoteManager.get as Mock).mockReturnValue({
+      byId: vi.fn().mockReturnValue({
         url: "https://myserver/sap/bc/adt",
         client: "001",
         language: "",
@@ -243,9 +243,9 @@ describe("SapGuiPanel.buildWebGuiUrl", () => {
 
   it("upgrades http to https", async () => {
     const mockPanel = makePanelMock()
-    ;(mockedWindow.createWebviewPanel as jest.Mock).mockReturnValue(mockPanel)
-    ;(mockedRemoteManager.get as jest.Mock).mockReturnValue({
-      byId: jest.fn().mockReturnValue({
+    ;(mockedWindow.createWebviewPanel as Mock).mockReturnValue(mockPanel)
+    ;(mockedRemoteManager.get as Mock).mockReturnValue({
+      byId: vi.fn().mockReturnValue({
         url: "http://myserver/sap/bc/adt",
         client: "001",
         language: "EN",
@@ -260,9 +260,9 @@ describe("SapGuiPanel.buildWebGuiUrl", () => {
 
   it("throws if connection config not found", async () => {
     const mockPanel = makePanelMock()
-    ;(mockedWindow.createWebviewPanel as jest.Mock).mockReturnValue(mockPanel)
-    ;(mockedRemoteManager.get as jest.Mock).mockReturnValue({
-      byId: jest.fn().mockReturnValue(null),
+    ;(mockedWindow.createWebviewPanel as Mock).mockReturnValue(mockPanel)
+    ;(mockedRemoteManager.get as Mock).mockReturnValue({
+      byId: vi.fn().mockReturnValue(null),
     })
 
     const { Uri } = require("vscode")
@@ -273,13 +273,13 @@ describe("SapGuiPanel.buildWebGuiUrl", () => {
 
 describe("SapGuiPanel sanitizeUrl (via loadDirectWebGuiUrl)", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     ;(SapGuiPanel as any).currentPanels = new Map()
   })
 
   it("loads direct WebGUI URL without error for valid https URL", () => {
     const mockPanel = makePanelMock()
-    ;(mockedWindow.createWebviewPanel as jest.Mock).mockReturnValue(mockPanel)
+    ;(mockedWindow.createWebviewPanel as Mock).mockReturnValue(mockPanel)
     const { Uri } = require("vscode")
     const instance = SapGuiPanel.createOrShow(Uri.parse("/ext"), {} as any, "dev100", "ZPROG", "PROG/P")
     expect(() => instance!.loadDirectWebGuiUrl("https://myserver/sap/bc/gui/sap/its/webgui?param=1")).not.toThrow()

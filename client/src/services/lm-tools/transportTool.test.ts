@@ -1,24 +1,24 @@
-jest.mock(
+vi.mock(
   "vscode",
   () => ({
-    LanguageModelToolResult: jest.fn().mockImplementation((parts: any[]) => ({ parts })),
-    LanguageModelTextPart: jest.fn().mockImplementation((text: string) => ({ text })),
-    MarkdownString: jest.fn().mockImplementation((text: string) => ({ text })),
-    lm: { registerTool: jest.fn(() => ({ dispose: jest.fn() })) }
+    LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
+    LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
+    MarkdownString: vi.fn().mockImplementation((text: string) => ({ text })),
+    lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) }
   }),
   { virtual: true }
 )
 
-jest.mock("../../adt/conections", () => ({
-  getClient: jest.fn(),
-  abapUri: jest.fn()
+vi.mock("../../adt/conections", () => ({
+  getClient: vi.fn(),
+  abapUri: vi.fn()
 }))
-jest.mock("../telemetry", () => ({ logTelemetry: jest.fn() }))
-jest.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: jest.fn(() => ({ dispose: jest.fn() }))
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("./toolRegistry", () => ({
+  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() }))
 }))
-jest.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }))
-jest.mock("../../views/transports", () => ({ readTransports: jest.fn() }))
+vi.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }))
+vi.mock("../../views/transports", () => ({ readTransports: vi.fn() }))
 
 import { ManageTransportRequestsTool } from "./transportTool"
 import { getClient } from "../../adt/conections"
@@ -32,9 +32,9 @@ function makeOptions(input: any = {}) {
 }
 
 const mockClient: any = {
-  userTransports: jest.fn(),
-  transportDetails: jest.fn(),
-  transportObjectContents: jest.fn()
+  userTransports: vi.fn(),
+  transportDetails: vi.fn(),
+  transportObjectContents: vi.fn()
 }
 
 describe("ManageTransportRequestsTool", () => {
@@ -42,8 +42,8 @@ describe("ManageTransportRequestsTool", () => {
 
   beforeEach(() => {
     tool = new ManageTransportRequestsTool()
-    jest.clearAllMocks()
-    ;(getClient as jest.Mock).mockReturnValue(mockClient)
+    vi.clearAllMocks()
+    ;(getClient as Mock).mockReturnValue(mockClient)
     ;(window as any).activeTextEditor = undefined
   })
 
@@ -140,7 +140,7 @@ describe("ManageTransportRequestsTool", () => {
     })
 
     it("wraps client errors", async () => {
-      ;(getClient as jest.Mock).mockImplementation(() => {
+      ;(getClient as Mock).mockImplementation(() => {
         throw new Error("transport service error")
       })
       await expect(
@@ -158,7 +158,7 @@ describe("ManageTransportRequestsTool", () => {
   describe("invoke - get_user_transports output", () => {
     it("formats user transports with category headers, targets, and transport details", async () => {
       const { readTransports } = require("../../views/transports")
-      ;(readTransports as jest.Mock).mockResolvedValue({
+      ;(readTransports as Mock).mockResolvedValue({
         workbench: [
           {
             "tm:name": "TRG",
@@ -201,7 +201,7 @@ describe("ManageTransportRequestsTool", () => {
 
     it("counts transports across multiple categories and targets", async () => {
       const { readTransports } = require("../../views/transports")
-      ;(readTransports as jest.Mock).mockResolvedValue({
+      ;(readTransports as Mock).mockResolvedValue({
         workbench: [
           {
             "tm:name": "TRG",
@@ -269,7 +269,7 @@ describe("ManageTransportRequestsTool", () => {
 
     it("shows released section with lock icon", async () => {
       const { readTransports } = require("../../views/transports")
-      ;(readTransports as jest.Mock).mockResolvedValue({
+      ;(readTransports as Mock).mockResolvedValue({
         workbench: [
           {
             "tm:name": "TRG",
@@ -305,7 +305,7 @@ describe("ManageTransportRequestsTool", () => {
 
     it("skips empty categories and empty target status sections", async () => {
       const { readTransports } = require("../../views/transports")
-      ;(readTransports as jest.Mock).mockResolvedValue({
+      ;(readTransports as Mock).mockResolvedValue({
         workbench: [],
         customizing: [],
         transportofcopies: []
@@ -325,7 +325,7 @@ describe("ManageTransportRequestsTool", () => {
 
     it("uses client.username when user parameter is not provided", async () => {
       const { readTransports } = require("../../views/transports")
-      ;(readTransports as jest.Mock).mockResolvedValue({
+      ;(readTransports as Mock).mockResolvedValue({
         workbench: [],
         customizing: [],
         transportofcopies: []
@@ -860,13 +860,13 @@ describe("ManageTransportRequestsTool", () => {
 
     it("uses active editor authority as connectionId when none provided", async () => {
       const { abapUri } = require("../../adt/conections")
-      ;(abapUri as jest.Mock).mockReturnValue(true)
+      ;(abapUri as Mock).mockReturnValue(true)
       ;(window as any).activeTextEditor = {
         document: { uri: { authority: "DEV200", scheme: "adt" } }
       }
-      mockClient.userTransports = jest.fn()
+      mockClient.userTransports = vi.fn()
       const { readTransports } = require("../../views/transports")
-      ;(readTransports as jest.Mock).mockResolvedValue({
+      ;(readTransports as Mock).mockResolvedValue({
         workbench: [],
         customizing: [],
         transportofcopies: []

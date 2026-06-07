@@ -1,4 +1,4 @@
-jest.mock("vscode", () => {
+vi.mock("vscode", () => {
   class LanguageModelToolResult { constructor(public parts: any[]) {} }
   class LanguageModelTextPart { constructor(public text: string) {} }
   class MarkdownString { constructor(public value: string) {} }
@@ -6,20 +6,20 @@ jest.mock("vscode", () => {
     LanguageModelToolResult,
     LanguageModelTextPart,
     MarkdownString,
-    lm: { registerTool: jest.fn(() => ({ dispose: jest.fn() })) },
+    lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) },
     workspace: {
       workspaceFolders: [
         { uri: { fsPath: "/test", scheme: "file" } }
       ],
       fs: {
-        writeFile: jest.fn().mockResolvedValue(undefined),
-        createDirectory: jest.fn().mockResolvedValue(undefined)
+        writeFile: vi.fn().mockResolvedValue(undefined),
+        createDirectory: vi.fn().mockResolvedValue(undefined)
       }
     },
     Uri: {
       parse: (s: string) => ({ authority: "", path: s, scheme: "file", fsPath: s, toString: () => s }),
       file: (s: string) => ({ fsPath: s, scheme: "file", toString: () => s }),
-      joinPath: jest.fn((...args: any[]) => ({
+      joinPath: vi.fn((...args: any[]) => ({
         fsPath: args.map((a: any) => a.fsPath || a).join("/"),
         toString: () => args.map((a: any) => a.fsPath || a).join("/")
       }))
@@ -27,10 +27,10 @@ jest.mock("vscode", () => {
   }
 }, { virtual: true })
 
-jest.mock("../../adt/conections", () => ({ getClient: jest.fn() }))
-jest.mock("../telemetry", () => ({ logTelemetry: jest.fn() }))
-jest.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: jest.fn(() => ({ dispose: jest.fn() }))
+vi.mock("../../adt/conections", () => ({ getClient: vi.fn() }))
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("./toolRegistry", () => ({
+  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() }))
 }))
 
 import { AdtDiscoveryTool } from "./adtDiscoveryTool"
@@ -49,9 +49,9 @@ function resultText(result: any): string {
 }
 
 const mockClient = {
-  adtDiscovery: jest.fn(),
-  adtCoreDiscovery: jest.fn(),
-  runQuery: jest.fn()
+  adtDiscovery: vi.fn(),
+  adtCoreDiscovery: vi.fn(),
+  runQuery: vi.fn()
 }
 
 describe("AdtDiscoveryTool", () => {
@@ -59,8 +59,8 @@ describe("AdtDiscoveryTool", () => {
 
   beforeEach(() => {
     tool = new AdtDiscoveryTool()
-    jest.clearAllMocks()
-    ;(getClient as jest.Mock).mockReturnValue(mockClient)
+    vi.clearAllMocks()
+    ;(getClient as Mock).mockReturnValue(mockClient)
   })
 
   describe("prepareInvocation", () => {
@@ -171,7 +171,7 @@ describe("AdtDiscoveryTool", () => {
     it("queries SEOMETAREL for RES_APP classes", async () => {
       await tool.invoke(makeOptions({ connectionId: "dev100" }), mockToken)
       expect(mockClient.runQuery).toHaveBeenCalled()
-      const firstCall = (mockClient.runQuery as jest.Mock).mock.calls[0][0] as string
+      const firstCall = (mockClient.runQuery as Mock).mock.calls[0][0] as string
       expect(firstCall).toContain("SEOMETAREL")
       expect(firstCall).toContain("CL_ADT_DISC_RES_APP_BASE")
     })
@@ -179,7 +179,7 @@ describe("AdtDiscoveryTool", () => {
     it("makes second query for CL_ADT_RES_APP_BASE", async () => {
       await tool.invoke(makeOptions({ connectionId: "dev100" }), mockToken)
       expect(mockClient.runQuery).toHaveBeenCalledTimes(2)
-      const secondCall = (mockClient.runQuery as jest.Mock).mock.calls[1][0] as string
+      const secondCall = (mockClient.runQuery as Mock).mock.calls[1][0] as string
       expect(secondCall).toContain("CL_ADT_RES_APP_BASE")
     })
 

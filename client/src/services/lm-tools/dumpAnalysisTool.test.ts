@@ -1,14 +1,14 @@
-jest.mock("vscode", () => ({
-  LanguageModelToolResult: jest.fn().mockImplementation((parts: any[]) => ({ parts })),
-  LanguageModelTextPart: jest.fn().mockImplementation((text: string) => ({ text })),
-  MarkdownString: jest.fn().mockImplementation((text: string) => ({ text })),
-  lm: { registerTool: jest.fn(() => ({ dispose: jest.fn() })) }
+vi.mock("vscode", () => ({
+  LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
+  LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
+  MarkdownString: vi.fn().mockImplementation((text: string) => ({ text })),
+  lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) }
 }), { virtual: true })
 
-jest.mock("../../adt/conections", () => ({ getClient: jest.fn() }))
-jest.mock("../telemetry", () => ({ logTelemetry: jest.fn() }))
-jest.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: jest.fn(() => ({ dispose: jest.fn() }))
+vi.mock("../../adt/conections", () => ({ getClient: vi.fn() }))
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("./toolRegistry", () => ({
+  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() }))
 }))
 
 import { ABAPDumpAnalysisTool } from "./dumpAnalysisTool"
@@ -22,8 +22,8 @@ function makeOptions(input: any = {}) {
 }
 
 const mockClient = {
-  getSt22Dumps: jest.fn(),
-  getSt22DumpDetail: jest.fn()
+  getSt22Dumps: vi.fn(),
+  getSt22DumpDetail: vi.fn()
 }
 
 describe("ABAPDumpAnalysisTool", () => {
@@ -31,8 +31,8 @@ describe("ABAPDumpAnalysisTool", () => {
 
   beforeEach(() => {
     tool = new ABAPDumpAnalysisTool()
-    jest.clearAllMocks()
-    ;(getClient as jest.Mock).mockReturnValue(mockClient)
+    vi.clearAllMocks()
+    ;(getClient as Mock).mockReturnValue(mockClient)
   })
 
   describe("prepareInvocation", () => {
@@ -63,7 +63,7 @@ describe("ABAPDumpAnalysisTool", () => {
 
   describe("invoke", () => {
     it("logs telemetry with connectionId", async () => {
-      mockClient.getSt22Dumps = jest.fn().mockResolvedValue([])
+      mockClient.getSt22Dumps = vi.fn().mockResolvedValue([])
       await tool.invoke(
         makeOptions({ action: "list_dumps", connectionId: "dev100" }),
         mockToken
@@ -74,7 +74,7 @@ describe("ABAPDumpAnalysisTool", () => {
     })
 
     it("normalizes connectionId to lowercase", async () => {
-      mockClient.getSt22Dumps = jest.fn().mockResolvedValue([])
+      mockClient.getSt22Dumps = vi.fn().mockResolvedValue([])
       await tool.invoke(
         makeOptions({ action: "list_dumps", connectionId: "DEV100" }),
         mockToken
@@ -101,7 +101,7 @@ describe("ABAPDumpAnalysisTool", () => {
     })
 
     it("wraps errors from client calls", async () => {
-      ;(getClient as jest.Mock).mockImplementation(() => {
+      ;(getClient as Mock).mockImplementation(() => {
         throw new Error("client error")
       })
       await expect(

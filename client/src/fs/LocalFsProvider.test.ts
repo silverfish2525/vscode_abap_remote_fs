@@ -1,57 +1,57 @@
 // Tests for fs/LocalFsProvider.ts
-jest.mock("vscode", () => {
+vi.mock("vscode", () => {
   const EventEmitter = class {
-    event = jest.fn()
-    fire = jest.fn()
+    event = vi.fn()
+    fire = vi.fn()
   }
   const FileChangeType = { Created: 1, Changed: 2, Deleted: 3 }
   const FileType = { Unknown: 0, File: 1, Directory: 2 }
   const Disposable = class { constructor(public dispose: () => void) {} }
   const Uri = {
-    joinPath: jest.fn((base: any, ...parts: string[]) => ({
+    joinPath: vi.fn((base: any, ...parts: string[]) => ({
       ...base,
       path: [base.path, ...parts].join("/"),
       toString: () => `${base.scheme}://${base.authority}${[base.path, ...parts].join("/")}`
     })),
-    parse: jest.fn((s: string) => ({ path: s, scheme: "adt", authority: "host", toString: () => s }))
+    parse: vi.fn((s: string) => ({ path: s, scheme: "adt", authority: "host", toString: () => s }))
   }
   const RelativePattern = class { constructor(base: any, pattern: string) {} }
   const workspace = {
     fs: {
-      stat: jest.fn(),
-      readDirectory: jest.fn(),
-      createDirectory: jest.fn(),
-      readFile: jest.fn(),
-      writeFile: jest.fn(),
-      delete: jest.fn(),
-      rename: jest.fn(),
-      copy: jest.fn()
+      stat: vi.fn(),
+      readDirectory: vi.fn(),
+      createDirectory: vi.fn(),
+      readFile: vi.fn(),
+      writeFile: vi.fn(),
+      delete: vi.fn(),
+      rename: vi.fn(),
+      copy: vi.fn()
     },
-    createFileSystemWatcher: jest.fn(() => ({
-      onDidCreate: jest.fn(),
-      onDidChange: jest.fn(),
-      onDidDelete: jest.fn(),
-      dispose: jest.fn()
+    createFileSystemWatcher: vi.fn(() => ({
+      onDidCreate: vi.fn(),
+      onDidChange: vi.fn(),
+      onDidDelete: vi.fn(),
+      dispose: vi.fn()
     }))
   }
   return { EventEmitter, FileChangeType, FileType, Disposable, Uri, RelativePattern, workspace }
 }, { virtual: true })
 
-jest.mock("./localStorage", () => ({
-  LocalStorage: jest.fn().mockImplementation(() => ({
-    resolveUri: jest.fn(async (uri: any) => ({ ...uri, path: `/resolved${uri.path}` }))
+vi.mock("./localStorage", () => ({
+  LocalStorage: vi.fn().mockImplementation(() => ({
+    resolveUri: vi.fn(async (uri: any) => ({ ...uri, path: `/resolved${uri.path}` }))
   }))
 }))
 
-jest.mock("./initialtemplates", () => ({
+vi.mock("./initialtemplates", () => ({
   templates: [{ name: "abapgit.xml", content: "<x/>" }]
 }))
 
-jest.mock("../adt/conections", () => ({ ADTSCHEME: "adt" }))
+vi.mock("../adt/conections", () => ({ ADTSCHEME: "adt" }))
 
-jest.mock("../config", () => ({
-  getConfig: jest.fn(() => ({
-    get: jest.fn((key: string) => undefined)
+vi.mock("../config", () => ({
+  getConfig: vi.fn(() => ({
+    get: vi.fn((key: string) => undefined)
   }))
 }))
 
@@ -76,7 +76,7 @@ describe("LocalFsProvider", () => {
   let context: any
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     context = makeContext()
     provider = new LocalFsProvider(context)
   })
@@ -88,7 +88,7 @@ describe("LocalFsProvider", () => {
 
     it("uses globalStorageUri when preferGlobal is set", () => {
       const { getConfig } = require("../config")
-      ;(getConfig as jest.Mock).mockReturnValue({ get: jest.fn(() => true) })
+      ;(getConfig as Mock).mockReturnValue({ get: vi.fn(() => true) })
       const p = new LocalFsProvider(context)
       expect(p).toBeDefined()
     })
@@ -130,7 +130,7 @@ describe("LocalFsProvider", () => {
   describe("stat", () => {
     it("resolves URI and calls workspace.fs.stat", async () => {
       const mockStat = { type: 1, ctime: 0, mtime: 0, size: 100 }
-      ;(vscode.workspace.fs.stat as jest.Mock).mockResolvedValue(mockStat)
+      ;(vscode.workspace.fs.stat as Mock).mockResolvedValue(mockStat)
 
       const uri = makeUri("/file.txt")
       const result = await provider.stat(uri)
@@ -143,7 +143,7 @@ describe("LocalFsProvider", () => {
   describe("readDirectory", () => {
     it("returns resolved directory contents", async () => {
       const entries: [string, number][] = [["file.txt", 1], ["subdir", 2]]
-      ;(vscode.workspace.fs.readDirectory as jest.Mock).mockResolvedValue(entries)
+      ;(vscode.workspace.fs.readDirectory as Mock).mockResolvedValue(entries)
 
       const uri = makeUri("/mydir")
       const result = await provider.readDirectory(uri)
@@ -152,7 +152,7 @@ describe("LocalFsProvider", () => {
     })
 
     it("returns empty array on error", async () => {
-      ;(vscode.workspace.fs.readDirectory as jest.Mock).mockRejectedValue(new Error("not found"))
+      ;(vscode.workspace.fs.readDirectory as Mock).mockRejectedValue(new Error("not found"))
 
       const uri = makeUri("/missingdir")
       const result = await provider.readDirectory(uri)
@@ -164,7 +164,7 @@ describe("LocalFsProvider", () => {
   describe("readFile", () => {
     it("resolves URI and reads file content", async () => {
       const content = new Uint8Array([65, 66, 67])
-      ;(vscode.workspace.fs.readFile as jest.Mock).mockResolvedValue(content)
+      ;(vscode.workspace.fs.readFile as Mock).mockResolvedValue(content)
 
       const uri = makeUri("/myfile.abap")
       const result = await provider.readFile(uri)
@@ -176,7 +176,7 @@ describe("LocalFsProvider", () => {
 
   describe("createDirectory", () => {
     it("creates directory via workspace.fs", async () => {
-      ;(vscode.workspace.fs.createDirectory as jest.Mock).mockResolvedValue(undefined)
+      ;(vscode.workspace.fs.createDirectory as Mock).mockResolvedValue(undefined)
 
       const uri = makeUri("/newdir")
       await provider.createDirectory(uri)
@@ -187,7 +187,7 @@ describe("LocalFsProvider", () => {
 
   describe("writeFile", () => {
     it("writes content to resolved URI", async () => {
-      ;(vscode.workspace.fs.writeFile as jest.Mock).mockResolvedValue(undefined)
+      ;(vscode.workspace.fs.writeFile as Mock).mockResolvedValue(undefined)
 
       const uri = makeUri("/writeme.txt")
       const content = new Uint8Array([72, 105])
@@ -199,7 +199,7 @@ describe("LocalFsProvider", () => {
 
   describe("delete", () => {
     it("deletes resolved URI", async () => {
-      ;(vscode.workspace.fs.delete as jest.Mock).mockResolvedValue(undefined)
+      ;(vscode.workspace.fs.delete as Mock).mockResolvedValue(undefined)
 
       const uri = makeUri("/deleteme.txt")
       await provider.delete(uri, { recursive: false })
@@ -210,7 +210,7 @@ describe("LocalFsProvider", () => {
 
   describe("rename", () => {
     it("renames from old to new resolved URI", async () => {
-      ;(vscode.workspace.fs.rename as jest.Mock).mockResolvedValue(undefined)
+      ;(vscode.workspace.fs.rename as Mock).mockResolvedValue(undefined)
 
       const oldUri = makeUri("/old.txt")
       const newUri = makeUri("/new.txt")
@@ -223,8 +223,8 @@ describe("LocalFsProvider", () => {
   describe("watch", () => {
     it("returns a Disposable", () => {
       const { LocalStorage } = require("./localStorage")
-      ;(LocalStorage as jest.Mock).mockImplementation(() => ({
-        resolveUri: jest.fn().mockResolvedValue(makeUri("/resolved/path", "file"))
+      ;(LocalStorage as Mock).mockImplementation(() => ({
+        resolveUri: vi.fn().mockResolvedValue(makeUri("/resolved/path", "file"))
       }))
       const p = new LocalFsProvider(context)
 
@@ -237,8 +237,8 @@ describe("LocalFsProvider", () => {
 
     it("calling dispose on the returned Disposable does not throw", () => {
       const { LocalStorage } = require("./localStorage")
-      ;(LocalStorage as jest.Mock).mockImplementation(() => ({
-        resolveUri: jest.fn().mockResolvedValue(makeUri("/resolved/path", "file"))
+      ;(LocalStorage as Mock).mockImplementation(() => ({
+        resolveUri: vi.fn().mockResolvedValue(makeUri("/resolved/path", "file"))
       }))
       const p = new LocalFsProvider(context)
 

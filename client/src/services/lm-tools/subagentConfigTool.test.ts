@@ -1,64 +1,64 @@
-jest.mock("vscode", () => ({
-  LanguageModelToolResult: jest.fn().mockImplementation((parts: any[]) => ({ parts })),
-  LanguageModelTextPart: jest.fn().mockImplementation((text: string) => ({ text })),
-  MarkdownString: jest.fn().mockImplementation((value: string) => ({ value })),
-  CancellationTokenSource: jest.fn().mockImplementation(() => ({
-    token: { isCancellationRequested: false, onCancellationRequested: jest.fn() }
+vi.mock("vscode", () => ({
+  LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
+  LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
+  MarkdownString: vi.fn().mockImplementation((value: string) => ({ value })),
+  CancellationTokenSource: vi.fn().mockImplementation(() => ({
+    token: { isCancellationRequested: false, onCancellationRequested: vi.fn() }
   })),
   lm: {
-    registerTool: jest.fn(() => ({ dispose: jest.fn() })),
-    onDidChangeChatModels: jest.fn(() => ({ dispose: jest.fn() }))
+    registerTool: vi.fn(() => ({ dispose: vi.fn() })),
+    onDidChangeChatModels: vi.fn(() => ({ dispose: vi.fn() }))
   },
   window: { activeTextEditor: undefined },
   workspace: {
     workspaceFolders: [],
-    getConfiguration: jest.fn(() => ({
-      get: jest.fn(),
-      update: jest.fn().mockResolvedValue(undefined)
+    getConfiguration: vi.fn(() => ({
+      get: vi.fn(),
+      update: vi.fn().mockResolvedValue(undefined)
     })),
-    onDidChangeConfiguration: jest.fn(() => ({ dispose: jest.fn() }))
+    onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() }))
   },
   ConfigurationTarget: { Workspace: 2 },
   Uri: { parse: (s: string) => ({ authority: s.split("/")[2] || "", path: s, scheme: "adt", toString: () => s }) },
   debug: { activeDebugSession: undefined }
 }), { virtual: true })
 
-jest.mock("../../adt/conections", () => ({
-  getClient: jest.fn(),
-  abapUri: jest.fn()
+vi.mock("../../adt/conections", () => ({
+  getClient: vi.fn(),
+  abapUri: vi.fn()
 }))
-jest.mock("../telemetry", () => ({ logTelemetry: jest.fn() }))
-jest.mock("../funMessenger", () => ({
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("../funMessenger", () => ({
   funWindow: {
     activeTextEditor: undefined,
-    showQuickPick: jest.fn(),
-    showInformationMessage: jest.fn(),
-    showWarningMessage: jest.fn()
+    showQuickPick: vi.fn(),
+    showInformationMessage: vi.fn(),
+    showWarningMessage: vi.fn()
   }
 }))
-jest.mock("./toolRegistry", () => ({ registerToolWithRegistry: jest.fn(() => ({ dispose: jest.fn() })) }))
-jest.mock("../abapCopilotLogger", () => ({ logCommands: { info: jest.fn(), error: jest.fn(), warn: jest.fn() } }))
+vi.mock("./toolRegistry", () => ({ registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() })) }))
+vi.mock("../abapCopilotLogger", () => ({ logCommands: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }))
 
-jest.mock("../subagentRegistry", () => ({
+vi.mock("../subagentRegistry", () => ({
   AGENT_REGISTRY: [
     { id: "abap-discoverer", name: "Discoverer", tier: 1, tools: ["abap-search"], templateFile: "test.md", defaultModel: "", description: "Discovers ABAP objects" },
     { id: "abap-reader", name: "Reader", tier: 1, tools: ["abap-read"], templateFile: "test2.md", defaultModel: "", description: "Reads ABAP code" },
     { id: "abap-orchestrator", name: "Orchestrator", tier: 3, tools: null, templateFile: "test3.md", defaultModel: "", description: "Orchestrates tasks" }
   ],
-  getSubagentSettings: jest.fn(() => ({ enabled: false, models: {} })),
-  getWorkspaceFolder: jest.fn(),
-  getAvailableModels: jest.fn(() => []),
-  getExtensionId: jest.fn(() => "test.extension"),
-  validateModelConfiguration: jest.fn(() => []),
-  buildFullToolName: jest.fn((ext: string, tool: string) => `${ext}#${tool}`)
+  getSubagentSettings: vi.fn(() => ({ enabled: false, models: {} })),
+  getWorkspaceFolder: vi.fn(),
+  getAvailableModels: vi.fn(() => []),
+  getExtensionId: vi.fn(() => "test.extension"),
+  validateModelConfiguration: vi.fn(() => []),
+  buildFullToolName: vi.fn((ext: string, tool: string) => `${ext}#${tool}`)
 }))
 
-jest.mock("../subagentFileOps", () => ({
-  enableSubagentsCore: jest.fn(),
-  disableSubagentsCore: jest.fn(),
-  disableAgentFiles: jest.fn(),
-  writeAgentFile: jest.fn().mockResolvedValue({ created: true, updated: false }),
-  refreshExplorer: jest.fn()
+vi.mock("../subagentFileOps", () => ({
+  enableSubagentsCore: vi.fn(),
+  disableSubagentsCore: vi.fn(),
+  disableAgentFiles: vi.fn(),
+  writeAgentFile: vi.fn().mockResolvedValue({ created: true, updated: false }),
+  refreshExplorer: vi.fn()
 }))
 
 // Must import after mocks
@@ -103,16 +103,16 @@ describe("SubagentConfigTool", () => {
   let mockContext: any
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
 
     mockContext = {
-      subscriptions: { push: jest.fn() },
+      subscriptions: { push: vi.fn() },
       extensionUri: { fsPath: "/test" }
     }
 
     // Register and capture the tool instance
     registerSubagentConfigTool(mockContext)
-    const registerCall = (registerToolWithRegistry as jest.Mock).mock.calls[0]
+    const registerCall = (registerToolWithRegistry as Mock).mock.calls[0]
     expect(registerCall[0]).toBe("manage_subagents")
     tool = registerCall[1]
   })
@@ -130,16 +130,16 @@ describe("SubagentConfigTool", () => {
 
   describe("invoke - get_status", () => {
     it("returns current status with enabled false", async () => {
-      ;(getSubagentSettings as jest.Mock).mockReturnValue({ enabled: false, models: {} })
-      ;(getWorkspaceFolder as jest.Mock).mockReturnValue({ fsPath: "C:\\workspace" })
-      ;(validateModelConfiguration as jest.Mock).mockResolvedValue([])
+      ;(getSubagentSettings as Mock).mockReturnValue({ enabled: false, models: {} })
+      ;(getWorkspaceFolder as Mock).mockReturnValue({ fsPath: "C:\\workspace" })
+      ;(validateModelConfiguration as Mock).mockResolvedValue([])
 
       const result: any = await tool.invoke(makeOptions({ action: "get_status" }), mockToken)
       expect(result.parts[0].text).toContain("Enabled: NO")
     })
 
     it("returns current status with enabled true", async () => {
-      ;(getSubagentSettings as jest.Mock).mockReturnValue({
+      ;(getSubagentSettings as Mock).mockReturnValue({
         enabled: true,
         models: {
           "abap-discoverer": "Claude Haiku 4.5",
@@ -147,8 +147,8 @@ describe("SubagentConfigTool", () => {
           "abap-orchestrator": "Claude Sonnet 4"
         }
       })
-      ;(getWorkspaceFolder as jest.Mock).mockReturnValue({ fsPath: "C:\\workspace" })
-      ;(validateModelConfiguration as jest.Mock).mockResolvedValue([
+      ;(getWorkspaceFolder as Mock).mockReturnValue({ fsPath: "C:\\workspace" })
+      ;(validateModelConfiguration as Mock).mockResolvedValue([
         { agentId: "abap-discoverer", configuredModel: "Claude Haiku 4.5", available: true },
         { agentId: "abap-reader", configuredModel: "GPT-4o", available: true },
         { agentId: "abap-orchestrator", configuredModel: "Claude Sonnet 4", available: true }
@@ -159,9 +159,9 @@ describe("SubagentConfigTool", () => {
     })
 
     it("shows unconfigured agents warning", async () => {
-      ;(getSubagentSettings as jest.Mock).mockReturnValue({ enabled: false, models: {} })
-      ;(getWorkspaceFolder as jest.Mock).mockReturnValue(undefined)
-      ;(validateModelConfiguration as jest.Mock).mockResolvedValue([])
+      ;(getSubagentSettings as Mock).mockReturnValue({ enabled: false, models: {} })
+      ;(getWorkspaceFolder as Mock).mockReturnValue(undefined)
+      ;(validateModelConfiguration as Mock).mockResolvedValue([])
 
       const result: any = await tool.invoke(makeOptions({ action: "get_status" }), mockToken)
       // 3 agents in mock registry, none configured
@@ -169,12 +169,12 @@ describe("SubagentConfigTool", () => {
     })
 
     it("shows unavailable model warnings", async () => {
-      ;(getSubagentSettings as jest.Mock).mockReturnValue({
+      ;(getSubagentSettings as Mock).mockReturnValue({
         enabled: true,
         models: { "abap-discoverer": "NonExistentModel" }
       })
-      ;(getWorkspaceFolder as jest.Mock).mockReturnValue({ fsPath: "C:\\test" })
-      ;(validateModelConfiguration as jest.Mock).mockResolvedValue([
+      ;(getWorkspaceFolder as Mock).mockReturnValue({ fsPath: "C:\\test" })
+      ;(validateModelConfiguration as Mock).mockResolvedValue([
         { agentId: "abap-discoverer", configuredModel: "NonExistentModel", available: false }
       ])
 
@@ -185,7 +185,7 @@ describe("SubagentConfigTool", () => {
 
   describe("invoke - list_models", () => {
     it("returns available models grouped by vendor", async () => {
-      ;(getAvailableModels as jest.Mock).mockResolvedValue([
+      ;(getAvailableModels as Mock).mockResolvedValue([
         { name: "Claude Sonnet 4", vendor: "Anthropic", family: "claude-sonnet" },
         { name: "GPT-4o", vendor: "OpenAI", family: "gpt-4o" }
       ])
@@ -198,7 +198,7 @@ describe("SubagentConfigTool", () => {
     })
 
     it("returns message when no models available", async () => {
-      ;(getAvailableModels as jest.Mock).mockResolvedValue([])
+      ;(getAvailableModels as Mock).mockResolvedValue([])
 
       const result: any = await tool.invoke(makeOptions({ action: "list_models" }), mockToken)
       expect(result.parts[0].text).toContain("No language models available")
@@ -207,7 +207,7 @@ describe("SubagentConfigTool", () => {
 
   describe("invoke - list_agents", () => {
     it("returns all agents from registry", async () => {
-      ;(getSubagentSettings as jest.Mock).mockReturnValue({ enabled: false, models: {} })
+      ;(getSubagentSettings as Mock).mockReturnValue({ enabled: false, models: {} })
 
       const result: any = await tool.invoke(makeOptions({ action: "list_agents" }), mockToken)
       expect(result.parts[0].text).toContain("abap-discoverer")
@@ -216,7 +216,7 @@ describe("SubagentConfigTool", () => {
     })
 
     it("shows configured models next to agents", async () => {
-      ;(getSubagentSettings as jest.Mock).mockReturnValue({
+      ;(getSubagentSettings as Mock).mockReturnValue({
         enabled: false,
         models: { "abap-discoverer": "Claude Haiku 4.5" }
       })
@@ -226,14 +226,14 @@ describe("SubagentConfigTool", () => {
     })
 
     it("shows NOT CONFIGURED for agents without models", async () => {
-      ;(getSubagentSettings as jest.Mock).mockReturnValue({ enabled: false, models: {} })
+      ;(getSubagentSettings as Mock).mockReturnValue({ enabled: false, models: {} })
 
       const result: any = await tool.invoke(makeOptions({ action: "list_agents" }), mockToken)
       expect(result.parts[0].text).toContain("NOT CONFIGURED")
     })
 
     it("groups agents by tier", async () => {
-      ;(getSubagentSettings as jest.Mock).mockReturnValue({ enabled: false, models: {} })
+      ;(getSubagentSettings as Mock).mockReturnValue({ enabled: false, models: {} })
 
       const result: any = await tool.invoke(makeOptions({ action: "list_agents" }), mockToken)
       expect(result.parts[0].text).toContain("Tier 3")
@@ -243,7 +243,7 @@ describe("SubagentConfigTool", () => {
 
   describe("invoke - list_tools", () => {
     it("returns tool assignments for agents", async () => {
-      ;(getExtensionId as jest.Mock).mockReturnValue("test.ext")
+      ;(getExtensionId as Mock).mockReturnValue("test.ext")
 
       const result: any = await tool.invoke(makeOptions({ action: "list_tools" }), mockToken)
       expect(result.parts[0].text).toContain("abap-discoverer")
@@ -259,7 +259,7 @@ describe("SubagentConfigTool", () => {
 
   describe("invoke - enable", () => {
     it("calls enableSubagentsCore and returns success", async () => {
-      ;(enableSubagentsCore as jest.Mock).mockResolvedValue({
+      ;(enableSubagentsCore as Mock).mockResolvedValue({
         success: true,
         fileStatus: "3 files created"
       })
@@ -270,7 +270,7 @@ describe("SubagentConfigTool", () => {
     })
 
     it("returns error when no workspace", async () => {
-      ;(enableSubagentsCore as jest.Mock).mockResolvedValue({
+      ;(enableSubagentsCore as Mock).mockResolvedValue({
         success: false,
         error: "no_workspace"
       })
@@ -280,7 +280,7 @@ describe("SubagentConfigTool", () => {
     })
 
     it("returns error when models are missing", async () => {
-      ;(enableSubagentsCore as jest.Mock).mockResolvedValue({
+      ;(enableSubagentsCore as Mock).mockResolvedValue({
         success: false,
         error: "missing_models",
         missingModels: ["abap-discoverer", "abap-reader"]
@@ -293,7 +293,7 @@ describe("SubagentConfigTool", () => {
     })
 
     it("returns error when validation fails", async () => {
-      ;(enableSubagentsCore as jest.Mock).mockResolvedValue({
+      ;(enableSubagentsCore as Mock).mockResolvedValue({
         success: false,
         error: "validation_failed",
         fileErrors: [
@@ -309,7 +309,7 @@ describe("SubagentConfigTool", () => {
 
   describe("invoke - disable", () => {
     it("calls disableSubagentsCore and returns success", async () => {
-      ;(disableSubagentsCore as jest.Mock).mockResolvedValue({ preserved: true })
+      ;(disableSubagentsCore as Mock).mockResolvedValue({ preserved: true })
 
       const result: any = await tool.invoke(makeOptions({ action: "disable" }), mockToken)
       expect(disableSubagentsCore).toHaveBeenCalled()
@@ -317,14 +317,14 @@ describe("SubagentConfigTool", () => {
     })
 
     it("mentions preservation when files exist", async () => {
-      ;(disableSubagentsCore as jest.Mock).mockResolvedValue({ preserved: true })
+      ;(disableSubagentsCore as Mock).mockResolvedValue({ preserved: true })
 
       const result: any = await tool.invoke(makeOptions({ action: "disable" }), mockToken)
       expect(result.parts[0].text).toContain("preserved")
     })
 
     it("handles case when no files to preserve", async () => {
-      ;(disableSubagentsCore as jest.Mock).mockResolvedValue({ preserved: false })
+      ;(disableSubagentsCore as Mock).mockResolvedValue({ preserved: false })
 
       const result: any = await tool.invoke(makeOptions({ action: "disable" }), mockToken)
       expect(result.parts[0].text).toContain("No agent files to preserve")
@@ -349,11 +349,11 @@ describe("SubagentConfigTool", () => {
     })
 
     it("applies valid configurations", async () => {
-      ;(getSubagentSettings as jest.Mock).mockReturnValue({ enabled: false, models: {} })
-      ;(getAvailableModels as jest.Mock).mockResolvedValue([
+      ;(getSubagentSettings as Mock).mockReturnValue({ enabled: false, models: {} })
+      ;(getAvailableModels as Mock).mockResolvedValue([
         { name: "Claude Haiku 4.5", vendor: "Anthropic", family: "claude-haiku" }
       ])
-      ;(getWorkspaceFolder as jest.Mock).mockReturnValue(undefined)
+      ;(getWorkspaceFolder as Mock).mockReturnValue(undefined)
 
       const result: any = await tool.invoke(
         makeOptions({
@@ -368,8 +368,8 @@ describe("SubagentConfigTool", () => {
     })
 
     it("warns about unknown agentId", async () => {
-      ;(getSubagentSettings as jest.Mock).mockReturnValue({ enabled: false, models: {} })
-      ;(getAvailableModels as jest.Mock).mockResolvedValue([
+      ;(getSubagentSettings as Mock).mockReturnValue({ enabled: false, models: {} })
+      ;(getAvailableModels as Mock).mockResolvedValue([
         { name: "GPT-4o", vendor: "OpenAI", family: "gpt-4o" }
       ])
 
@@ -384,8 +384,8 @@ describe("SubagentConfigTool", () => {
     })
 
     it("warns about unavailable model but still sets it", async () => {
-      ;(getSubagentSettings as jest.Mock).mockReturnValue({ enabled: false, models: {} })
-      ;(getAvailableModels as jest.Mock).mockResolvedValue([])
+      ;(getSubagentSettings as Mock).mockReturnValue({ enabled: false, models: {} })
+      ;(getAvailableModels as Mock).mockResolvedValue([])
 
       const result: any = await tool.invoke(
         makeOptions({
@@ -399,14 +399,14 @@ describe("SubagentConfigTool", () => {
     })
 
     it("updates agent files when subagents are enabled", async () => {
-      ;(getSubagentSettings as jest.Mock).mockReturnValue({
+      ;(getSubagentSettings as Mock).mockReturnValue({
         enabled: true,
         models: { "abap-discoverer": "Old Model" }
       })
-      ;(getAvailableModels as jest.Mock).mockResolvedValue([
+      ;(getAvailableModels as Mock).mockResolvedValue([
         { name: "Claude Haiku 4.5", vendor: "Anthropic", family: "claude-haiku" }
       ])
-      ;(getWorkspaceFolder as jest.Mock).mockReturnValue({ fsPath: "C:\\workspace" })
+      ;(getWorkspaceFolder as Mock).mockReturnValue({ fsPath: "C:\\workspace" })
 
       await tool.invoke(
         makeOptions({
@@ -419,8 +419,8 @@ describe("SubagentConfigTool", () => {
     })
 
     it("does not update agent files when subagents are disabled", async () => {
-      ;(getSubagentSettings as jest.Mock).mockReturnValue({ enabled: false, models: {} })
-      ;(getAvailableModels as jest.Mock).mockResolvedValue([
+      ;(getSubagentSettings as Mock).mockReturnValue({ enabled: false, models: {} })
+      ;(getAvailableModels as Mock).mockResolvedValue([
         { name: "GPT-4o", vendor: "OpenAI", family: "gpt-4o" }
       ])
 
@@ -437,19 +437,19 @@ describe("SubagentConfigTool", () => {
 
   describe("invoke - validate", () => {
     it("reports all configured and valid", async () => {
-      ;(validateModelConfiguration as jest.Mock).mockResolvedValue([
+      ;(validateModelConfiguration as Mock).mockResolvedValue([
         { agentId: "abap-discoverer", configuredModel: "Claude Haiku 4.5", available: true },
         { agentId: "abap-reader", configuredModel: "GPT-4o", available: true },
         { agentId: "abap-orchestrator", configuredModel: "Claude Sonnet 4", available: true }
       ])
-      ;(getSubagentSettings as jest.Mock).mockReturnValue({ enabled: true, models: {} })
+      ;(getSubagentSettings as Mock).mockReturnValue({ enabled: true, models: {} })
 
       const result: any = await tool.invoke(makeOptions({ action: "validate" }), mockToken)
       expect(result.parts[0].text).toContain("3 agents are configured")
     })
 
     it("reports unconfigured agents", async () => {
-      ;(validateModelConfiguration as jest.Mock).mockResolvedValue([
+      ;(validateModelConfiguration as Mock).mockResolvedValue([
         { agentId: "abap-discoverer", configuredModel: null, available: false },
         { agentId: "abap-reader", configuredModel: "GPT-4o", available: true },
         { agentId: "abap-orchestrator", configuredModel: null, available: false }
@@ -462,12 +462,12 @@ describe("SubagentConfigTool", () => {
     })
 
     it("reports unavailable models", async () => {
-      ;(validateModelConfiguration as jest.Mock).mockResolvedValue([
+      ;(validateModelConfiguration as Mock).mockResolvedValue([
         { agentId: "abap-discoverer", configuredModel: "BadModel", available: false },
         { agentId: "abap-reader", configuredModel: "GPT-4o", available: true },
         { agentId: "abap-orchestrator", configuredModel: "Claude Sonnet 4", available: true }
       ])
-      ;(getSubagentSettings as jest.Mock).mockReturnValue({ enabled: true, models: {} })
+      ;(getSubagentSettings as Mock).mockReturnValue({ enabled: true, models: {} })
 
       const result: any = await tool.invoke(makeOptions({ action: "validate" }), mockToken)
       expect(result.parts[0].text).toContain("AVAILABILITY ISSUES")
@@ -477,28 +477,28 @@ describe("SubagentConfigTool", () => {
 
   describe("invoke - regenerate", () => {
     it("returns error when subagents not enabled", async () => {
-      ;(getSubagentSettings as jest.Mock).mockReturnValue({ enabled: false, models: {} })
+      ;(getSubagentSettings as Mock).mockReturnValue({ enabled: false, models: {} })
 
       const result: any = await tool.invoke(makeOptions({ action: "regenerate" }), mockToken)
       expect(result.parts[0].text).toContain("not enabled")
     })
 
     it("returns error when no workspace folder", async () => {
-      ;(getSubagentSettings as jest.Mock).mockReturnValue({ enabled: true, models: {} })
-      ;(getWorkspaceFolder as jest.Mock).mockReturnValue(undefined)
+      ;(getSubagentSettings as Mock).mockReturnValue({ enabled: true, models: {} })
+      ;(getWorkspaceFolder as Mock).mockReturnValue(undefined)
 
       const result: any = await tool.invoke(makeOptions({ action: "regenerate" }), mockToken)
       expect(result.parts[0].text).toContain("No workspace folder")
     })
 
     it("regenerates all agent files", async () => {
-      ;(getSubagentSettings as jest.Mock).mockReturnValue({
+      ;(getSubagentSettings as Mock).mockReturnValue({
         enabled: true,
         models: { "abap-discoverer": "Claude Haiku 4.5" }
       })
-      ;(getWorkspaceFolder as jest.Mock).mockReturnValue({ fsPath: "C:\\workspace" })
-      ;(getExtensionId as jest.Mock).mockReturnValue("test.ext")
-      ;(writeAgentFile as jest.Mock).mockResolvedValue({ created: true, updated: false })
+      ;(getWorkspaceFolder as Mock).mockReturnValue({ fsPath: "C:\\workspace" })
+      ;(getExtensionId as Mock).mockReturnValue("test.ext")
+      ;(writeAgentFile as Mock).mockResolvedValue({ created: true, updated: false })
 
       const result: any = await tool.invoke(makeOptions({ action: "regenerate" }), mockToken)
       expect(writeAgentFile).toHaveBeenCalledTimes(3) // 3 agents in mock registry
@@ -506,13 +506,13 @@ describe("SubagentConfigTool", () => {
     })
 
     it("reports individual file failures", async () => {
-      ;(getSubagentSettings as jest.Mock).mockReturnValue({
+      ;(getSubagentSettings as Mock).mockReturnValue({
         enabled: true,
         models: { "abap-discoverer": "Claude Haiku 4.5" }
       })
-      ;(getWorkspaceFolder as jest.Mock).mockReturnValue({ fsPath: "C:\\workspace" })
-      ;(getExtensionId as jest.Mock).mockReturnValue("test.ext")
-      ;(writeAgentFile as jest.Mock)
+      ;(getWorkspaceFolder as Mock).mockReturnValue({ fsPath: "C:\\workspace" })
+      ;(getExtensionId as Mock).mockReturnValue("test.ext")
+      ;(writeAgentFile as Mock)
         .mockResolvedValueOnce({ created: true, updated: false })
         .mockRejectedValueOnce(new Error("Write failed"))
         .mockResolvedValueOnce({ created: false, updated: true })
@@ -534,9 +534,9 @@ describe("SubagentConfigTool", () => {
 
   describe("telemetry", () => {
     it("logs telemetry on invoke", async () => {
-      ;(getSubagentSettings as jest.Mock).mockReturnValue({ enabled: false, models: {} })
-      ;(getWorkspaceFolder as jest.Mock).mockReturnValue(undefined)
-      ;(validateModelConfiguration as jest.Mock).mockResolvedValue([])
+      ;(getSubagentSettings as Mock).mockReturnValue({ enabled: false, models: {} })
+      ;(getWorkspaceFolder as Mock).mockReturnValue(undefined)
+      ;(validateModelConfiguration as Mock).mockResolvedValue([])
 
       await tool.invoke(makeOptions({ action: "get_status" }), mockToken)
       expect(logTelemetry).toHaveBeenCalledWith("tool_manage_subagents_called")

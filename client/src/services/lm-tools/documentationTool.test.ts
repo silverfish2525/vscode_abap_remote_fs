@@ -1,24 +1,24 @@
-jest.mock("vscode", () => ({
-  LanguageModelToolResult: jest.fn().mockImplementation((parts: any[]) => ({ parts })),
-  LanguageModelTextPart: jest.fn().mockImplementation((text: string) => ({ text })),
-  MarkdownString: jest.fn().mockImplementation((text: string) => ({ text })),
+vi.mock("vscode", () => ({
+  LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
+  LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
+  MarkdownString: vi.fn().mockImplementation((text: string) => ({ text })),
   extensions: {
-    getExtension: jest.fn()
+    getExtension: vi.fn()
   },
-  lm: { registerTool: jest.fn(() => ({ dispose: jest.fn() })) }
+  lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) }
 }), { virtual: true })
 
-jest.mock("../../adt/conections", () => ({}))
-jest.mock("../telemetry", () => ({ logTelemetry: jest.fn() }))
-jest.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: jest.fn(() => ({ dispose: jest.fn() }))
+vi.mock("../../adt/conections", () => ({}))
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("./toolRegistry", () => ({
+  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() }))
 }))
-jest.mock("path", () => ({
+vi.mock("path", () => ({
   join: (...args: string[]) => args.join("/")
 }))
-jest.mock("fs", () => ({
-  existsSync: jest.fn(),
-  readFileSync: jest.fn()
+vi.mock("fs", () => ({
+  existsSync: vi.fn(),
+  readFileSync: vi.fn()
 }))
 
 import { ABAPFSDocumentationTool } from "./documentationTool"
@@ -39,10 +39,10 @@ describe("ABAPFSDocumentationTool", () => {
 
   beforeEach(() => {
     tool = new ABAPFSDocumentationTool()
-    jest.clearAllMocks()
-    ;(vscode.extensions.getExtension as jest.Mock).mockReturnValue(mockExtension)
-    ;(fs.existsSync as jest.Mock).mockReturnValue(true)
-    ;(fs.readFileSync as jest.Mock).mockReturnValue(
+    vi.clearAllMocks()
+    ;(vscode.extensions.getExtension as Mock).mockReturnValue(mockExtension)
+    ;(fs.existsSync as Mock).mockReturnValue(true)
+    ;(fs.readFileSync as Mock).mockReturnValue(
       Array.from({ length: 200 }, (_, i) => `Line ${i + 1} content`).join("\n")
     )
   })
@@ -113,14 +113,14 @@ describe("ABAPFSDocumentationTool", () => {
     })
 
     it("throws when extension not found", async () => {
-      ;(vscode.extensions.getExtension as jest.Mock).mockReturnValue(undefined)
+      ;(vscode.extensions.getExtension as Mock).mockReturnValue(undefined)
       await expect(
         tool.invoke(makeOptions({ action: "get_documentation" }), mockToken)
       ).rejects.toThrow("ABAP FS extension not found")
     })
 
     it("throws when documentation file not found", async () => {
-      ;(fs.existsSync as jest.Mock).mockReturnValue(false)
+      ;(fs.existsSync as Mock).mockReturnValue(false)
       await expect(
         tool.invoke(makeOptions({ action: "get_documentation" }), mockToken)
       ).rejects.toThrow("DOCUMENTATION.md not found")
@@ -129,7 +129,7 @@ describe("ABAPFSDocumentationTool", () => {
 
   describe("invoke - search_documentation", () => {
     it("returns matches for search query", async () => {
-      ;(fs.readFileSync as jest.Mock).mockReturnValue(
+      ;(fs.readFileSync as Mock).mockReturnValue(
         "Line 1 connection info\nLine 2 other text\nLine 3 connection again"
       )
       const result: any = await tool.invoke(
@@ -140,7 +140,7 @@ describe("ABAPFSDocumentationTool", () => {
     })
 
     it("returns no-matches message when not found", async () => {
-      ;(fs.readFileSync as jest.Mock).mockReturnValue("Line 1\nLine 2\nLine 3")
+      ;(fs.readFileSync as Mock).mockReturnValue("Line 1\nLine 2\nLine 3")
       const result: any = await tool.invoke(
         makeOptions({ action: "search_documentation", searchQuery: "xyznotfound" }),
         mockToken
@@ -165,7 +165,7 @@ describe("ABAPFSDocumentationTool", () => {
     })
 
     it("throws when settings file not found", async () => {
-      ;(fs.existsSync as jest.Mock).mockReturnValue(false)
+      ;(fs.existsSync as Mock).mockReturnValue(false)
       await expect(
         tool.invoke(makeOptions({ action: "get_settings" }), mockToken)
       ).rejects.toThrow("ABAP-FS-SETTINGS.md not found")
@@ -174,7 +174,7 @@ describe("ABAPFSDocumentationTool", () => {
 
   describe("invoke - search_settings", () => {
     it("searches settings file", async () => {
-      ;(fs.readFileSync as jest.Mock).mockReturnValue("setting: timeout value\nother setting")
+      ;(fs.readFileSync as Mock).mockReturnValue("setting: timeout value\nother setting")
       const result: any = await tool.invoke(
         makeOptions({ action: "search_settings", searchQuery: "timeout" }),
         mockToken
@@ -196,13 +196,13 @@ describe("readFileLines helper (via get_documentation)", () => {
 
   beforeEach(() => {
     tool = new ABAPFSDocumentationTool()
-    jest.clearAllMocks()
-    ;(vscode.extensions.getExtension as jest.Mock).mockReturnValue(mockExtension)
-    ;(fs.existsSync as jest.Mock).mockReturnValue(true)
+    vi.clearAllMocks()
+    ;(vscode.extensions.getExtension as Mock).mockReturnValue(mockExtension)
+    ;(fs.existsSync as Mock).mockReturnValue(true)
   })
 
   it("includes line range header in output", async () => {
-    ;(fs.readFileSync as jest.Mock).mockReturnValue("Line1\nLine2\nLine3\nLine4\nLine5")
+    ;(fs.readFileSync as Mock).mockReturnValue("Line1\nLine2\nLine3\nLine4\nLine5")
     const result: any = await tool.invoke(
       makeOptions({ action: "get_documentation", startLine: 2, lineCount: 2 }),
       mockToken
@@ -211,7 +211,7 @@ describe("readFileLines helper (via get_documentation)", () => {
   })
 
   it("handles startLine beyond file end gracefully", async () => {
-    ;(fs.readFileSync as jest.Mock).mockReturnValue("Line1\nLine2")
+    ;(fs.readFileSync as Mock).mockReturnValue("Line1\nLine2")
     const result: any = await tool.invoke(
       makeOptions({ action: "get_documentation", startLine: 100, lineCount: 50 }),
       mockToken
@@ -227,13 +227,13 @@ describe("searchFileLines helper (via search_documentation)", () => {
 
   beforeEach(() => {
     tool = new ABAPFSDocumentationTool()
-    jest.clearAllMocks()
-    ;(vscode.extensions.getExtension as jest.Mock).mockReturnValue(mockExtension)
-    ;(fs.existsSync as jest.Mock).mockReturnValue(true)
+    vi.clearAllMocks()
+    ;(vscode.extensions.getExtension as Mock).mockReturnValue(mockExtension)
+    ;(fs.existsSync as Mock).mockReturnValue(true)
   })
 
   it("finds lines matching any word in multi-word query", async () => {
-    ;(fs.readFileSync as jest.Mock).mockReturnValue("alpha line\nbeta line\ngamma line")
+    ;(fs.readFileSync as Mock).mockReturnValue("alpha line\nbeta line\ngamma line")
     const result: any = await tool.invoke(
       makeOptions({ action: "search_documentation", searchQuery: "alpha gamma" }),
       mockToken
@@ -243,7 +243,7 @@ describe("searchFileLines helper (via search_documentation)", () => {
   })
 
   it("is case-insensitive in search", async () => {
-    ;(fs.readFileSync as jest.Mock).mockReturnValue("This is CONNECTION info")
+    ;(fs.readFileSync as Mock).mockReturnValue("This is CONNECTION info")
     const result: any = await tool.invoke(
       makeOptions({ action: "search_documentation", searchQuery: "connection" }),
       mockToken
@@ -252,7 +252,7 @@ describe("searchFileLines helper (via search_documentation)", () => {
   })
 
   it("shows line numbers in output", async () => {
-    ;(fs.readFileSync as jest.Mock).mockReturnValue("line1\nfound here\nline3")
+    ;(fs.readFileSync as Mock).mockReturnValue("line1\nfound here\nline3")
     const result: any = await tool.invoke(
       makeOptions({ action: "search_documentation", searchQuery: "found" }),
       mockToken

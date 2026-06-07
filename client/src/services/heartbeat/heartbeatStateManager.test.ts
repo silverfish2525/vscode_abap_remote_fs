@@ -2,13 +2,13 @@
  * Tests for heartbeatStateManager.ts
  */
 
-jest.mock("vscode", () => ({
+vi.mock("vscode", () => ({
   workspace: {
-    getConfiguration: jest.fn()
+    getConfiguration: vi.fn()
   }
 }), { virtual: true })
 
-jest.mock("../../lib", () => ({ log: jest.fn() }))
+vi.mock("../../lib", () => ({ log: vi.fn() }))
 
 import * as fs from "fs"
 import * as path from "path"
@@ -23,13 +23,13 @@ import { HeartbeatRunRecord } from "./heartbeatTypes"
 function makeContext(storagePath: string) {
   return {
     globalStorageUri: { fsPath: storagePath },
-    subscriptions: { push: jest.fn() }
+    subscriptions: { push: vi.fn() }
   } as any
 }
 
 function makeConfigMock(overrides: Record<string, any> = {}) {
   return {
-    get: jest.fn((key: string, defaultValue?: any) => {
+    get: vi.fn((key: string, defaultValue?: any) => {
       return overrides[key] !== undefined ? overrides[key] : defaultValue
     })
   }
@@ -59,7 +59,7 @@ beforeEach(() => {
 
 afterEach(() => {
   fs.rmSync(tmpDir, { recursive: true, force: true })
-  jest.clearAllMocks()
+  vi.clearAllMocks()
 })
 
 // ============================================================================

@@ -1,6 +1,6 @@
-jest.mock("vscode", () => ({
+vi.mock("vscode", () => ({
   Uri: {
-    parse: jest.fn((s: string) => ({
+    parse: vi.fn((s: string) => ({
       scheme: "adt",
       authority: s.split("://")[1]?.split("/")[0] || "conn",
       path: s,
@@ -9,8 +9,8 @@ jest.mock("vscode", () => ({
   }
 }), { virtual: true })
 
-jest.mock("../../lib", () => ({
-  cache: jest.fn((fn: any) => {
+vi.mock("../../lib", () => ({
+  cache: vi.fn((fn: any) => {
     const map = new Map()
     const accessor = (k: string) => { if (!map.has(k)) map.set(k, fn(k)); return map.get(k) }
     accessor.get = (k: string) => { if (!map.has(k)) map.set(k, fn(k)); return map.get(k) }
@@ -18,21 +18,21 @@ jest.mock("../../lib", () => ({
   })
 }))
 
-jest.mock("../../adt/conections", () => ({
-  getClient: jest.fn(),
-  abapUri: jest.fn(),
-  getRoot: jest.fn()
+vi.mock("../../adt/conections", () => ({
+  getClient: vi.fn(),
+  abapUri: vi.fn(),
+  getRoot: vi.fn()
 }))
 
-jest.mock("abapobject", () => ({
-  isAbapClassInclude: jest.fn().mockReturnValue(false)
+vi.mock("abapobject", () => ({
+  isAbapClassInclude: vi.fn().mockReturnValue(false)
 }))
 
-jest.mock("abapfs", () => ({
-  isAbapFile: jest.fn()
+vi.mock("abapfs", () => ({
+  isAbapFile: vi.fn()
 }))
 
-jest.mock("abap-adt-api", () => ({
+vi.mock("abap-adt-api", () => ({
   classIncludes: {},
   Revision: {}
 }))
@@ -42,8 +42,8 @@ import { getClient, abapUri, getRoot } from "../../adt/conections"
 import { isAbapClassInclude } from "abapobject"
 import { isAbapFile } from "abapfs"
 
-const mockIsAbapClassInclude = isAbapClassInclude as unknown as jest.Mock
-const mockIsAbapFile = isAbapFile as unknown as jest.Mock
+const mockIsAbapClassInclude = isAbapClassInclude as unknown as Mock
+const mockIsAbapFile = isAbapFile as unknown as Mock
 
 describe("revLabel", () => {
   it("returns version when revision has version", () => {
@@ -75,18 +75,18 @@ describe("AbapRevisionService", () => {
   let mockClient: any
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     // Clear the services cache between tests
-    ;(AbapRevisionService as any).services = (require("../../lib").cache as jest.Mock)(
+    ;(AbapRevisionService as any).services = (require("../../lib").cache as Mock)(
       (connId: string) => new (AbapRevisionService as any)(connId)
     )
     mockClient = {
-      revisions: jest.fn().mockResolvedValue([
+      revisions: vi.fn().mockResolvedValue([
         { version: "000001", date: "20240101" },
         { version: "000002", date: "20231201" }
       ])
     }
-    ;(getClient as jest.Mock).mockReturnValue(mockClient)
+    ;(getClient as Mock).mockReturnValue(mockClient)
   })
 
   it("get() returns an instance for connId", () => {
@@ -106,7 +106,7 @@ describe("AbapRevisionService", () => {
       const mockObj: any = {
         key: "CLAS ZCL_TEST",
         structure: { "adtcore:name": "ZCL_TEST" },
-        loadStructure: jest.fn()
+        loadStructure: vi.fn()
       }
       mockIsAbapClassInclude.mockReturnValue(false)
       const revisions = await service.objRevisions(mockObj)
@@ -119,7 +119,7 @@ describe("AbapRevisionService", () => {
       const mockObj: any = {
         key: "PROG ZPROG",
         structure: { uri: "/path" },
-        loadStructure: jest.fn()
+        loadStructure: vi.fn()
       }
       mockIsAbapClassInclude.mockReturnValue(false)
       await service.objRevisions(mockObj)
@@ -133,7 +133,7 @@ describe("AbapRevisionService", () => {
       const mockObj: any = {
         key: "PROG ZPROG2",
         structure: { uri: "/path2" },
-        loadStructure: jest.fn()
+        loadStructure: vi.fn()
       }
       mockIsAbapClassInclude.mockReturnValue(false)
       await service.objRevisions(mockObj)
@@ -143,7 +143,7 @@ describe("AbapRevisionService", () => {
 
     it("loads structure if not present", async () => {
       const service = AbapRevisionService.get("conn6")
-      const loadStructureFn = jest.fn()
+      const loadStructureFn = vi.fn()
       const mockObj: any = {
         key: "PROG ZPROG3",
         structure: undefined,
@@ -161,7 +161,7 @@ describe("AbapRevisionService", () => {
       const mockObj: any = {
         key: "PROG ZPROG4",
         structure: undefined,
-        loadStructure: jest.fn() // doesn't set structure
+        loadStructure: vi.fn() // doesn't set structure
       }
       mockIsAbapClassInclude.mockReturnValue(false)
       const revisions = await service.objRevisions(mockObj)
@@ -176,7 +176,7 @@ describe("AbapRevisionService", () => {
         structure: {},
         techName: "main",
         parent: { structure: parentStructure },
-        loadStructure: jest.fn()
+        loadStructure: vi.fn()
       }
       mockIsAbapClassInclude.mockReturnValue(true)
       await service.objRevisions(mockObj)
@@ -186,7 +186,7 @@ describe("AbapRevisionService", () => {
 
   describe("uriRevisions", () => {
     it("returns undefined for non-ABAP URIs", async () => {
-      ;(abapUri as jest.Mock).mockReturnValue(false)
+      ;(abapUri as Mock).mockReturnValue(false)
       const service = AbapRevisionService.get("conn9")
       const uri: any = { scheme: "file", path: "/local/file.abap", authority: "conn9" }
       const result = await service.uriRevisions(uri, false)
@@ -194,7 +194,7 @@ describe("AbapRevisionService", () => {
     })
 
     it("returns undefined for non-.abap paths", async () => {
-      ;(abapUri as jest.Mock).mockReturnValue(true)
+      ;(abapUri as Mock).mockReturnValue(true)
       const service = AbapRevisionService.get("conn10")
       const uri: any = { scheme: "adt", path: "/sap/bc/adt/programs", authority: "conn10" }
       const result = await service.uriRevisions(uri, false)
@@ -202,16 +202,16 @@ describe("AbapRevisionService", () => {
     })
 
     it("returns revisions for valid abap URI", async () => {
-      ;(abapUri as jest.Mock).mockReturnValue(true)
+      ;(abapUri as Mock).mockReturnValue(true)
       const mockFile: any = { object: { key: "PROG ZPROG", structure: { uri: "/p" } } }
       mockIsAbapFile.mockReturnValue(true)
-      const mockRoot: any = { getNodeAsync: jest.fn().mockResolvedValue(mockFile) }
-      ;(getRoot as jest.Mock).mockReturnValue(mockRoot)
+      const mockRoot: any = { getNodeAsync: vi.fn().mockResolvedValue(mockFile) }
+      ;(getRoot as Mock).mockReturnValue(mockRoot)
 
       const service = AbapRevisionService.get("conn11")
       const uri: any = { scheme: "adt", path: "/sap/bc/adt/source.abap", authority: "conn11" }
       mockIsAbapClassInclude.mockReturnValue(false)
-      mockFile.object.loadStructure = jest.fn()
+      mockFile.object.loadStructure = vi.fn()
       const revisions = await service.uriRevisions(uri, false)
       expect(revisions).toBeDefined()
     })

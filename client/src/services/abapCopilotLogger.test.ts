@@ -1,19 +1,19 @@
-jest.mock("vscode", () => ({
+vi.mock("vscode", () => ({
   window: {
-    createOutputChannel: jest.fn()
+    createOutputChannel: vi.fn()
   }
 }), { virtual: true })
 
-jest.mock("../lib/logger", () => {
+vi.mock("../lib/logger", () => {
   const mockChannel = {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
-    trace: jest.fn(),
-    show: jest.fn(),
-    clear: jest.fn(),
-    dispose: jest.fn()
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+    trace: vi.fn(),
+    show: vi.fn(),
+    clear: vi.fn(),
+    dispose: vi.fn()
   }
   return { channel: mockChannel }
 })
@@ -24,7 +24,7 @@ import { channel } from "../lib/logger"
 const mockChannel = channel as any
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
 })
 
 // ─── copilotLogger singleton ──────────────────────────────────────────────────

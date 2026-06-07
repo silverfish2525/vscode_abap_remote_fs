@@ -1,36 +1,36 @@
-jest.mock("vscode", () => ({
-  LanguageModelToolResult: jest.fn().mockImplementation((parts: any[]) => ({ parts })),
-  LanguageModelTextPart: jest.fn().mockImplementation((text: string) => ({ text })),
-  MarkdownString: jest.fn().mockImplementation((text: string) => ({ text })),
-  Uri: { parse: jest.fn((s: string) => ({ toString: () => s, authority: "dev100", path: "/test" })) },
-  commands: { executeCommand: jest.fn() },
-  lm: { registerTool: jest.fn(() => ({ dispose: jest.fn() })) }
+vi.mock("vscode", () => ({
+  LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
+  LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
+  MarkdownString: vi.fn().mockImplementation((text: string) => ({ text })),
+  Uri: { parse: vi.fn((s: string) => ({ toString: () => s, authority: "dev100", path: "/test" })) },
+  commands: { executeCommand: vi.fn() },
+  lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) }
 }), { virtual: true })
 
-jest.mock("../../adt/conections", () => ({
-  getClient: jest.fn(),
-  getOrCreateRoot: jest.fn()
+vi.mock("../../adt/conections", () => ({
+  getClient: vi.fn(),
+  getOrCreateRoot: vi.fn()
 }))
-jest.mock("../telemetry", () => ({ logTelemetry: jest.fn() }))
-jest.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: jest.fn(() => ({ dispose: jest.fn() }))
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("./toolRegistry", () => ({
+  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() }))
 }))
-jest.mock("../abapSearchService", () => ({ getSearchService: jest.fn() }))
-jest.mock("abapobject", () => ({ isAbapClass: jest.fn() }))
-jest.mock("abapfs", () => ({ isAbapFile: jest.fn(), isAbapStat: jest.fn() }))
-jest.mock("../../adt/operations/AdtObjectFinder", () => ({
-  createUri: jest.fn(),
-  uriAbapFile: jest.fn()
-}))
-
-const mockAddResultsWithReturn = jest.fn()
-jest.mock("../../adt/operations/UnitTestRunner", () => ({
-  UnitTestRunner: { get: jest.fn(() => ({ addResultsWithReturn: mockAddResultsWithReturn })) }
+vi.mock("../abapSearchService", () => ({ getSearchService: vi.fn() }))
+vi.mock("abapobject", () => ({ isAbapClass: vi.fn() }))
+vi.mock("abapfs", () => ({ isAbapFile: vi.fn(), isAbapStat: vi.fn() }))
+vi.mock("../../adt/operations/AdtObjectFinder", () => ({
+  createUri: vi.fn(),
+  uriAbapFile: vi.fn()
 }))
 
-const mockActivate = jest.fn()
-jest.mock("../../adt/operations/AdtObjectActivator", () => ({
-  AdtObjectActivator: { get: jest.fn(() => ({ activate: mockActivate })) }
+const mockAddResultsWithReturn = vi.fn()
+vi.mock("../../adt/operations/UnitTestRunner", () => ({
+  UnitTestRunner: { get: vi.fn(() => ({ addResultsWithReturn: mockAddResultsWithReturn })) }
+}))
+
+const mockActivate = vi.fn()
+vi.mock("../../adt/operations/AdtObjectActivator", () => ({
+  AdtObjectActivator: { get: vi.fn(() => ({ activate: mockActivate })) }
 }))
 
 import { CreateTestIncludeTool, RunUnitTestsTool } from "./unitTestTools"
@@ -47,17 +47,17 @@ function makeOptions(input: any = {}) {
   return { input } as any
 }
 
-const mockSearcher = { searchObjects: jest.fn() }
-const mockRoot = { findByAdtUri: jest.fn() }
+const mockSearcher = { searchObjects: vi.fn() }
+const mockRoot = { findByAdtUri: vi.fn() }
 
 describe("CreateTestIncludeTool", () => {
   let tool: CreateTestIncludeTool
 
   beforeEach(() => {
     tool = new CreateTestIncludeTool()
-    jest.clearAllMocks()
-    ;(getSearchService as jest.Mock).mockReturnValue(mockSearcher)
-    ;(getOrCreateRoot as jest.Mock).mockResolvedValue(mockRoot)
+    vi.clearAllMocks()
+    ;(getSearchService as Mock).mockReturnValue(mockSearcher)
+    ;(getOrCreateRoot as Mock).mockResolvedValue(mockRoot)
   })
 
   describe("prepareInvocation", () => {
@@ -143,14 +143,14 @@ describe("CreateTestIncludeTool", () => {
 
       const mockParent = {
         structure: true,
-        loadStructure: jest.fn(),
-        findInclude: jest.fn().mockReturnValue({ some: "include" })
+        loadStructure: vi.fn(),
+        findInclude: vi.fn().mockReturnValue({ some: "include" })
       }
       const mockAbapFile = {
         object: { parent: mockParent }
       }
-      ;(uriAbapFile as unknown as jest.Mock).mockReturnValue(mockAbapFile)
-      ;(isAbapClass as unknown as jest.Mock).mockReturnValue(true)
+      ;(uriAbapFile as unknown as Mock).mockReturnValue(mockAbapFile)
+      ;(isAbapClass as unknown as Mock).mockReturnValue(true)
 
       const result: any = await tool.invoke(
         makeOptions({ className: "ZCL_TEST", connectionId: "dev100" }),
@@ -188,7 +188,7 @@ describe("RunUnitTestsTool", () => {
     ])
     const mockFile = {
       object: {
-        loadStructure: jest.fn().mockResolvedValue({
+        loadStructure: vi.fn().mockResolvedValue({
           metaData: { "adtcore:version": opts.version || "active" }
         })
       }
@@ -197,7 +197,7 @@ describe("RunUnitTestsTool", () => {
       path: "/zcl_test/source/main",
       file: mockFile
     })
-    ;(isAbapFile as unknown as jest.Mock).mockReturnValue(true)
+    ;(isAbapFile as unknown as Mock).mockReturnValue(true)
   }
 
   /** Helper to build a UnitTestResults object */
@@ -223,9 +223,9 @@ describe("RunUnitTestsTool", () => {
 
   beforeEach(() => {
     tool = new RunUnitTestsTool()
-    jest.clearAllMocks()
-    ;(getSearchService as jest.Mock).mockReturnValue(mockSearcher)
-    ;(getOrCreateRoot as jest.Mock).mockResolvedValue(mockRoot)
+    vi.clearAllMocks()
+    ;(getSearchService as Mock).mockReturnValue(mockSearcher)
+    ;(getOrCreateRoot as Mock).mockResolvedValue(mockRoot)
     mockAddResultsWithReturn.mockResolvedValue(makeTestResults())
     mockActivate.mockResolvedValue(undefined)
   })
@@ -518,7 +518,7 @@ describe("RunUnitTestsTool", () => {
           path: "/zcl_test/source/main",
           file: null
         })
-        ;(isAbapFile as unknown as jest.Mock).mockReturnValue(false)
+        ;(isAbapFile as unknown as Mock).mockReturnValue(false)
 
         const result: any = await tool.invoke(
           makeOptions({ objectName: "ZCL_TEST", connectionId: "dev100" }),

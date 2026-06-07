@@ -1,18 +1,18 @@
-jest.mock("vscode", () => ({
-  LanguageModelToolResult: jest.fn().mockImplementation((parts: any[]) => ({ parts })),
-  LanguageModelTextPart: jest.fn().mockImplementation((text: string) => ({ text })),
-  MarkdownString: jest.fn().mockImplementation((text: string) => ({ text })),
-  lm: { registerTool: jest.fn(() => ({ dispose: jest.fn() })) }
+vi.mock("vscode", () => ({
+  LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
+  LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
+  MarkdownString: vi.fn().mockImplementation((text: string) => ({ text })),
+  lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) }
 }), { virtual: true })
 
-jest.mock("../../adt/conections", () => ({}))
-jest.mock("../telemetry", () => ({ logTelemetry: jest.fn() }))
-jest.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: jest.fn(() => ({ dispose: jest.fn() }))
+vi.mock("../../adt/conections", () => ({}))
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("./toolRegistry", () => ({
+  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() }))
 }))
-jest.mock("../sapSystemInfo", () => ({
-  getSAPSystemInfo: jest.fn(),
-  formatSAPSystemInfoAsText: jest.fn()
+vi.mock("../sapSystemInfo", () => ({
+  getSAPSystemInfo: vi.fn(),
+  formatSAPSystemInfoAsText: vi.fn()
 }))
 
 import { SAPSystemInfoTool } from "./sapSystemInfoTool"
@@ -43,7 +43,7 @@ describe("SAPSystemInfoTool", () => {
 
   beforeEach(() => {
     tool = new SAPSystemInfoTool()
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   describe("prepareInvocation", () => {
@@ -71,7 +71,7 @@ describe("SAPSystemInfoTool", () => {
 
   describe("invoke", () => {
     it("logs telemetry", async () => {
-      ;(getSAPSystemInfo as jest.Mock).mockResolvedValue(mockSystemInfo)
+      ;(getSAPSystemInfo as Mock).mockResolvedValue(mockSystemInfo)
       await tool.invoke(makeOptions({ connectionId: "dev100" }), mockToken)
       expect(logTelemetry).toHaveBeenCalledWith("tool_get_sap_system_info_called", {
         connectionId: "dev100"
@@ -79,13 +79,13 @@ describe("SAPSystemInfoTool", () => {
     })
 
     it("normalizes connectionId to lowercase", async () => {
-      ;(getSAPSystemInfo as jest.Mock).mockResolvedValue(mockSystemInfo)
+      ;(getSAPSystemInfo as Mock).mockResolvedValue(mockSystemInfo)
       await tool.invoke(makeOptions({ connectionId: "DEV100" }), mockToken)
       expect(getSAPSystemInfo).toHaveBeenCalledWith("dev100", false)
     })
 
     it("returns summary with system type and release", async () => {
-      ;(getSAPSystemInfo as jest.Mock).mockResolvedValue(mockSystemInfo)
+      ;(getSAPSystemInfo as Mock).mockResolvedValue(mockSystemInfo)
       const result: any = await tool.invoke(makeOptions({ connectionId: "dev100" }), mockToken)
       const summaryText = result.parts[0].text
       expect(summaryText).toContain("S/4HANA")
@@ -93,7 +93,7 @@ describe("SAPSystemInfoTool", () => {
     })
 
     it("returns summary with client info", async () => {
-      ;(getSAPSystemInfo as jest.Mock).mockResolvedValue(mockSystemInfo)
+      ;(getSAPSystemInfo as Mock).mockResolvedValue(mockSystemInfo)
       const result: any = await tool.invoke(makeOptions({ connectionId: "dev100" }), mockToken)
       const summaryText = result.parts[0].text
       expect(summaryText).toContain("100")
@@ -101,7 +101,7 @@ describe("SAPSystemInfoTool", () => {
     })
 
     it("returns summary with timezone info", async () => {
-      ;(getSAPSystemInfo as jest.Mock).mockResolvedValue(mockSystemInfo)
+      ;(getSAPSystemInfo as Mock).mockResolvedValue(mockSystemInfo)
       const result: any = await tool.invoke(makeOptions({ connectionId: "dev100" }), mockToken)
       const summaryText = result.parts[0].text
       expect(summaryText).toContain("UTC")
@@ -109,14 +109,14 @@ describe("SAPSystemInfoTool", () => {
 
     it("shows DST rule when not NONE", async () => {
       const infoWithDST = { ...mockSystemInfo, timezone: { ...mockSystemInfo.timezone, dstRule: "EU" } }
-      ;(getSAPSystemInfo as jest.Mock).mockResolvedValue(infoWithDST)
+      ;(getSAPSystemInfo as Mock).mockResolvedValue(infoWithDST)
       const result: any = await tool.invoke(makeOptions({ connectionId: "dev100" }), mockToken)
       const summaryText = result.parts[0].text
       expect(summaryText).toContain("DST")
     })
 
     it("shows component count when includeComponents is true", async () => {
-      ;(getSAPSystemInfo as jest.Mock).mockResolvedValue(mockSystemInfo)
+      ;(getSAPSystemInfo as Mock).mockResolvedValue(mockSystemInfo)
       const result: any = await tool.invoke(
         makeOptions({ connectionId: "dev100", includeComponents: true }),
         mockToken
@@ -127,13 +127,13 @@ describe("SAPSystemInfoTool", () => {
     })
 
     it("defaults includeComponents to false", async () => {
-      ;(getSAPSystemInfo as jest.Mock).mockResolvedValue(mockSystemInfo)
+      ;(getSAPSystemInfo as Mock).mockResolvedValue(mockSystemInfo)
       await tool.invoke(makeOptions({ connectionId: "dev100" }), mockToken)
       expect(getSAPSystemInfo).toHaveBeenCalledWith("dev100", false)
     })
 
     it("also returns full JSON in second part", async () => {
-      ;(getSAPSystemInfo as jest.Mock).mockResolvedValue(mockSystemInfo)
+      ;(getSAPSystemInfo as Mock).mockResolvedValue(mockSystemInfo)
       const result: any = await tool.invoke(makeOptions({ connectionId: "dev100" }), mockToken)
       expect(result.parts).toHaveLength(2)
       const jsonText = result.parts[1].text
@@ -149,14 +149,14 @@ describe("SAPSystemInfoTool", () => {
 
     it("throws with localizedMessage on error", async () => {
       const err = Object.assign(new Error("base"), { localizedMessage: "localized error" })
-      ;(getSAPSystemInfo as jest.Mock).mockRejectedValue(err)
+      ;(getSAPSystemInfo as Mock).mockRejectedValue(err)
       await expect(
         tool.invoke(makeOptions({ connectionId: "dev100" }), mockToken)
       ).rejects.toThrow("localized error")
     })
 
     it("throws with standard message on plain error", async () => {
-      ;(getSAPSystemInfo as jest.Mock).mockRejectedValue(new Error("network failure"))
+      ;(getSAPSystemInfo as Mock).mockRejectedValue(new Error("network failure"))
       await expect(
         tool.invoke(makeOptions({ connectionId: "dev100" }), mockToken)
       ).rejects.toThrow("network failure")
@@ -164,7 +164,7 @@ describe("SAPSystemInfoTool", () => {
 
     it("handles info with no client", async () => {
       const noClientInfo = { ...mockSystemInfo, currentClient: undefined }
-      ;(getSAPSystemInfo as jest.Mock).mockResolvedValue(noClientInfo)
+      ;(getSAPSystemInfo as Mock).mockResolvedValue(noClientInfo)
       const result: any = await tool.invoke(makeOptions({ connectionId: "dev100" }), mockToken)
       const summaryText = result.parts[0].text
       expect(summaryText).not.toContain("Client:")

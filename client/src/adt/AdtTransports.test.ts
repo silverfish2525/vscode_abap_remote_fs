@@ -1,31 +1,31 @@
-jest.mock("vscode", () => ({ ProgressLocation: { Notification: 15 } }), { virtual: true })
-jest.mock("../services/funMessenger", () => ({
+vi.mock("vscode", () => ({ ProgressLocation: { Notification: 15 } }), { virtual: true })
+vi.mock("../services/funMessenger", () => ({
   funWindow: {
-    showQuickPick: jest.fn(),
-    showInputBox: jest.fn(),
-    showInformationMessage: jest.fn()
+    showQuickPick: vi.fn(),
+    showInputBox: vi.fn(),
+    showInformationMessage: vi.fn()
   }
 }))
-jest.mock("../lib", () => ({
+vi.mock("../lib", () => ({
   fieldOrder: () => () => 0,
-  withp: jest.fn()
+  withp: vi.fn()
 }))
-jest.mock("../api", () => ({}))
-jest.mock("./conections", () => ({
-  uriRoot: jest.fn(),
-  getClient: jest.fn()
+vi.mock("../api", () => ({}))
+vi.mock("./conections", () => ({
+  uriRoot: vi.fn(),
+  getClient: vi.fn()
 }))
-jest.mock("abapfs", () => ({
-  isAbapStat: jest.fn(),
-  isAbapFolder: jest.fn()
+vi.mock("abapfs", () => ({
+  isAbapStat: vi.fn(),
+  isAbapFolder: vi.fn()
 }))
 
 import { trSel, TransportStatus, transportValidators } from "./AdtTransports"
 import { funWindow as window } from "../services/funMessenger"
 import { withp } from "../lib"
 
-const mockWindow = window as jest.Mocked<typeof window>
-const mockWithp = withp as jest.Mock
+const mockWindow = window as Mocked<typeof window>
+const mockWithp = withp as Mock
 
 describe("trSel", () => {
   it("creates a transport selection with cancelled=false by default", () => {
@@ -78,7 +78,7 @@ describe("transportValidators array", () => {
   })
 
   it("can have validators pushed in", () => {
-    const validator = jest.fn().mockResolvedValue(true)
+    const validator = vi.fn().mockResolvedValue(true)
     const before = transportValidators.length
     transportValidators.push(validator)
     expect(transportValidators.length).toBe(before + 1)
@@ -89,13 +89,13 @@ describe("transportValidators array", () => {
 
 describe("selectTransport", () => {
   let mockClient: any
-  const { selectTransport } = jest.requireActual("./AdtTransports")
+  const { selectTransport } = vi.importActual("./AdtTransports")
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockClient = {
-      transportInfo: jest.fn(),
-      createTransport: jest.fn()
+      transportInfo: vi.fn(),
+      createTransport: vi.fn()
     }
   })
 

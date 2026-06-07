@@ -1,17 +1,17 @@
-jest.mock("vscode", () => ({
-  LanguageModelToolResult: jest.fn().mockImplementation((parts: any[]) => ({ parts })),
-  LanguageModelTextPart: jest.fn().mockImplementation((text: string) => ({ text })),
-  MarkdownString: jest.fn().mockImplementation((text: string) => ({ text })),
-  lm: { registerTool: jest.fn(() => ({ dispose: jest.fn() })) }
+vi.mock("vscode", () => ({
+  LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
+  LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
+  MarkdownString: vi.fn().mockImplementation((text: string) => ({ text })),
+  lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) }
 }), { virtual: true })
 
-jest.mock("../../adt/conections", () => ({}))
-jest.mock("../telemetry", () => ({ logTelemetry: jest.fn() }))
-jest.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: jest.fn(() => ({ dispose: jest.fn() }))
+vi.mock("../../adt/conections", () => ({}))
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("./toolRegistry", () => ({
+  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() }))
 }))
-jest.mock("../../config", () => ({
-  connectedRoots: jest.fn()
+vi.mock("../../config", () => ({
+  connectedRoots: vi.fn()
 }))
 
 import { ConnectedSystemsTool } from "./connectedSystemsTool"
@@ -29,7 +29,7 @@ describe("ConnectedSystemsTool", () => {
 
   beforeEach(() => {
     tool = new ConnectedSystemsTool()
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   describe("prepareInvocation", () => {
@@ -42,7 +42,7 @@ describe("ConnectedSystemsTool", () => {
   describe("invoke", () => {
     it("logs telemetry", async () => {
       const mockMap = new Map([["dev100", {}]])
-      ;(connectedRoots as jest.Mock).mockReturnValue(mockMap)
+      ;(connectedRoots as Mock).mockReturnValue(mockMap)
 
       await tool.invoke(makeOptions(), mockToken)
       expect(logTelemetry).toHaveBeenCalledWith("tool_get_connected_systems_called")
@@ -50,7 +50,7 @@ describe("ConnectedSystemsTool", () => {
 
     it("returns comma-separated connection IDs when systems are connected", async () => {
       const mockMap = new Map([["dev100", {}], ["qas200", {}]])
-      ;(connectedRoots as jest.Mock).mockReturnValue(mockMap)
+      ;(connectedRoots as Mock).mockReturnValue(mockMap)
 
       const result: any = await tool.invoke(makeOptions(), mockToken)
       const text = result.parts[0].text
@@ -59,7 +59,7 @@ describe("ConnectedSystemsTool", () => {
     })
 
     it("returns no-connection message when no systems connected", async () => {
-      ;(connectedRoots as jest.Mock).mockReturnValue(new Map())
+      ;(connectedRoots as Mock).mockReturnValue(new Map())
 
       const result: any = await tool.invoke(makeOptions(), mockToken)
       const text = result.parts[0].text
@@ -67,7 +67,7 @@ describe("ConnectedSystemsTool", () => {
     })
 
     it("returns single connection ID when one system connected", async () => {
-      ;(connectedRoots as jest.Mock).mockReturnValue(new Map([["prd300", {}]]))
+      ;(connectedRoots as Mock).mockReturnValue(new Map([["prd300", {}]]))
 
       const result: any = await tool.invoke(makeOptions(), mockToken)
       const text = result.parts[0].text
@@ -75,7 +75,7 @@ describe("ConnectedSystemsTool", () => {
     })
 
     it("throws wrapped error when connectedRoots throws", async () => {
-      ;(connectedRoots as jest.Mock).mockImplementation(() => {
+      ;(connectedRoots as Mock).mockImplementation(() => {
         throw new Error("config error")
       })
 
@@ -85,7 +85,7 @@ describe("ConnectedSystemsTool", () => {
     })
 
     it("handles non-Error exceptions", async () => {
-      ;(connectedRoots as jest.Mock).mockImplementation(() => {
+      ;(connectedRoots as Mock).mockImplementation(() => {
         throw "string error"
       })
 
@@ -100,7 +100,7 @@ describe("ConnectedSystemsTool", () => {
 
     it("produces exact comma-separated format with multiple connections", async () => {
       const mockMap = new Map([["dev100", {}], ["qas200", {}], ["prd300", {}]])
-      ;(connectedRoots as jest.Mock).mockReturnValue(mockMap)
+      ;(connectedRoots as Mock).mockReturnValue(mockMap)
 
       const result: any = await tool.invoke(makeOptions(), mockToken)
       const text: string = result.parts[0].text
@@ -110,7 +110,7 @@ describe("ConnectedSystemsTool", () => {
     })
 
     it("does not include comma for a single connection", async () => {
-      ;(connectedRoots as jest.Mock).mockReturnValue(new Map([["solo100", {}]]))
+      ;(connectedRoots as Mock).mockReturnValue(new Map([["solo100", {}]]))
 
       const result: any = await tool.invoke(makeOptions(), mockToken)
       const text: string = result.parts[0].text
@@ -124,7 +124,7 @@ describe("ConnectedSystemsTool", () => {
       mockMap.set("zzz999", {})
       mockMap.set("aaa111", {})
       mockMap.set("mmm555", {})
-      ;(connectedRoots as jest.Mock).mockReturnValue(mockMap)
+      ;(connectedRoots as Mock).mockReturnValue(mockMap)
 
       const result: any = await tool.invoke(makeOptions(), mockToken)
       const text: string = result.parts[0].text
@@ -138,7 +138,7 @@ describe("ConnectedSystemsTool", () => {
         ["conn_a", { uri: "adt://conn_a", some: "data" }],
         ["conn_b", { uri: "adt://conn_b", other: "stuff" }]
       ])
-      ;(connectedRoots as jest.Mock).mockReturnValue(mockMap)
+      ;(connectedRoots as Mock).mockReturnValue(mockMap)
 
       const result: any = await tool.invoke(makeOptions(), mockToken)
       const text: string = result.parts[0].text
@@ -154,7 +154,7 @@ describe("ConnectedSystemsTool", () => {
     it("returns all connection IDs, not just the first or last", async () => {
       const ids = ["sys1", "sys2", "sys3", "sys4", "sys5"]
       const mockMap = new Map(ids.map(id => [id, {}]))
-      ;(connectedRoots as jest.Mock).mockReturnValue(mockMap)
+      ;(connectedRoots as Mock).mockReturnValue(mockMap)
 
       const result: any = await tool.invoke(makeOptions(), mockToken)
       const text: string = result.parts[0].text
@@ -171,7 +171,7 @@ describe("ConnectedSystemsTool", () => {
     })
 
     it("returns exactly one text part in the result", async () => {
-      ;(connectedRoots as jest.Mock).mockReturnValue(new Map([["x", {}]]))
+      ;(connectedRoots as Mock).mockReturnValue(new Map([["x", {}]]))
 
       const result: any = await tool.invoke(makeOptions(), mockToken)
       expect(result.parts).toHaveLength(1)
@@ -179,7 +179,7 @@ describe("ConnectedSystemsTool", () => {
     })
 
     it("empty map returns message suggesting connect command, not an empty list", async () => {
-      ;(connectedRoots as jest.Mock).mockReturnValue(new Map())
+      ;(connectedRoots as Mock).mockReturnValue(new Map())
 
       const result: any = await tool.invoke(makeOptions(), mockToken)
       const text: string = result.parts[0].text
@@ -191,7 +191,7 @@ describe("ConnectedSystemsTool", () => {
     })
 
     it("wraps error with 'Failed to get connected systems' prefix", async () => {
-      ;(connectedRoots as jest.Mock).mockImplementation(() => {
+      ;(connectedRoots as Mock).mockImplementation(() => {
         throw new Error("something broke")
       })
 

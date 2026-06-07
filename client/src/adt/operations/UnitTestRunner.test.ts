@@ -1,6 +1,6 @@
-jest.mock("vscode", () => ({
+vi.mock("vscode", () => ({
   Uri: {
-    parse: jest.fn((s: string) => ({
+    parse: vi.fn((s: string) => ({
       scheme: "adt",
       authority: s.split("://")[1]?.split("/")[0] || "conn",
       path: "/" + (s.split("://")[1]?.split("/").slice(1).join("/") || ""),
@@ -8,90 +8,90 @@ jest.mock("vscode", () => ({
     }))
   },
   tests: {
-    createTestController: jest.fn().mockReturnValue({
-      createRunProfile: jest.fn(),
-      createTestItem: jest.fn().mockImplementation((id: string, label: string) => ({
+    createTestController: vi.fn().mockReturnValue({
+      createRunProfile: vi.fn(),
+      createTestItem: vi.fn().mockImplementation((id: string, label: string) => ({
         id,
         label,
         children: {
-          get: jest.fn(),
-          add: jest.fn(),
-          delete: jest.fn(),
-          [Symbol.iterator]: jest.fn().mockReturnValue([][Symbol.iterator]())
+          get: vi.fn(),
+          add: vi.fn(),
+          delete: vi.fn(),
+          [Symbol.iterator]: vi.fn().mockReturnValue([][Symbol.iterator]())
         },
         parent: undefined,
         range: undefined
       })),
       items: {
-        get: jest.fn(),
-        add: jest.fn(),
-        [Symbol.iterator]: jest.fn().mockReturnValue([][Symbol.iterator]())
+        get: vi.fn(),
+        add: vi.fn(),
+        [Symbol.iterator]: vi.fn().mockReturnValue([][Symbol.iterator]())
       },
-      createTestRun: jest.fn().mockReturnValue({
-        enqueued: jest.fn(),
-        started: jest.fn(),
-        skipped: jest.fn(),
-        passed: jest.fn(),
-        failed: jest.fn(),
-        end: jest.fn()
+      createTestRun: vi.fn().mockReturnValue({
+        enqueued: vi.fn(),
+        started: vi.fn(),
+        skipped: vi.fn(),
+        passed: vi.fn(),
+        failed: vi.fn(),
+        end: vi.fn()
       })
     })
   },
   TestRunProfileKind: { Run: 1 },
-  TestRunRequest: jest.fn().mockImplementation((include: any) => ({ include, exclude: [] })),
-  TestMessage: jest.fn().mockImplementation((msg: any) => ({ message: msg })),
-  MarkdownString: jest.fn().mockImplementation((s: string) => ({ value: s })),
-  commands: { executeCommand: jest.fn() },
-  TestItemCollection: jest.fn(),
-  TestRun: jest.fn(),
-  Range: jest.fn().mockImplementation((s: any, e: any) => ({ start: s, end: e }))
+  TestRunRequest: vi.fn().mockImplementation((include: any) => ({ include, exclude: [] })),
+  TestMessage: vi.fn().mockImplementation((msg: any) => ({ message: msg })),
+  MarkdownString: vi.fn().mockImplementation((s: string) => ({ value: s })),
+  commands: { executeCommand: vi.fn() },
+  TestItemCollection: vi.fn(),
+  TestRun: vi.fn(),
+  Range: vi.fn().mockImplementation((s: any, e: any) => ({ start: s, end: e }))
 }), { virtual: true })
 
-jest.mock("../conections", () => ({
-  getClient: jest.fn(),
-  getRoot: jest.fn(),
-  uriRoot: jest.fn()
+vi.mock("../conections", () => ({
+  getClient: vi.fn(),
+  getRoot: vi.fn(),
+  uriRoot: vi.fn()
 }))
 
-jest.mock("../includes", () => ({
+vi.mock("../includes", () => ({
   IncludeService: {
-    get: jest.fn().mockReturnValue({ current: jest.fn().mockReturnValue(null) })
+    get: vi.fn().mockReturnValue({ current: vi.fn().mockReturnValue(null) })
   }
 }))
 
-jest.mock("abapfs", () => ({
-  isAbapFile: jest.fn(),
-  isAbapStat: jest.fn(),
-  isFolder: jest.fn()
+vi.mock("abapfs", () => ({
+  isAbapFile: vi.fn(),
+  isAbapStat: vi.fn(),
+  isFolder: vi.fn()
 }))
 
-jest.mock("abap-adt-api", () => ({
+vi.mock("abap-adt-api", () => ({
   UnitTestAlertKind: { warning: "warning", error: "error" },
-  uriPartsToString: jest.fn((u: any) => u?.toString() || "")
+  uriPartsToString: vi.fn((u: any) => u?.toString() || "")
 }))
 
-jest.mock("../../lib", () => ({
-  lineRange: jest.fn((line: number) => ({ start: { line }, end: { line } }))
+vi.mock("../../lib", () => ({
+  lineRange: vi.fn((line: number) => ({ start: { line }, end: { line } }))
 }))
 
-jest.mock("abapobject", () => ({
-  isAbapClassInclude: jest.fn().mockReturnValue(false)
+vi.mock("abapobject", () => ({
+  isAbapClassInclude: vi.fn().mockReturnValue(false)
 }))
 
-jest.mock("./AdtObjectFinder", () => ({
-  AdtObjectFinder: jest.fn().mockImplementation(() => ({
-    vscodeRange: jest.fn().mockResolvedValue({ uri: "adt://conn/path", start: { line: 0 } }),
-    clearCaches: jest.fn()
+vi.mock("./AdtObjectFinder", () => ({
+  AdtObjectFinder: vi.fn().mockImplementation(() => ({
+    vscodeRange: vi.fn().mockResolvedValue({ uri: "adt://conn/path", start: { line: 0 } }),
+    clearCaches: vi.fn()
   }))
 }))
 
-jest.mock("../../services/telemetry", () => ({ logTelemetry: jest.fn() }))
+vi.mock("../../services/telemetry", () => ({ logTelemetry: vi.fn() }))
 
 import { UnitTestRunner, UnitTestResults, TestClassResult, TestMethodResult } from "./UnitTestRunner"
 
 describe("UnitTestRunner", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     ;(UnitTestRunner as any).instances.clear()
   })
 

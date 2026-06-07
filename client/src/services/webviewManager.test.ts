@@ -3,72 +3,72 @@
  * Tests singleton pattern, WebviewManager public API, and interface types.
  */
 
-const mockCreateWebviewPanel = jest.fn()
-const mockGlobalStateGet = jest.fn().mockReturnValue({})
-const mockGlobalStateUpdate = jest.fn().mockResolvedValue(undefined)
+const mockCreateWebviewPanel = vi.fn()
+const mockGlobalStateGet = vi.fn().mockReturnValue({})
+const mockGlobalStateUpdate = vi.fn().mockResolvedValue(undefined)
 
-jest.mock(
+vi.mock(
   "vscode",
   () => ({
     window: {
-      showInformationMessage: jest.fn(),
-      showErrorMessage: jest.fn(),
+      showInformationMessage: vi.fn(),
+      showErrorMessage: vi.fn(),
       createWebviewPanel: mockCreateWebviewPanel,
       activeTextEditor: undefined
     },
     workspace: {
-      getConfiguration: jest.fn().mockReturnValue({
-        get: jest.fn((k: string, d: any) => d),
-        update: jest.fn()
+      getConfiguration: vi.fn().mockReturnValue({
+        get: vi.fn((k: string, d: any) => d),
+        update: vi.fn()
       }),
-      fs: { writeFile: jest.fn() }
+      fs: { writeFile: vi.fn() }
     },
     ViewColumn: { One: 1, Active: -1 },
     Uri: {
-      joinPath: jest.fn(),
-      file: jest.fn((p: string) => ({ fsPath: p }))
+      joinPath: vi.fn(),
+      file: vi.fn((p: string) => ({ fsPath: p }))
     }
   }),
   { virtual: true }
 )
 
-jest.mock("./funMessenger", () => ({
+vi.mock("./funMessenger", () => ({
   funWindow: {
-    showInformationMessage: jest.fn(),
-    showErrorMessage: jest.fn(),
-    showWarningMessage: jest.fn(),
+    showInformationMessage: vi.fn(),
+    showErrorMessage: vi.fn(),
+    showWarningMessage: vi.fn(),
     createWebviewPanel: mockCreateWebviewPanel,
     activeTextEditor: undefined
   }
 }))
 
-jest.mock("../adt/conections", () => ({
-  getClient: jest.fn(),
-  getOrCreateRoot: jest.fn()
+vi.mock("../adt/conections", () => ({
+  getClient: vi.fn(),
+  getOrCreateRoot: vi.fn()
 }))
 
-jest.mock("../lib", () => ({
-  caughtToString: jest.fn((e: any) => String(e)),
-  log: jest.fn()
+vi.mock("../lib", () => ({
+  caughtToString: vi.fn((e: any) => String(e)),
+  log: vi.fn()
 }))
 
-jest.mock("./dependencyGraph", () => ({
-  fetchWhereUsedData: jest.fn().mockResolvedValue([]),
-  buildGraphData: jest.fn().mockReturnValue({ nodes: [], edges: [] }),
-  mergeGraphData: jest.fn().mockReturnValue({ nodes: [], edges: [] }),
-  applyFilters: jest.fn().mockReturnValue({ nodes: [], edges: [] })
+vi.mock("./dependencyGraph", () => ({
+  fetchWhereUsedData: vi.fn().mockResolvedValue([]),
+  buildGraphData: vi.fn().mockReturnValue({ nodes: [], edges: [] }),
+  mergeGraphData: vi.fn().mockReturnValue({ nodes: [], edges: [] }),
+  applyFilters: vi.fn().mockReturnValue({ nodes: [], edges: [] })
 }))
 
-jest.mock("../adt/operations/AdtObjectFinder", () => ({
-  AdtObjectFinder: jest.fn()
+vi.mock("../adt/operations/AdtObjectFinder", () => ({
+  AdtObjectFinder: vi.fn()
 }))
 
-jest.mock("./abapSearchService", () => ({
-  getSearchService: jest.fn()
+vi.mock("./abapSearchService", () => ({
+  getSearchService: vi.fn()
 }))
 
-jest.mock("abapfs", () => ({
-  isAbapFile: jest.fn()
+vi.mock("abapfs", () => ({
+  isAbapFile: vi.fn()
 }))
 
 import { WebviewManager } from "./webviewManager"
@@ -89,25 +89,25 @@ function makeMockPanel() {
   const panel = {
     webview: {
       html: "",
-      onDidReceiveMessage: jest.fn().mockReturnValue({ dispose: jest.fn() }),
-      postMessage: jest.fn().mockResolvedValue(true),
-      asWebviewUri: jest.fn((uri: any) => uri)
+      onDidReceiveMessage: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+      postMessage: vi.fn().mockResolvedValue(true),
+      asWebviewUri: vi.fn((uri: any) => uri)
     },
     title: "Test Panel",
     viewColumn: 1,
-    onDidDispose: jest.fn((fn: () => void) => {
+    onDidDispose: vi.fn((fn: () => void) => {
       onDisposeFns.push(fn)
-      return { dispose: jest.fn() }
+      return { dispose: vi.fn() }
     }),
-    dispose: jest.fn(() => { onDisposeFns.forEach(fn => fn()) }),
-    reveal: jest.fn()
+    dispose: vi.fn(() => { onDisposeFns.forEach(fn => fn()) }),
+    reveal: vi.fn()
   }
   return panel
 }
 
 describe("WebviewManager", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     // Reset singleton between tests
     ;(WebviewManager as any).instance = undefined
     mockGlobalStateGet.mockReturnValue({})
@@ -222,7 +222,7 @@ describe("WebviewManager", () => {
         directData as any, "", "DEV100", undefined, undefined, undefined, undefined, undefined, undefined, true
       )
 
-      const clearSortMsg = (panel.webview.postMessage as jest.Mock).mock.calls.find(
+      const clearSortMsg = (panel.webview.postMessage as Mock).mock.calls.find(
         (c: any) => c[0]?.command === "clearSorting"
       )
       expect(clearSortMsg).toBeDefined()
@@ -240,7 +240,7 @@ describe("WebviewManager", () => {
         directData as any, "", "DEV100", undefined, undefined, undefined, undefined, undefined, undefined, false, true
       )
 
-      const clearFiltersMsg = (panel.webview.postMessage as jest.Mock).mock.calls.find(
+      const clearFiltersMsg = (panel.webview.postMessage as Mock).mock.calls.find(
         (c: any) => c[0]?.command === "clearFilters"
       )
       expect(clearFiltersMsg).toBeDefined()
@@ -259,7 +259,7 @@ describe("WebviewManager", () => {
         directData as any, "", "DEV100", undefined, undefined, undefined, undefined, sortColumns
       )
 
-      const sortMsg = (panel.webview.postMessage as jest.Mock).mock.calls.find(
+      const sortMsg = (panel.webview.postMessage as Mock).mock.calls.find(
         (c: any) => c[0]?.command === "applySorting"
       )
       expect(sortMsg).toBeDefined()
@@ -279,7 +279,7 @@ describe("WebviewManager", () => {
         directData as any, "", "DEV100", undefined, undefined, undefined, undefined, undefined, filters
       )
 
-      const filterMsg = (panel.webview.postMessage as jest.Mock).mock.calls.find(
+      const filterMsg = (panel.webview.postMessage as Mock).mock.calls.find(
         (c: any) => c[0]?.command === "applyFilters"
       )
       expect(filterMsg).toBeDefined()

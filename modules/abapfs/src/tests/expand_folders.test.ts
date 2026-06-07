@@ -1,7 +1,7 @@
 import { isFolder, isAbapFile, isAbapStat } from ".."
 import { runTest } from "./connectServer"
 import { convertSlash } from "../../../abapObject/out"
-import { mock } from "jest-mock-extended"
+import { mock } from "vitest-mock-extended"
 
 test(
   "class in $ABAPGIT",

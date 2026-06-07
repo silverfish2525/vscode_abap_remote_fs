@@ -1,35 +1,35 @@
-jest.mock("vscode", () => ({
-  LanguageModelToolResult: jest.fn().mockImplementation((parts: any[]) => ({ parts })),
-  LanguageModelTextPart: jest.fn().mockImplementation((text: string) => ({ text })),
-  MarkdownString: jest.fn().mockImplementation((text: string) => ({ text })),
-  lm: { registerTool: jest.fn(() => ({ dispose: jest.fn() })) },
-  Uri: { file: jest.fn((p: string) => ({ fsPath: p })) }
+vi.mock("vscode", () => ({
+  LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
+  LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
+  MarkdownString: vi.fn().mockImplementation((text: string) => ({ text })),
+  lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) },
+  Uri: { file: vi.fn((p: string) => ({ fsPath: p })) }
 }), { virtual: true })
 
-jest.mock("../../adt/conections", () => ({
-  getClient: jest.fn(),
-  getOrCreateRoot: jest.fn()
+vi.mock("../../adt/conections", () => ({
+  getClient: vi.fn(),
+  getOrCreateRoot: vi.fn()
 }))
-jest.mock("../telemetry", () => ({ logTelemetry: jest.fn() }))
-jest.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: jest.fn(() => ({ dispose: jest.fn() }))
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("./toolRegistry", () => ({
+  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() }))
 }))
-jest.mock("../../views/sapgui/SapGuiPanel", () => ({
+vi.mock("../../views/sapgui/SapGuiPanel", () => ({
   SapGuiPanel: {
-    createOrShow: jest.fn(),
-    getTransactionInfo: jest.fn()
+    createOrShow: vi.fn(),
+    getTransactionInfo: vi.fn()
   }
 }))
-jest.mock("../../config", () => ({
+vi.mock("../../config", () => ({
   RemoteManager: {
-    get: jest.fn(() => ({
-      byId: jest.fn()
+    get: vi.fn(() => ({
+      byId: vi.fn()
     }))
   }
 }))
-jest.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }))
-jest.mock("abap-adt-api", () => ({
-  ADTClient: jest.fn()
+vi.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }))
+vi.mock("abap-adt-api", () => ({
+  ADTClient: vi.fn()
 }))
 
 import { GetAbapObjectUrlTool } from "./getObjectUrlTool"
@@ -45,8 +45,8 @@ function makeOptions(input: any = {}) {
 }
 
 const mockPanel = {
-  buildWebGuiUrl: jest.fn(),
-  dispose: jest.fn()
+  buildWebGuiUrl: vi.fn(),
+  dispose: vi.fn()
 }
 
 describe("GetAbapObjectUrlTool", () => {
@@ -61,10 +61,10 @@ describe("GetAbapObjectUrlTool", () => {
 
   beforeEach(() => {
     tool = new GetAbapObjectUrlTool()
-    jest.clearAllMocks()
-    ;(RemoteManager.get as jest.Mock).mockReturnValue({ byId: jest.fn().mockReturnValue(mockConfig) })
-    ;(SapGuiPanel.createOrShow as jest.Mock).mockReturnValue(mockPanel)
-    ;(SapGuiPanel.getTransactionInfo as jest.Mock).mockReturnValue({ transaction: "SE38" })
+    vi.clearAllMocks()
+    ;(RemoteManager.get as Mock).mockReturnValue({ byId: vi.fn().mockReturnValue(mockConfig) })
+    ;(SapGuiPanel.createOrShow as Mock).mockReturnValue(mockPanel)
+    ;(SapGuiPanel.getTransactionInfo as Mock).mockReturnValue({ transaction: "SE38" })
     mockPanel.buildWebGuiUrl.mockResolvedValue("https://sap.example.com/sap/bc/gui/sap/its/webgui?~transaction=SE38")
     ;(window as any).activeTextEditor = undefined
   })
@@ -141,7 +141,7 @@ describe("GetAbapObjectUrlTool", () => {
     })
 
     it("throws when connection config not found", async () => {
-      ;(RemoteManager.get as jest.Mock).mockReturnValue({ byId: jest.fn().mockReturnValue(undefined) })
+      ;(RemoteManager.get as Mock).mockReturnValue({ byId: vi.fn().mockReturnValue(undefined) })
       await expect(
         tool.invoke(makeOptions({ objectName: "ZPROG", connectionId: "dev100" }), mockToken)
       ).rejects.toThrow("Connection configuration not found")

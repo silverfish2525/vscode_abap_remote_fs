@@ -1,4 +1,4 @@
-import { mock } from "jest-mock-extended"
+import { mock } from "vitest-mock-extended"
 import { AbapFsService, createRoot } from ".."
 import sampleNodeContents from "../testdata/nodeContents1.json"
 import sampleclas from "../testdata/zcl_ca_alv.json"

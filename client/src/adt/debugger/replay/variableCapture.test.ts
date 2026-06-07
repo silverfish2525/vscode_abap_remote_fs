@@ -1,7 +1,7 @@
-jest.mock("vscode", () => ({}), { virtual: true })
-jest.mock("../../../lib", () => ({
-  log: jest.fn(),
-  caughtToString: jest.fn((e: any) => String(e))
+vi.mock("vscode", () => ({}), { virtual: true })
+vi.mock("../../../lib", () => ({
+  log: vi.fn(),
+  caughtToString: vi.fn((e: any) => String(e))
 }))
 
 import { captureScopesBatched } from "./variableCapture"
@@ -213,7 +213,7 @@ describe("captureScopesBatched", () => {
           hierarchies: [makeHierarchy("LOCAL", "LT_BIG[]")],
           variables: [makeVar("LT_BIG[]", "LT_BIG", "", "table", 5000)]
         }),
-      debuggerVariables: jest.fn().mockResolvedValue([])
+      debuggerVariables: vi.fn().mockResolvedValue([])
     } as any
 
     await captureScopesBatched(client, defaultOpts)
@@ -313,7 +313,7 @@ describe("captureScopesBatched", () => {
           hierarchies: [makeHierarchy("LOCAL", "LT_HUGE[]")],
           variables: [makeVar("LT_HUGE[]", "LT_HUGE", "", "table", 3000)]
         }),
-      debuggerVariables: jest.fn().mockImplementation((ids: string[]) => {
+      debuggerVariables: vi.fn().mockImplementation((ids: string[]) => {
         return Promise.resolve(ids.map((id: string) => makeVar(id, id, "data")))
       })
     } as any

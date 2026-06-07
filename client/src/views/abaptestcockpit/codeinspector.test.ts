@@ -1,27 +1,27 @@
 import { getVariant, runInspectorByAdtUrl, runInspector, findingPragmas } from "./codeinspector"
 
-jest.mock("vscode", () => ({
+vi.mock("vscode", () => ({
   Uri: {
-    parse: jest.fn((s: string) => ({ toString: () => s, scheme: "adt", authority: "sys" }))
+    parse: vi.fn((s: string) => ({ toString: () => s, scheme: "adt", authority: "sys" }))
   }
 }), { virtual: true })
 
-jest.mock("../../adt/conections", () => ({
-  getClient: jest.fn()
+vi.mock("../../adt/conections", () => ({
+  getClient: vi.fn()
 }))
 
-jest.mock("../../adt/operations/AdtObjectFinder", () => ({
-  findAbapObject: jest.fn()
+vi.mock("../../adt/operations/AdtObjectFinder", () => ({
+  findAbapObject: vi.fn()
 }))
 
-jest.mock("../../config", () => ({
+vi.mock("../../config", () => ({
   RemoteManager: {
-    get: jest.fn()
+    get: vi.fn()
   }
 }))
 
-jest.mock("./functions", () => ({
-  extractPragmas: jest.fn()
+vi.mock("./functions", () => ({
+  extractPragmas: vi.fn()
 }))
 
 import { getClient } from "../../adt/conections"
@@ -29,22 +29,22 @@ import { findAbapObject } from "../../adt/operations/AdtObjectFinder"
 import { RemoteManager } from "../../config"
 import { extractPragmas } from "./functions"
 
-const mockGetClient = getClient as jest.MockedFunction<typeof getClient>
-const mockFindAbapObject = findAbapObject as jest.MockedFunction<typeof findAbapObject>
-const mockRemoteManager = RemoteManager.get as jest.MockedFunction<typeof RemoteManager.get>
-const mockExtractPragmas = extractPragmas as jest.MockedFunction<typeof extractPragmas>
+const mockGetClient = getClient as MockedFunction<typeof getClient>
+const mockFindAbapObject = findAbapObject as MockedFunction<typeof findAbapObject>
+const mockRemoteManager = RemoteManager.get as MockedFunction<typeof RemoteManager.get>
+const mockExtractPragmas = extractPragmas as MockedFunction<typeof extractPragmas>
 
 describe("getVariant", () => {
-  beforeEach(() => jest.clearAllMocks())
+  beforeEach(() => vi.clearAllMocks())
 
   it("returns variant from connection config when atcVariant is set", async () => {
     const mockCheckVariant = { id: "myvariant" }
     const mockClient = {
-      atcCheckVariant: jest.fn().mockResolvedValue(mockCheckVariant),
-      atcCustomizing: jest.fn()
+      atcCheckVariant: vi.fn().mockResolvedValue(mockCheckVariant),
+      atcCustomizing: vi.fn()
     }
     mockRemoteManager.mockReturnValue({
-      byId: jest.fn().mockReturnValue({ atcVariant: "MYVARIANT" })
+      byId: vi.fn().mockReturnValue({ atcVariant: "MYVARIANT" })
     } as any)
 
     const result = await getVariant(mockClient as any, "myconn")
@@ -55,11 +55,11 @@ describe("getVariant", () => {
 
   it("throws when atcVariant is configured but checkVariant is falsy", async () => {
     const mockClient = {
-      atcCheckVariant: jest.fn().mockResolvedValue(null),
-      atcCustomizing: jest.fn()
+      atcCheckVariant: vi.fn().mockResolvedValue(null),
+      atcCustomizing: vi.fn()
     }
     mockRemoteManager.mockReturnValue({
-      byId: jest.fn().mockReturnValue({ atcVariant: "BADVARIANT" })
+      byId: vi.fn().mockReturnValue({ atcVariant: "BADVARIANT" })
     } as any)
 
     await expect(getVariant(mockClient as any, "myconn")).rejects.toThrow(
@@ -70,13 +70,13 @@ describe("getVariant", () => {
   it("falls back to system customizing when no atcVariant in config", async () => {
     const mockCheckVariant = { id: "system_variant" }
     const mockClient = {
-      atcCheckVariant: jest.fn().mockResolvedValue(mockCheckVariant),
-      atcCustomizing: jest.fn().mockResolvedValue({
+      atcCheckVariant: vi.fn().mockResolvedValue(mockCheckVariant),
+      atcCustomizing: vi.fn().mockResolvedValue({
         properties: [{ name: "systemCheckVariant", value: "DEFAULT" }]
       })
     }
     mockRemoteManager.mockReturnValue({
-      byId: jest.fn().mockReturnValue({})
+      byId: vi.fn().mockReturnValue({})
     } as any)
 
     const result = await getVariant(mockClient as any, "myconn")
@@ -88,13 +88,13 @@ describe("getVariant", () => {
 
   it("throws when no connection found", async () => {
     const mockClient = {
-      atcCheckVariant: jest.fn().mockResolvedValue(null),
-      atcCustomizing: jest.fn().mockResolvedValue({
+      atcCheckVariant: vi.fn().mockResolvedValue(null),
+      atcCustomizing: vi.fn().mockResolvedValue({
         properties: [{ name: "systemCheckVariant", value: "DEFAULT" }]
       })
     }
     mockRemoteManager.mockReturnValue({
-      byId: jest.fn().mockReturnValue(null)
+      byId: vi.fn().mockReturnValue(null)
     } as any)
 
     await expect(getVariant(mockClient as any, "myconn")).rejects.toThrow(
@@ -104,13 +104,13 @@ describe("getVariant", () => {
 
   it("throws when systemCheckVariant not in customizing properties", async () => {
     const mockClient = {
-      atcCheckVariant: jest.fn().mockResolvedValue(null),
-      atcCustomizing: jest.fn().mockResolvedValue({
+      atcCheckVariant: vi.fn().mockResolvedValue(null),
+      atcCustomizing: vi.fn().mockResolvedValue({
         properties: []
       })
     }
     mockRemoteManager.mockReturnValue({
-      byId: jest.fn().mockReturnValue({})
+      byId: vi.fn().mockReturnValue({})
     } as any)
 
     await expect(getVariant(mockClient as any, "myconn")).rejects.toThrow(
@@ -120,14 +120,14 @@ describe("getVariant", () => {
 })
 
 describe("runInspectorByAdtUrl", () => {
-  beforeEach(() => jest.clearAllMocks())
+  beforeEach(() => vi.clearAllMocks())
 
   it("creates ATC run and returns worklist", async () => {
     const mockWorklist = { objects: [] }
     const mockRun = { id: "run1", timestamp: "2024-01-01" }
     const mockClient = {
-      createAtcRun: jest.fn().mockResolvedValue(mockRun),
-      atcWorklists: jest.fn().mockReturnValue(mockWorklist)
+      createAtcRun: vi.fn().mockResolvedValue(mockRun),
+      atcWorklists: vi.fn().mockReturnValue(mockWorklist)
     }
 
     const result = await runInspectorByAdtUrl("/some/uri", "MYVARIANT", mockClient as any)
@@ -143,19 +143,19 @@ describe("runInspectorByAdtUrl", () => {
 })
 
 describe("runInspector", () => {
-  beforeEach(() => jest.clearAllMocks())
+  beforeEach(() => vi.clearAllMocks())
 
   it("loads structure if not present and delegates to runInspectorByAdtUrl", async () => {
     const mockWorklist = { objects: [] }
     const mockRun = { id: "run1", timestamp: "ts" }
     const mockClient = {
-      createAtcRun: jest.fn().mockResolvedValue(mockRun),
-      atcWorklists: jest.fn().mockReturnValue(mockWorklist)
+      createAtcRun: vi.fn().mockResolvedValue(mockRun),
+      atcWorklists: vi.fn().mockReturnValue(mockWorklist)
     }
     const mockObject = {
       structure: null,
-      loadStructure: jest.fn().mockResolvedValue(undefined),
-      contentsPath: jest.fn().mockReturnValue("/some/path")
+      loadStructure: vi.fn().mockResolvedValue(undefined),
+      contentsPath: vi.fn().mockReturnValue("/some/path")
     }
     mockFindAbapObject.mockResolvedValue(mockObject as any)
 
@@ -172,13 +172,13 @@ describe("runInspector", () => {
     const mockWorklist = { objects: [] }
     const mockRun = { id: "run1", timestamp: "ts" }
     const mockClient = {
-      createAtcRun: jest.fn().mockResolvedValue(mockRun),
-      atcWorklists: jest.fn().mockReturnValue(mockWorklist)
+      createAtcRun: vi.fn().mockResolvedValue(mockRun),
+      atcWorklists: vi.fn().mockReturnValue(mockWorklist)
     }
     const mockObject = {
       structure: { name: "already loaded" },
-      loadStructure: jest.fn(),
-      contentsPath: jest.fn().mockReturnValue("/some/path")
+      loadStructure: vi.fn(),
+      contentsPath: vi.fn().mockReturnValue("/some/path")
     }
     mockFindAbapObject.mockResolvedValue(mockObject as any)
 
@@ -189,14 +189,14 @@ describe("runInspector", () => {
 })
 
 describe("findingPragmas", () => {
-  beforeEach(() => jest.clearAllMocks())
+  beforeEach(() => vi.clearAllMocks())
 
   it("fetches pragma from finding link and extracts pragmas", async () => {
     const mockPragmas = ["##NO_TEXT"]
     mockExtractPragmas.mockReturnValue(mockPragmas)
     const mockClient = {
       httpClient: {
-        request: jest.fn().mockResolvedValue({ body: "<html>pragma content</html>" })
+        request: vi.fn().mockResolvedValue({ body: "<html>pragma content</html>" })
       }
     }
     mockGetClient.mockReturnValue(mockClient as any)
@@ -217,7 +217,7 @@ describe("findingPragmas", () => {
     mockExtractPragmas.mockReturnValue([])
     const mockClient = {
       httpClient: {
-        request: jest.fn().mockResolvedValue({ body: "<html>no pragma</html>" })
+        request: vi.fn().mockResolvedValue({ body: "<html>no pragma</html>" })
       }
     }
     mockGetClient.mockReturnValue(mockClient as any)

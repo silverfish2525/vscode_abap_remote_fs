@@ -1,30 +1,30 @@
-jest.mock("../services/funMessenger", () => ({
+vi.mock("../services/funMessenger", () => ({
   funWindow: {
-    showWarningMessage: jest.fn(),
-    showQuickPick: jest.fn(),
-    showInputBox: jest.fn(),
-    showErrorMessage: jest.fn(),
-    createOutputChannel: jest.fn(() => ({
-      info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(), trace: jest.fn(),
+    showWarningMessage: vi.fn(),
+    showQuickPick: vi.fn(),
+    showInputBox: vi.fn(),
+    showErrorMessage: vi.fn(),
+    createOutputChannel: vi.fn(() => ({
+      info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn(), trace: vi.fn(),
     })),
   },
 }), { virtual: false })
-jest.mock("../lib", () => ({
-  log: Object.assign(jest.fn(), {
-    info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(), trace: jest.fn(),
+vi.mock("../lib", () => ({
+  log: Object.assign(vi.fn(), {
+    info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn(), trace: vi.fn(),
   }),
 }), { virtual: false })
 
-jest.mock("vscode", () => {
+vi.mock("vscode", () => {
   const NotebookCellKind = { Markup: 1, Code: 2 }
 
-  const NotebookCellData = jest.fn().mockImplementation(
+  const NotebookCellData = vi.fn().mockImplementation(
     (kind: number, value: string, languageId: string) => ({
       kind, value, languageId, metadata: {} as Record<string, any>,
     })
   )
 
-  const NotebookData = jest.fn().mockImplementation((cells: any[]) => ({
+  const NotebookData = vi.fn().mockImplementation((cells: any[]) => ({
     cells,
     metadata: {} as Record<string, any>,
   }))
@@ -34,7 +34,7 @@ jest.mock("vscode", () => {
     NotebookCellData,
     NotebookData,
     workspace: {
-      registerNotebookSerializer: jest.fn(() => ({ dispose: jest.fn() })),
+      registerNotebookSerializer: vi.fn(() => ({ dispose: vi.fn() })),
     },
   }
 }, { virtual: true })
@@ -44,7 +44,7 @@ import { NOTEBOOK_TYPE, SQL_LANGUAGE_ID } from "./types"
 import vscode from "vscode"
 
 // We use a real CancellationToken stub — serialize/deserialize ignore it
-const stubToken: any = { isCancellationRequested: false, onCancellationRequested: jest.fn() }
+const stubToken: any = { isCancellationRequested: false, onCancellationRequested: vi.fn() }
 
 function encode(text: string): Uint8Array {
   return new TextEncoder().encode(text)
@@ -67,7 +67,7 @@ function decodeResult(bytes: Uint8Array): string {
 // ── Deserialization ──────────────────────────────────────────────────────────
 
 describe("AbapNotebookSerializer.deserializeNotebook", () => {
-  beforeEach(() => jest.clearAllMocks())
+  beforeEach(() => vi.clearAllMocks())
 
   test("deserializes empty content to empty notebook with version 1", async () => {
     const data = await deserialize("")
@@ -260,7 +260,7 @@ describe("AbapNotebookSerializer.deserializeNotebook", () => {
 // ── Serialization ────────────────────────────────────────────────────────────
 
 describe("AbapNotebookSerializer.serializeNotebook", () => {
-  beforeEach(() => jest.clearAllMocks())
+  beforeEach(() => vi.clearAllMocks())
 
   function makeData(cells: any[], meta: Record<string, any> = { version: 1 }) {
     return { cells, metadata: meta }
@@ -393,10 +393,10 @@ describe("AbapNotebookSerializer.serializeNotebook", () => {
 // ── registerNotebookSerializer ───────────────────────────────────────────────
 
 describe("registerNotebookSerializer", () => {
-  beforeEach(() => jest.clearAllMocks())
+  beforeEach(() => vi.clearAllMocks())
 
   test("calls vscode.workspace.registerNotebookSerializer", () => {
-    const context = { subscriptions: { push: jest.fn() } } as any
+    const context = { subscriptions: { push: vi.fn() } } as any
     registerNotebookSerializer(context)
     const vscode = require("vscode")
     expect(vscode.workspace.registerNotebookSerializer).toHaveBeenCalledWith(
@@ -407,7 +407,7 @@ describe("registerNotebookSerializer", () => {
   })
 
   test("returns a disposable", () => {
-    const context = { subscriptions: { push: jest.fn() } } as any
+    const context = { subscriptions: { push: vi.fn() } } as any
     const disposable = registerNotebookSerializer(context)
     expect(disposable).toBeDefined()
     expect(typeof disposable.dispose).toBe("function")

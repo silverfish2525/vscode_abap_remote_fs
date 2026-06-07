@@ -1,30 +1,30 @@
-jest.mock("vscode", () => ({
-  LanguageModelToolResult: jest.fn().mockImplementation((parts: any[]) => ({ parts })),
-  LanguageModelTextPart: jest.fn().mockImplementation((text: string) => ({ text })),
-  MarkdownString: jest.fn().mockImplementation((value: string) => ({ value })),
-  lm: { registerTool: jest.fn(() => ({ dispose: jest.fn() })) }
+vi.mock("vscode", () => ({
+  LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
+  LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
+  MarkdownString: vi.fn().mockImplementation((value: string) => ({ value })),
+  lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) }
 }), { virtual: true })
 
-jest.mock("../../adt/conections", () => ({
-  getClient: jest.fn(),
-  abapUri: jest.fn()
+vi.mock("../../adt/conections", () => ({
+  getClient: vi.fn(),
+  abapUri: vi.fn()
 }))
-jest.mock("../telemetry", () => ({ logTelemetry: jest.fn() }))
-jest.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }))
-jest.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: jest.fn(() => ({ dispose: jest.fn() }))
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }))
+vi.mock("./toolRegistry", () => ({
+  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() }))
 }))
-jest.mock("../abapCopilotLogger", () => ({
-  logCommands: { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+vi.mock("../abapCopilotLogger", () => ({
+  logCommands: { info: vi.fn(), error: vi.fn(), warn: vi.fn() }
 }))
-jest.mock("../abapSearchService", () => ({ getSearchService: jest.fn() }))
-jest.mock("./shared", () => ({
-  getOptimalObjectURI: jest.fn((type: string, uri: string) => uri + "/source/main"),
-  getObjectEnhancements: jest.fn(() => Promise.resolve({ hasEnhancements: false, enhancements: [] })),
-  getTableTypeFromDD: jest.fn(() => Promise.resolve("")),
-  getTableStructureFromDD: jest.fn(() => Promise.resolve("")),
-  getAppendStructuresFromDD: jest.fn(() => Promise.resolve([])),
-  getCompleteTableStructure: jest.fn(() => Promise.resolve(""))
+vi.mock("../abapSearchService", () => ({ getSearchService: vi.fn() }))
+vi.mock("./shared", () => ({
+  getOptimalObjectURI: vi.fn((type: string, uri: string) => uri + "/source/main"),
+  getObjectEnhancements: vi.fn(() => Promise.resolve({ hasEnhancements: false, enhancements: [] })),
+  getTableTypeFromDD: vi.fn(() => Promise.resolve("")),
+  getTableStructureFromDD: vi.fn(() => Promise.resolve("")),
+  getAppendStructuresFromDD: vi.fn(() => Promise.resolve([])),
+  getCompleteTableStructure: vi.fn(() => Promise.resolve(""))
 }))
 
 import { GetABAPObjectInfoTool } from "./getObjectInfoTool"
@@ -39,17 +39,17 @@ function makeOptions(input: any = {}) {
   return { input } as any
 }
 
-const mockSearcher = { searchObjects: jest.fn() }
-const mockClient = { getObjectSource: jest.fn() }
+const mockSearcher = { searchObjects: vi.fn() }
+const mockClient = { getObjectSource: vi.fn() }
 
 describe("GetABAPObjectInfoTool", () => {
   let tool: GetABAPObjectInfoTool
 
   beforeEach(() => {
     tool = new GetABAPObjectInfoTool()
-    jest.clearAllMocks()
-    ;(getSearchService as jest.Mock).mockReturnValue(mockSearcher)
-    ;(getClient as jest.Mock).mockReturnValue(mockClient)
+    vi.clearAllMocks()
+    ;(getSearchService as Mock).mockReturnValue(mockSearcher)
+    ;(getClient as Mock).mockReturnValue(mockClient)
     ;(window as any).activeTextEditor = undefined
   })
 
@@ -118,7 +118,7 @@ describe("GetABAPObjectInfoTool", () => {
       ;(window as any).activeTextEditor = {
         document: { uri: { authority: "local", scheme: "file" } }
       }
-      ;(abapUri as jest.Mock).mockReturnValue(false)
+      ;(abapUri as Mock).mockReturnValue(false)
 
       await expect(
         tool.invoke(makeOptions({ objectName: "ZTEST" }), mockToken)
@@ -129,7 +129,7 @@ describe("GetABAPObjectInfoTool", () => {
       ;(window as any).activeTextEditor = {
         document: { uri: { authority: "dev100", scheme: "adt" } }
       }
-      ;(abapUri as jest.Mock).mockReturnValue(true)
+      ;(abapUri as Mock).mockReturnValue(true)
       mockSearcher.searchObjects.mockResolvedValue([])
 
       await tool.invoke(makeOptions({ objectName: "ZTEST" }), mockToken)
@@ -259,7 +259,7 @@ describe("GetABAPObjectInfoTool", () => {
         package: "ZPACK",
         systemType: "SAP"
       }])
-      ;(getCompleteTableStructure as jest.Mock).mockResolvedValue(
+      ;(getCompleteTableStructure as Mock).mockResolvedValue(
         "Complete Table Structure for ZMYTABLE:\n" +
         "============\n" +
         "MAIN TABLE STRUCTURE:\n" +
@@ -286,7 +286,7 @@ describe("GetABAPObjectInfoTool", () => {
         package: "ZPACK",
         systemType: "SAP"
       }])
-      ;(getCompleteTableStructure as jest.Mock).mockRejectedValue(new Error("DD query failed"))
+      ;(getCompleteTableStructure as Mock).mockRejectedValue(new Error("DD query failed"))
       mockClient.getObjectSource.mockResolvedValue("table zmytable\n  field1\n  field2\n")
 
       const result: any = await tool.invoke(
@@ -307,7 +307,7 @@ describe("GetABAPObjectInfoTool", () => {
         package: "MM",
         systemType: "SAP"
       }])
-      ;(getCompleteTableStructure as jest.Mock).mockResolvedValue(
+      ;(getCompleteTableStructure as Mock).mockResolvedValue(
         "Complete Table Structure for MARA:\n" +
         "MAIN TABLE STRUCTURE:\n" +
         "MATNR CHAR 40\n" +
@@ -340,7 +340,7 @@ describe("GetABAPObjectInfoTool", () => {
         systemType: "SAP"
       }])
       mockClient.getObjectSource.mockResolvedValue("REPORT zprog.\n")
-      ;(getObjectEnhancements as jest.Mock).mockResolvedValue({
+      ;(getObjectEnhancements as Mock).mockResolvedValue({
         hasEnhancements: true,
         totalEnhancements: 2,
         enhancements: [
@@ -369,7 +369,7 @@ describe("GetABAPObjectInfoTool", () => {
         systemType: "SAP"
       }])
       mockClient.getObjectSource.mockResolvedValue("REPORT zprog.\n")
-      ;(getObjectEnhancements as jest.Mock).mockResolvedValue({
+      ;(getObjectEnhancements as Mock).mockResolvedValue({
         hasEnhancements: false,
         enhancements: []
       })
