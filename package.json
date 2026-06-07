@@ -74,7 +74,6 @@
     "@types/mocha": "^7.0.2",
     "@types/node": "^18.11.18",
     "@vscode/vsce": "^3.3.0",
-    "concurrently": "^6.3.0",
     "ovsx": "^0.10.1",
     "rimraf": "^3.0.2",
     "typescript": "^4.9.4",
@@ -5181,7 +5180,6 @@
     "applicationinsights": "^2.9.8",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "prettier": "^3.8.1",
-    "xml2js": "^0.6.2"
+    "prettier": "^3.8.1"
   }
 }
