@@ -17,8 +17,7 @@ import { RemoteManager, formatKey } from "../../config"
 import { isAbapFile } from "abapfs"
 import { AGroup, AState } from "./abapscm"
 import { caughtToString, atob, btoa } from "../../lib"
-import * as t from "io-ts"
-import { isRight } from "fp-ts/lib/Either"
+import { conflictDetailsSchema, type ConflictDetails } from "../../schemas/abapRevisions"
 import { vsCodeUri } from "../../langClient"
 
 interface RevisionItem extends QuickPickItem {
@@ -26,22 +25,6 @@ interface RevisionItem extends QuickPickItem {
   revision: Revision
 }
 
-const revision = t.type({
-  uri: t.string,
-  date: t.string,
-  author: t.string,
-  version: t.string,
-  versionTitle: t.string
-})
-const conflictDetails = t.type({
-  conflicting: t.string,
-  transport: t.string,
-  uri: t.string,
-  incoming: revision,
-  conflict: revision
-})
-
-type ConflictDetails = t.TypeOf<typeof conflictDetails>
 const revItems = (revisions: Revision[]): RevisionItem[] =>
   revisions.map((r, i) => ({
     label: revLabel(r, `revision ${i}`),
@@ -353,8 +336,8 @@ export class AbapRevisionCommands {
 
   @command(AbapFsCommands.mergeEditor)
   private static async mergeEditor(uri: Uri | ConflictDetails) {
-    const details = conflictDetails.decode(uri)
-    if (isRight(details)) this.mergeEditorByDetails(details.right)
+    const details = conflictDetailsSchema.safeParse(uri)
+    if (details.success) this.mergeEditorByDetails(details.data)
     if (uri instanceof Uri) this.mergeConflicts(uri)
   }
   @command(AbapFsCommands.clearScmGroup)

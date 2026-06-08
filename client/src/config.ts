@@ -17,6 +17,7 @@ import { PasswordVault } from "./lib"
 import { oauthLogin } from "./oauth"
 import { ADTSCHEME } from "./adt/conections"
 import { CallLogger } from "./adt/adtCommLog"
+import { parseRemoteSettings } from "./schemas/settings"
 
 const CONFIGROOT = "abapfs"
 const REMOTE = "remote"
@@ -222,9 +223,23 @@ export class RemoteManager {
 
   private remoteList(): RemoteConfig[] {
     const userConfig = workspace.getConfiguration(CONFIGROOT)
-    const remote = userConfig[REMOTE]
-    if (!remote) throw new Error("No destination configured")
-    return Object.keys(remote).map(name => config(name, remote[name] as RemoteConfig))
+    const rawRemote = userConfig[REMOTE]
+    if (!rawRemote) throw new Error("No destination configured")
+    // Validate the shape coming out of settings.json before we hand it to
+    // typed call sites. Returning `undefined` from `parseRemoteSettings`
+    // means the value failed validation; the issues have already been logged
+    // and we treat it as an empty configuration so the user gets the same
+    // "no destination configured" surface they would see with an empty
+    // settings file, rather than a hard crash deeper in the stack.
+    const validated = parseRemoteSettings(rawRemote)
+    if (!validated) {
+      throw new Error(
+        "abapfs.remote settings are malformed; see the output channel for details"
+      )
+    }
+    return Object.keys(validated).map(name =>
+      config(name, validated[name] as RemoteConfig)
+    )
   }
 
   private loadRemote(connectionId: string) {

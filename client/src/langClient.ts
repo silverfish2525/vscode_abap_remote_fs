@@ -9,6 +9,11 @@ import {
   UriRequest,
   SearchProgress
 } from "vscode-abap-remote-fs-sharedapi"
+import {
+  uriRequestSchema,
+  searchProgressSchema,
+  commLogEntryDataSchema
+} from "./schemas/lspMessages"
 import { ExtensionContext, Uri, ProgressLocation, workspace, WorkspaceEdit } from "vscode"
 import {
   LanguageClient,
@@ -65,7 +70,15 @@ export async function vsCodeUri(
   throw lastError || uriError(uri)
 }
 
-async function getVSCodeUri({ confKey, uri, mainInclude }: UriRequest): Promise<StringWrapper> {
+async function getVSCodeUri(req: unknown): Promise<StringWrapper> {
+  const parsed = uriRequestSchema.safeParse(req)
+  if (!parsed.success) {
+    log(
+      `Methods.vsUri received malformed UriRequest:\n${JSON.stringify(parsed.error.issues)}`
+    )
+    return { s: "" }
+  }
+  const { confKey, uri, mainInclude } = parsed.data
   const s = await vsCodeUri(confKey, uri, mainInclude)
   return { s }
 }
@@ -132,9 +145,17 @@ async function getToken(connId: string) {
 }
 
 let setProgress: ((prog: SearchProgress) => void) | undefined
-async function setSearchProgress(searchProg: SearchProgress) {
-  if (setProgress) setProgress(searchProg)
-  else if (!searchProg.ended) {
+async function setSearchProgress(searchProg: unknown) {
+  const parsed = searchProgressSchema.safeParse(searchProg)
+  if (!parsed.success) {
+    log(
+      `Methods.setSearchProgress received malformed payload:\n${JSON.stringify(parsed.error.issues)}`
+    )
+    return
+  }
+  const validated: SearchProgress = parsed.data
+  if (setProgress) setProgress(validated)
+  else if (!validated.ended) {
     window.withProgress(
       {
         location: ProgressLocation.Notification,
@@ -217,9 +238,17 @@ export async function startLanguageClient(context: ExtensionContext) {
       client.onRequest(Methods.vsUri, getVSCodeUri)
       client.onRequest(Methods.setSearchProgress, setSearchProgress)
       client.onRequest(Methods.getToken, getToken)
-      client.onNotification(Methods.commLogEntry, (entry: CommLogEntryData) =>
-        CallLogger.get(entry.connId)?.add(hidrateLogData(entry.logData))
-      )
+      client.onNotification(Methods.commLogEntry, (entry: unknown) => {
+        const parsed = commLogEntryDataSchema.safeParse(entry)
+        if (!parsed.success) {
+          log(
+            `Methods.commLogEntry received malformed payload:\n${JSON.stringify(parsed.error.issues)}`
+          )
+          return
+        }
+        const validated = parsed.data as CommLogEntryData
+        CallLogger.get(validated.connId)?.add(hidrateLogData(validated.logData))
+      })
     }
   })
   client.start()
