@@ -20,6 +20,7 @@
     "typescript": "^6.0.0"
   },
   "dependencies": {
-    "abap-adt-api": "^8.4.0"
+    "abap-adt-api": "^8.4.0",
+    "abapobject": "file:../abapObject"
   }
 }

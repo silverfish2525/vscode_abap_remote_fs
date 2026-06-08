@@ -1,5 +1,5 @@
 import { FileStat, FileType, FileSystemError } from "vscode"
-import { AbapObject } from "../../abapObject"
+import { AbapObject } from "abapobject"
 import { AbapFsService } from "."
 import { AbapFolder, isAbapFolder } from "./abapFolder"
 import { ObjectVersion, isCreatableTypeId } from "abap-adt-api"

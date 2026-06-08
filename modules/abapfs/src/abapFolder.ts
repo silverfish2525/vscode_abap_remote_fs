@@ -1,5 +1,5 @@
 import { FileStat, FileSystemError } from "vscode"
-import { AbapObject, PACKAGE, fromNode, convertSlash } from "../../abapObject"
+import { AbapObject, PACKAGE, fromNode, convertSlash } from "abapobject"
 import { Folder, isFolder } from "./folder"
 import { NodeStructure, Node, NodeObjectType, isCreatableTypeId } from "abap-adt-api"
 import { AbapFile, isAbapFile } from "./abapFile"
