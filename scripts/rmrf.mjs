@@ -43,5 +43,7 @@ const expand = (pattern) => {
 const targets = args.flatMap(expand)
 
 await Promise.all(
-  targets.map(p => rm(p, { recursive: true, force: true }))
+  // maxRetries softens Windows EBUSY/EPERM during `clean` (close to rimraf's behaviour
+  // for cases that matter to npm-script cleanup; not a 1:1 equivalent for live trees).
+  targets.map(p => rm(p, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 }))
 )
