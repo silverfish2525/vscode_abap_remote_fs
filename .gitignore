@@ -35,3 +35,7 @@ modules/*/src/**/*.js.map
 # MemPalace per-project files
 mempalace.yaml
 entities.json
+
+# AI agent skills (project-local, do not commit)
+.agents/
+skills-lock.json
