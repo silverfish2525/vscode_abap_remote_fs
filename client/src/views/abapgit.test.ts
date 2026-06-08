@@ -18,10 +18,12 @@ vi.mock("vscode", () => ({
     constructor(public label?: any, public collapsibleState?: number) {}
   },
   TreeItemCollapsibleState: { None: 0, Collapsed: 1, Expanded: 2 },
-  EventEmitter: vi.fn().mockImplementation(() => ({
-    event: {},
-    fire: vi.fn(),
-  })),
+  EventEmitter: vi.fn(function () {
+    return {
+      event: {},
+      fire: vi.fn(),
+    }
+  }),
   workspace: {
     workspaceFolders: [],
     onDidChangeWorkspaceFolders: vi.fn(() => ({ dispose: vi.fn() })),
@@ -84,9 +86,11 @@ vi.mock("../adt/conections", () => ({
 }), { virtual: true })
 
 vi.mock("../adt/operations/AdtObjectFinder", () => ({
-  AdtObjectFinder: vi.fn().mockImplementation(() => ({
-    vscodeUri: vi.fn(),
-  })),
+  AdtObjectFinder: vi.fn(function () {
+    return {
+      vscodeUri: vi.fn(),
+    }
+  }),
   createUri: vi.fn(),
 }), { virtual: true })
 

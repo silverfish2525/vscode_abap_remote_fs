@@ -1,10 +1,9 @@
 vi.mock(
   "vscode",
   () => ({
-    EventEmitter: vi.fn().mockImplementation(() => ({
-      event: "mockEvent",
-      fire: vi.fn()
-    })),
+    EventEmitter: vi.fn(function () {
+      return { event: "mockEvent", fire: vi.fn() }
+    }),
     Uri: {
       parse: vi.fn((s: string) => ({
         scheme: "adt",

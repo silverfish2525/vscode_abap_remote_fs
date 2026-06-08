@@ -13,7 +13,7 @@ vi.mock("vscode", () => ({
   Uri: {
     parse: vi.fn((s: string) => ({ toString: () => s }))
   }
-}), { virtual: true })
+}))
 
 vi.mock("./services/funMessenger", () => ({
   funWindow: {
@@ -22,7 +22,7 @@ vi.mock("./services/funMessenger", () => ({
   }
 }))
 vi.mock("abap-adt-api", () => ({
-  ADTClient: vi.fn().mockImplementation(() => ({})),
+  ADTClient: vi.fn(function () { return {} }),
   createSSLConfig: vi.fn(() => ({})),
   LogCallback: vi.fn()
 }))

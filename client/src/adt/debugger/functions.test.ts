@@ -53,7 +53,7 @@ describe("newClientFromKey", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    MockADTClient.mockImplementation(() => ({} as any))
+    MockADTClient.mockImplementation(function () { return {} as any })
   })
 
   test("returns undefined when configFromKey returns undefined", async () => {

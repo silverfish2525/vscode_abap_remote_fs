@@ -4,7 +4,7 @@ vi.mock("abap-adt-api", () => ({
   )
 }))
 vi.mock("@vscode/debugadapter", () => ({
-  Handles: vi.fn().mockImplementation((base: number) => {
+  Handles: vi.fn(function (base: number) {
     const store = new Map<number, any>()
     let counter = base || 1000
     return {
@@ -17,9 +17,9 @@ vi.mock("@vscode/debugadapter", () => ({
       reset: vi.fn(() => { store.clear(); counter = base || 1000 })
     }
   }),
-  Scope: vi.fn().mockImplementation((name: string, ref: number, expensive: boolean) => ({
-    name, variablesReference: ref, expensive
-  }))
+  Scope: vi.fn(function (name: string, ref: number, expensive: boolean) {
+    return { name, variablesReference: ref, expensive }
+  })
 }))
 
 import { ReplayVariableManager } from "./replayVariableManager"

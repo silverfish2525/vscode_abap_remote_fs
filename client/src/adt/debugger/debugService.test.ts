@@ -3,7 +3,7 @@ vi.mock("abap-adt-api", () => ({
   session_types: { stateful: "stateful" }
 }))
 vi.mock("vscode", () => ({
-  EventEmitter: vi.fn().mockImplementation(() => {
+  EventEmitter: vi.fn(function () {
     const listeners: any[] = []
     return {
       event: vi.fn((listener: any, _thisArg?: any, disposables?: any[]) => {
@@ -16,13 +16,13 @@ vi.mock("vscode", () => ({
       dispose: vi.fn()
     }
   }),
-  Disposable: vi.fn().mockImplementation((fn: any) => ({ dispose: fn }))
+  Disposable: vi.fn(function (fn: any) { return { dispose: fn } })
 }), { virtual: true })
 vi.mock("@vscode/debugadapter", () => ({
-  ContinuedEvent: vi.fn().mockImplementation((threadId: number) => ({ type: "continued", threadId })),
-  StoppedEvent: vi.fn().mockImplementation((reason: string, threadId: number) => ({ type: "stopped", reason, threadId })),
-  ThreadEvent: vi.fn().mockImplementation((reason: string, threadId: number) => ({ type: "thread", reason, threadId })),
-  Source: vi.fn().mockImplementation((name: string, path: string) => ({ name, path }))
+  ContinuedEvent: vi.fn(function (threadId: number) { return { type: "continued", threadId } }),
+  StoppedEvent: vi.fn(function (reason: string, threadId: number) { return { type: "stopped", reason, threadId } }),
+  ThreadEvent: vi.fn(function (reason: string, threadId: number) { return { type: "thread", reason, threadId } }),
+  Source: vi.fn(function (name: string, path: string) { return { name, path } })
 }))
 vi.mock("./functions", () => ({
   newClientFromKey: vi.fn()

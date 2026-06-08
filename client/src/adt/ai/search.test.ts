@@ -10,8 +10,8 @@ vi.mock("vscode", () => ({
       }
     })
   },
-  LanguageModelTextPart: vi.fn((t: string) => ({ value: t })),
-  LanguageModelToolResult: vi.fn((content: any[]) => ({ content }))
+  LanguageModelTextPart: vi.fn(function (t: string) { return { value: t } }),
+  LanguageModelToolResult: vi.fn(function (content: any[]) { return { content } })
 }), { virtual: true })
 
 vi.mock("../conections", () => ({
@@ -105,9 +105,9 @@ describe("SearchTool", () => {
       }))
       const mockClient = { searchObject: vi.fn().mockResolvedValue(manyResults) }
       const mockRoot = {
-        findByAdtUri: vi.fn().mockImplementation(() =>
-          Promise.resolve({ path: "/some/path" })
-        )
+        findByAdtUri: vi.fn(function () {
+          return Promise.resolve({ path: "/some/path" })
+        })
       }
       mockGetClient.mockReturnValue(mockClient as any)
       mockGetRoot.mockReturnValue(mockRoot as any)

@@ -19,9 +19,11 @@ vi.mock("../../adt/conections", () => ({
 }))
 
 vi.mock("../../adt/operations/AdtObjectFinder", () => ({
-  AdtObjectFinder: vi.fn().mockImplementation(() => ({
-    displayAdtUri: vi.fn()
-  }))
+  AdtObjectFinder: vi.fn(function () {
+    return {
+      displayAdtUri: vi.fn()
+    }
+  })
 }))
 
 vi.mock("../../commands", () => ({
@@ -30,7 +32,7 @@ vi.mock("../../commands", () => ({
 }))
 
 vi.mock("../history", () => ({
-  History: vi.fn().mockImplementation((initial?: any) => {
+  History: vi.fn(function (initial?: any) {
     let items: any[] = initial !== undefined ? [initial] : []
     let idx = 0
     return {

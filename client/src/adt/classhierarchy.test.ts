@@ -1,16 +1,18 @@
 vi.mock(
   "vscode",
   () => ({
-    EventEmitter: vi.fn().mockImplementation(() => ({
-      event: vi.fn(),
-      fire: vi.fn()
-    })),
+    EventEmitter: vi.fn(function () {
+      return {
+        event: vi.fn(),
+        fire: vi.fn()
+      }
+    }),
     ProgressLocation: { Notification: 15 },
-    Position: vi
-      .fn()
-      .mockImplementation((line: number, char: number) => ({ line, character: char })),
-    Range: vi.fn().mockImplementation((start: any, end: any) => ({ start, end })),
-    CodeLens: vi.fn().mockImplementation((range: any, cmd: any) => ({ range, command: cmd }))
+    Position: vi.fn(function (line: number, char: number) {
+      return { line, character: char }
+    }),
+    Range: vi.fn(function (start: any, end: any) { return { start, end } }),
+    CodeLens: vi.fn(function (range: any, cmd: any) { return { range, command: cmd } })
   }),
   { virtual: true }
 )

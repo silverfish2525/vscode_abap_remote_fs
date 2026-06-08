@@ -28,7 +28,7 @@ beforeEach(() => {
 // Helper to get a fresh validator instance after module reset
 function getValidator() {
   vi.resetModules()
-  vi.mock("vscode", () => ({
+  vi.doMock("vscode", () => ({
     extensions: {
       getExtension: vi.fn().mockReturnValue({ packageJSON: { version: "2.1.0" } })
     },
@@ -41,7 +41,7 @@ function getValidator() {
     },
     StatusBarAlignment: { Left: 1, Right: 2 }
   }), { virtual: true })
-  vi.mock("./funMessenger", () => ({
+  vi.doMock("./funMessenger", () => ({
     funWindow: {
       createStatusBarItem: vi.fn().mockReturnValue({
         show: vi.fn(), hide: vi.fn(), dispose: vi.fn(), text: "", tooltip: "", command: ""

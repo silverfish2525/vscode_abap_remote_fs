@@ -30,7 +30,7 @@
   "exclude": [
     "node_modules",
     ".vscode-test",
-    "*.d.ts",
-    "*.test.ts"
+    "**/*.d.ts",
+    "**/*.test.ts"
   ]
 }

@@ -3,15 +3,15 @@ vi.mock("vscode", () => ({
 }), { virtual: true })
 
 vi.mock("./search", () => ({
-  SearchTool: vi.fn().mockImplementation(() => ({ id: "search" }))
+  SearchTool: vi.fn(function () { return { id: "search" } })
 }))
 
 vi.mock("./unit", () => ({
-  UnitTool: vi.fn().mockImplementation(() => ({ id: "unit" }))
+  UnitTool: vi.fn(function () { return { id: "unit" } })
 }))
 
 vi.mock("./activate", () => ({
-  ActivateTool: vi.fn().mockImplementation(() => ({ id: "activate" }))
+  ActivateTool: vi.fn(function () { return { id: "activate" } })
 }))
 
 vi.mock("../../services/lm-tools/toolRegistry", () => ({

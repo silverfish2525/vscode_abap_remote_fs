@@ -1,6 +1,6 @@
 vi.mock("vscode", () => {
-  const Position = vi.fn((line: number, character: number) => ({ line, character }))
-  const Range = vi.fn((start: any, end: any) => ({ start, end }))
+  const Position = vi.fn(function (line: number, character: number) { return { line, character } })
+  const Range = vi.fn(function (start: any, end: any) { return { start, end } })
   const Uri = {
     parse: vi.fn((s: string) => ({
       toString: () => s,
@@ -100,7 +100,9 @@ describe("showErrorMessage", () => {
 
 describe("vscPosition", () => {
   beforeEach(() => {
-    ;(Position as Mock).mockImplementation((line: number, char: number) => ({ line, character: char }))
+    ;(Position as Mock).mockImplementation(function (line: number, char: number) {
+      return { line, character: char }
+    })
   })
 
   it("converts 1-based ADT line to 0-based VS Code line", () => {
@@ -127,8 +129,12 @@ describe("vscPosition", () => {
 
 describe("rangeApi2Vsc", () => {
   beforeEach(() => {
-    ;(Position as Mock).mockImplementation((line: number, char: number) => ({ line, character: char }))
-    ;(Range as Mock).mockImplementation((start: any, end: any) => ({ start, end }))
+    ;(Position as Mock).mockImplementation(function (line: number, char: number) {
+      return { line, character: char }
+    })
+    ;(Range as Mock).mockImplementation(function (start: any, end: any) {
+      return { start, end }
+    })
   })
 
   it("converts API range to VS Code range", () => {
@@ -179,8 +185,12 @@ describe("rangeVscToApi", () => {
 
 describe("lineRange", () => {
   beforeEach(() => {
-    ;(Position as Mock).mockImplementation((line: number, char: number) => ({ line, character: char }))
-    ;(Range as Mock).mockImplementation((start: any, end: any) => ({ start, end }))
+    ;(Position as Mock).mockImplementation(function (line: number, char: number) {
+      return { line, character: char }
+    })
+    ;(Range as Mock).mockImplementation(function (start: any, end: any) {
+      return { start, end }
+    })
   })
 
   it("creates a range spanning column 0-1 for given line", () => {
@@ -237,7 +247,9 @@ describe("createStore", () => {
 
 describe("splitAdtUri", () => {
   beforeEach(() => {
-    ;(Position as Mock).mockImplementation((line: number, char: number) => ({ line, character: char }))
+    ;(Position as Mock).mockImplementation(function (line: number, char: number) {
+      return { line, character: char }
+    })
     mockSplitAdtUriInternal.mockReturnValue({
       path: "/sap/bc/adt/programs/ZTEST",
       type: "PROG",
@@ -288,7 +300,9 @@ describe("splitAdtUri", () => {
   })
 
   it("includes start when range has actual extent", () => {
-    ;(Position as Mock).mockImplementation((line: number, char: number) => ({ line, character: char }))
+    ;(Position as Mock).mockImplementation(function (line: number, char: number) {
+      return { line, character: char }
+    })
     const uriParts = {
       uri: "/path",
       range: {

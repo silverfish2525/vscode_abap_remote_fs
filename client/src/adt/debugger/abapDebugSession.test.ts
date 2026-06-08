@@ -18,8 +18,8 @@ vi.mock("@vscode/debugadapter", () => ({
     this.sendResponse = vi.fn()
     this.sendEvent = vi.fn()
   }),
-  InitializedEvent: vi.fn().mockImplementation(() => ({ type: "initialized" })),
-  Thread: vi.fn().mockImplementation((id: number, name: string) => ({ id, name }))
+  InitializedEvent: vi.fn(function () { return { type: "initialized" } }),
+  Thread: vi.fn(function (id: number, name: string) { return { id, name } })
 }))
 vi.mock("./abapConfigurationProvider", () => ({
   DEBUGTYPE: "abap"

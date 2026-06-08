@@ -3,11 +3,11 @@ vi.mock("@vscode/debugadapter", () => ({
     this.sendResponse = vi.fn()
     this.sendEvent = vi.fn()
   }),
-  InitializedEvent: vi.fn().mockImplementation(() => ({ type: "initialized" })),
-  StoppedEvent: vi.fn().mockImplementation((reason: string, threadId: number) => ({ type: "stopped", reason, threadId })),
-  TerminatedEvent: vi.fn().mockImplementation(() => ({ type: "terminated" })),
-  Thread: vi.fn().mockImplementation((id: number, name: string) => ({ id, name })),
-  Source: vi.fn().mockImplementation((name: string, path: string) => ({ name, path }))
+  InitializedEvent: vi.fn(function () { return { type: "initialized" } }),
+  StoppedEvent: vi.fn(function (reason: string, threadId: number) { return { type: "stopped", reason, threadId } }),
+  TerminatedEvent: vi.fn(function () { return { type: "terminated" } }),
+  Thread: vi.fn(function (id: number, name: string) { return { id, name } }),
+  Source: vi.fn(function (name: string, path: string) { return { name, path } })
 }))
 vi.mock("abap-adt-api", () => ({
   debugMetaIsComplex: vi.fn((meta: string) =>
@@ -18,12 +18,14 @@ vi.mock("@vscode/debugprotocol", () => ({}))
 // ReplayVariableManager is a real import but its deps are mocked above
 vi.mock("./replayVariableManager", () => {
   return {
-    ReplayVariableManager: vi.fn().mockImplementation(() => ({
-      reset: vi.fn(),
-      getScopes: vi.fn().mockReturnValue([]),
-      getVariables: vi.fn().mockReturnValue([]),
-      evaluate: vi.fn().mockReturnValue(undefined)
-    }))
+    ReplayVariableManager: vi.fn(function () {
+      return {
+        reset: vi.fn(),
+        getScopes: vi.fn().mockReturnValue([]),
+        getVariables: vi.fn().mockReturnValue([]),
+        evaluate: vi.fn().mockReturnValue(undefined)
+      }
+    })
   }
 })
 

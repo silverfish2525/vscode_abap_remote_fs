@@ -14,6 +14,10 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
+    // Auto-restore spies and reset mocks between tests so they don't leak.
+    // Per Vitest's "Writing Tests with AI" guidance — common AI-generated test
+    // pitfall is forgetting `mockFn.mockRestore()`. This makes it global.
+    restoreMocks: true,
     include: ["**/*.test.ts", "**/__tests__/*.{ts,tsx,js}"],
     // 14 test files have file-level vi.mock factories that reference variables the
     // hoister cannot lift (jest tolerated this, vitest does not). Excluding here

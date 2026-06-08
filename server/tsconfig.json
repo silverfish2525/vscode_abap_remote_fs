@@ -4,7 +4,7 @@
     "target": "ES2022",
     "rootDir": "src",
     "moduleResolution": "node16",
-    "types": ["node", "jest"],
+    "types": ["node", "vitest/globals"],
     "outDir": "./out",
     "sourceMap": true,
     "strict": true,

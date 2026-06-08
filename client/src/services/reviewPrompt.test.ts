@@ -53,7 +53,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   vi.resetModules()
   // Re-apply the mock after resetModules
-  vi.mock("vscode", () => ({
+  vi.doMock("vscode", () => ({
     window: {
       createStatusBarItem: vi.fn().mockReturnValue(makeStatusBarItem()),
       showInformationMessage: vi.fn().mockResolvedValue(undefined)

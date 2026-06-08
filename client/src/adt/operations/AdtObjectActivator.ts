@@ -363,7 +363,7 @@ export class AdtObjectActivator {
       return `${v}`
     }
 
-    type Msg = { text: string; href: string | undefined; target: string }
+    type Msg = { text: string; href: string; target: string }
     // Real ADT activation responses sometimes carry `longText`/`message`/`msg`
     // keys on each message even though upstream `ActivationResultMessage` only
     // declares `shortText`/`objDescr`/`href`. Narrow at the use site instead
@@ -400,11 +400,10 @@ export class AdtObjectActivator {
 
           if (!target) target = defaultObjectName
 
-          return { text, href, target }
+          return { text, href, target } satisfies Msg
         }
       )
       .filter((m): m is Msg => m !== undefined)
-
     const grouped = new Map<string, Msg[]>()
     for (const m of msgs) {
       const arr = grouped.get(m.target) || []
@@ -522,7 +521,11 @@ export class AdtObjectActivator {
     }
   }
 
-  private async tryActivate(object: AbapObject, uri: Uri, interactive: boolean) {
+  private async tryActivate(
+    object: AbapObject,
+    uri: Uri,
+    interactive: boolean
+  ): Promise<ActivationResult | undefined> {
     const { name, path } = object.lockObject
     let result
     const mainProg = await this.getMain(object, uri)
@@ -557,7 +560,7 @@ export class AdtObjectActivator {
           success: false,
           messages: [cancelMsg],
           inactive: relatedObjects
-        }
+        } as ActivationResult
       }
     } else {
       // No inactive related objects found, or only one object, just activate the main object
@@ -617,7 +620,10 @@ export class AdtObjectActivator {
         await inactive.loadStructure(true)
         return { ok: true }
       } else {
-        return this.summarizeFailure(result, object.name)
+        return this.summarizeFailure(
+          result || ({ success: false, messages: [], inactive: [] } as ActivationResult),
+          object.name
+        )
       }
     } catch (error) {
       // Enhanced error handling: surface ADT response body/status when present

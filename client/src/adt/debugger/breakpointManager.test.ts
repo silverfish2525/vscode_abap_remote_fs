@@ -18,11 +18,13 @@ vi.mock(
   { virtual: true }
 )
 vi.mock("@vscode/debugadapter", () => ({
-  Breakpoint: vi.fn().mockImplementation((verified: boolean, line?: number) => ({
-    verified,
-    line
-  })),
-  Source: vi.fn().mockImplementation((name: string, path: string) => ({ name, path }))
+  Breakpoint: vi.fn(function (verified: boolean, line?: number) {
+    return {
+      verified,
+      line
+    }
+  }),
+  Source: vi.fn(function (name: string, path: string) { return { name, path } })
 }))
 vi.mock("../../lib", () => ({
   caughtToString: vi.fn((e: any) => String(e)),

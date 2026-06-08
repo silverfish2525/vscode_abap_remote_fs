@@ -30,7 +30,7 @@
     "oxc-loader": "0.0.2",
     "terser-webpack-plugin": "^5.3.6",
     "typescript": "^6.0.0",
-    "vitest": "^2.1.0",
+    "vitest": "5.0.0-beta.4",
     "webpack": "^5.101.3",
     "webpack-cli": "^5.1.4"
   },

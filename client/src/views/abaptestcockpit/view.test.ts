@@ -1,6 +1,6 @@
 vi.mock("vscode", () => {
-  const Position = vi.fn((line: number, character: number) => ({ line, character }))
-  const Range = vi.fn((start: any, end: any) => ({ start, end }))
+  const Position = vi.fn(function (line: number, character: number) { return { line, character } })
+  const Range = vi.fn(function (start: any, end: any) { return { start, end } })
   const ThemeColor = vi.fn((id: string) => ({ id }))
   const ThemeIcon = vi.fn((id: string, color?: any) => ({ id, color }))
   return {
@@ -13,10 +13,12 @@ vi.mock("vscode", () => {
       this.collapsibleState = collapsible
     }),
     TreeItemCollapsibleState: { Expanded: 1, Collapsed: 2, None: 0 },
-    EventEmitter: vi.fn().mockImplementation(() => ({
-      fire: vi.fn(),
-      event: vi.fn()
-    })),
+    EventEmitter: vi.fn(function () {
+      return {
+        fire: vi.fn(),
+        event: vi.fn()
+      }
+    }),
     commands: { executeCommand: vi.fn() }
   }
 }, { virtual: true })
@@ -33,9 +35,11 @@ vi.mock("../../adt/conections", () => ({
 }))
 
 vi.mock("../../adt/operations/AdtObjectFinder", () => ({
-  AdtObjectFinder: vi.fn().mockImplementation(() => ({
-    vscodeRange: vi.fn()
-  }))
+  AdtObjectFinder: vi.fn(function () {
+    return {
+      vscodeRange: vi.fn()
+    }
+  })
 }))
 
 vi.mock("../../commands", () => ({

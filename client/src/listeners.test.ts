@@ -18,7 +18,7 @@ vi.mock("vscode", () => ({
     parse: vi.fn(s => ({ toString: () => s, scheme: "adt", authority: "host", path: "/file" }))
   },
   TabInputTextDiff: class {}
-}), { virtual: true })
+}))
 
 vi.mock("./lib", () => ({
   caughtToString: vi.fn(e => String(e)),

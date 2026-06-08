@@ -4,7 +4,7 @@ vi.mock("vscode", () => ({
   commands: {
     executeCommand: vi.fn()
   }
-}), { virtual: true })
+}))
 
 import * as vscode from "vscode"
 

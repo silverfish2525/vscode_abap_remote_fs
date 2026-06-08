@@ -10,8 +10,8 @@ vi.mock("vscode", () => ({
       }
     })
   },
-  LanguageModelTextPart: vi.fn((t: string) => ({ value: t })),
-  LanguageModelToolResult: vi.fn((content: any[]) => ({ content })),
+  LanguageModelTextPart: vi.fn(function (t: string) { return { value: t } }),
+  LanguageModelToolResult: vi.fn(function (content: any[]) { return { content } }),
   ProgressLocation: { Window: 10 },
   window: {
     withProgress: vi.fn()
