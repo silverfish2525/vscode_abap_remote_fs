@@ -74,7 +74,7 @@ class CollectionItem extends TreeItem {
 // buckets, but live ADT responses also include a `transportofcopies` bucket of
 // the same shape. This local extension lets us iterate the three categories
 // without an `as any` cast.
-type TransportsOfUserExt = TransportsOfUser & {
+export type TransportsOfUserExt = TransportsOfUser & {
   transportofcopies?: TransportTarget[]
 }
 
