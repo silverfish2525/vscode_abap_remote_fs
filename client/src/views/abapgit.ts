@@ -73,6 +73,9 @@ class AbapGit {
     const item: ServerItem = {
       tag: "server",
       connId,
+      // uuid v1 -> v4 transition (crypto.randomUUID): tree-item IDs are ephemeral
+      // (regenerated on every refresh) so the format swap is a no-op for users; kept
+      // 32-hex-uppercase callers above (ideId/terminalId) remain backwards-compatible.
       id: randomUUID(),
       contextValue: "system",
       collapsibleState: TreeItemCollapsibleState.Expanded,

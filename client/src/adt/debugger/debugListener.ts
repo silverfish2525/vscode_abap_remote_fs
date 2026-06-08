@@ -39,6 +39,9 @@ export interface DebuggerUI {
 const getOrCreateIdeId = (): string => {
   const ideId = context.workspaceState.get("adt.ideId")
   if (typeof ideId === "string") return ideId
+  // uuid v1 -> v4 transition (crypto.randomUUID): persisted IDs from old installs
+  // continue to use v1 via workspaceState; only fresh installs see v4.
+  // Format remains 32-hex-uppercase (dashes stripped), so SAP-side parsing is unaffected.
   const newIdeId = randomUUID().replace(/-/g, "").toUpperCase()
   context.workspaceState.update("adt.ideId", newIdeId)
   return newIdeId
@@ -57,6 +60,9 @@ const getOrCreateTerminalId = async () => {
     try {
       return readFileSync(cfgfile).toString("utf8")
     } catch (error) {
+      // uuid v1 -> v4 transition (crypto.randomUUID): existing ~/.SAP/ABAPDebugging/terminalId
+      // files from old installs keep their v1 value; only fresh installs write v4.
+      // Format remains 32-hex-uppercase (dashes stripped) for SAP terminal-ID compatibility.
       const terminalId = randomUUID().replace(/-/g, "").toUpperCase()
       if (!existsSync(cfgpath)) mkdirSync(cfgpath, { recursive: true })
       writeFileSync(cfgfile, terminalId)
