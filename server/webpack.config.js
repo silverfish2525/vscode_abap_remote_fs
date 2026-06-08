@@ -41,14 +41,15 @@ const config = {
       {
         test: /\.ts$/,
         exclude: /node_modules/,
-        use: [
-          {
-            loader: "ts-loader",
-            options: {
-              transpileOnly: true
-            }
+        use: {
+          loader: "oxc-loader",
+          options: {
+            // Match tsc's `useDefineForClassFields: false` semantics so that
+            // class-field lowering uses direct property assignments instead
+            // of the `@oxc-project/runtime/helpers/defineProperty` helper.
+            assumptions: { setPublicClassFields: true }
           }
-        ]
+        }
       }
     ]
   }
