@@ -11,7 +11,8 @@
       "es2019"
     ],
     "types": [
-      "node"
+      "node",
+      "vitest/globals"
     ],
     "sourceMap": true,
     "strict": true,

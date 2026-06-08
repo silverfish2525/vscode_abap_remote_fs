@@ -297,7 +297,7 @@ describe("openObject", () => {
 
   test("tries to refresh and re-find when object not found initially", async () => {
     const mockRoot = {
-      findByAdtUri: jest
+      findByAdtUri: vi
         .fn()
         .mockResolvedValueOnce(null)
         .mockResolvedValueOnce({ file: {}, path: "/ztest" })

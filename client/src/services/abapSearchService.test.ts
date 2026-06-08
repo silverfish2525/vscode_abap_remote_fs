@@ -140,7 +140,7 @@ describe("searchService.searchObjects", () => {
 
   it("skips type when searchObject throws for that type", async () => {
     const mockClient = {
-      searchObject: jest
+      searchObject: vi
         .fn()
         .mockRejectedValueOnce(new Error("Type not supported"))
         .mockResolvedValueOnce([makeSearchResult("ZTABLE", "TABL/DT")])

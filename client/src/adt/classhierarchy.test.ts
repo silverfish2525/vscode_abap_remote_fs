@@ -6,7 +6,7 @@ vi.mock(
       fire: vi.fn()
     })),
     ProgressLocation: { Notification: 15 },
-    Position: jest
+    Position: vi
       .fn()
       .mockImplementation((line: number, char: number) => ({ line, character: char })),
     Range: vi.fn().mockImplementation((start: any, end: any) => ({ start, end })),

@@ -227,7 +227,7 @@ describe("getTransportObjectPathFromObjectInfo", () => {
 
 describe("getTextElements (async)", () => {
   it("calls getTextElements with the correct URL and section", async () => {
-    const getTextElementsFn = jest
+    const getTextElementsFn = vi
       .fn()
       .mockResolvedValue({ textElements: [], programName: "ZPROG" })
     const client: any = { getTextElements: getTextElementsFn }
@@ -247,7 +247,7 @@ describe("getTextElements (async)", () => {
   })
 
   it("re-throws non-404 errors", async () => {
-    const getTextElementsFn = jest
+    const getTextElementsFn = vi
       .fn()
       .mockRejectedValue({ response: { status: 500 }, message: "Server error" })
     const client: any = { getTextElements: getTextElementsFn }
