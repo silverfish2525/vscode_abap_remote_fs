@@ -38,7 +38,7 @@ const cjsJs = () => ({ js: ".js" as const })
 const sharedNodeOptions = {
   format: "cjs" as const,
   platform: "node" as const,
-  target: "node18" as const,
+  target: "node20" as const,
   sourcemap: true,
   clean: true,
   dts: false,
