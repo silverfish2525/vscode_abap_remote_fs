@@ -1,2 +1,2 @@
-export { s4hProvider } from "./view"
-import "./commands"
+export { s4hProvider } from "./view";
+import "./commands";

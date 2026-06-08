@@ -3,24 +3,24 @@
  * Direct access to ABAP objects using ADT URIs
  */
 
-import * as vscode from "vscode"
-import { registerToolWithRegistry } from "./toolRegistry"
-import { funWindow as window } from "../funMessenger"
-import { getSearchService } from "../abapSearchService"
-import { abapUri, getClient } from "../../adt/conections"
-import { logTelemetry } from "../telemetry"
-import { getOptimalObjectURI, resolveCorrectURI } from "./shared"
-import { assertToolInvocationAuthorized } from "./toolGuard"
+import * as vscode from "vscode";
+import { registerToolWithRegistry } from "./toolRegistry";
+import { funWindow as window } from "../funMessenger";
+import { getSearchService } from "../abapSearchService";
+import { abapUri, getClient } from "../../adt/conections";
+import { logTelemetry } from "../telemetry";
+import { getOptimalObjectURI, resolveCorrectURI } from "./shared";
+import { assertToolInvocationAuthorized } from "./toolGuard";
 
 // ============================================================================
 // INTERFACE
 // ============================================================================
 
 export interface IGetObjectByURIParameters {
-  uri: string
-  startLine?: number
-  lineCount?: number
-  connectionId?: string
+  uri: string;
+  startLine?: number;
+  lineCount?: number;
+  connectionId?: string;
 }
 
 // ============================================================================
@@ -33,127 +33,127 @@ export interface IGetObjectByURIParameters {
 export class GetObjectByURITool implements vscode.LanguageModelTool<IGetObjectByURIParameters> {
   async prepareInvocation(
     options: vscode.LanguageModelToolInvocationPrepareOptions<IGetObjectByURIParameters>,
-    _token: vscode.CancellationToken
+    _token: vscode.CancellationToken,
   ) {
-    const { uri, startLine = 0, lineCount = 50, connectionId } = options.input
+    const { uri, startLine = 0, lineCount = 50, connectionId } = options.input;
 
     const confirmationMessages = {
       title: "Get ABAP Object by URI",
       message: new vscode.MarkdownString(
         `Direct access to ABAP object via URI: \`${uri}\`\n` +
           `Lines: ${startLine}-${startLine + lineCount}` +
-          (connectionId ? ` (connection: ${connectionId})` : "")
-      )
-    }
+          (connectionId ? ` (connection: ${connectionId})` : ""),
+      ),
+    };
 
     return {
       invocationMessage: `Accessing object via URI: ${uri}`,
-      confirmationMessages
-    }
+      confirmationMessages,
+    };
   }
 
   async invoke(
     options: vscode.LanguageModelToolInvocationOptions<IGetObjectByURIParameters>,
-    _token: vscode.CancellationToken
+    _token: vscode.CancellationToken,
   ): Promise<vscode.LanguageModelToolResult> {
-    assertToolInvocationAuthorized(options)
-    let { uri, startLine = 0, lineCount = 50, connectionId } = options.input
-    logTelemetry("tool_get_object_by_uri_called", { connectionId })
+    assertToolInvocationAuthorized(options);
+    let { uri, startLine = 0, lineCount = 50, connectionId } = options.input;
+    logTelemetry("tool_get_object_by_uri_called", { connectionId });
 
     if (connectionId) {
-      connectionId = connectionId.toLowerCase()
+      connectionId = connectionId.toLowerCase();
     }
 
     try {
-      let actualConnectionId = connectionId
+      let actualConnectionId = connectionId;
 
       if (!actualConnectionId) {
-        const activeEditor = window.activeTextEditor
+        const activeEditor = window.activeTextEditor;
         if (!activeEditor || !abapUri(activeEditor.document.uri)) {
           throw new Error(
-            "No active ABAP document and no connectionId provided. Please open an ABAP file or provide connectionId parameter."
-          )
+            "No active ABAP document and no connectionId provided. Please open an ABAP file or provide connectionId parameter.",
+          );
         }
-        actualConnectionId = activeEditor.document.uri.authority
+        actualConnectionId = activeEditor.document.uri.authority;
       }
 
-      const client = getClient(actualConnectionId)
+      const client = getClient(actualConnectionId);
 
-      let sourceContent = ""
-      let uriUsed = ""
+      let sourceContent = "";
+      let uriUsed = "";
 
       // Intelligent URI approach
-      let optimalUri = uri
+      let optimalUri = uri;
 
       if (!uri.includes("/source/main")) {
-        const objectTypeMatch = uri.match(/\/(ddic|oo|programs|functions)\/(\w+)\/([^\/]+)/)
+        const objectTypeMatch = uri.match(/\/(ddic|oo|programs|functions)\/(\w+)\/([^\/]+)/);
         if (objectTypeMatch) {
-          const [, category, subType] = objectTypeMatch
-          let detectedType = ""
+          const [, category, subType] = objectTypeMatch;
+          let detectedType = "";
 
           if (category === "ddic") {
-            if (subType === "tables") detectedType = "TABL/TA"
-            else if (subType === "dataelements") detectedType = "DTEL/DE"
-            else if (subType === "domains") detectedType = "DOMA/DD"
-            else if (subType === "tabletypes") detectedType = "TTYP/DA"
+            if (subType === "tables") detectedType = "TABL/TA";
+            else if (subType === "dataelements") detectedType = "DTEL/DE";
+            else if (subType === "domains") detectedType = "DOMA/DD";
+            else if (subType === "tabletypes") detectedType = "TTYP/DA";
           } else if (category === "oo") {
-            if (subType === "classes") detectedType = "CLAS/OC"
-            else if (subType === "interfaces") detectedType = "INTF/OI"
+            if (subType === "classes") detectedType = "CLAS/OC";
+            else if (subType === "interfaces") detectedType = "INTF/OI";
           } else if (category === "programs") {
-            detectedType = "PROG/P"
+            detectedType = "PROG/P";
           } else if (category === "functions") {
-            detectedType = "FUNC/FF"
+            detectedType = "FUNC/FF";
           }
 
           if (detectedType) {
-            optimalUri = getOptimalObjectURI(detectedType, uri)
+            optimalUri = getOptimalObjectURI(detectedType, uri);
           }
         }
       }
 
       try {
-        sourceContent = await client.getObjectSource(optimalUri)
-        uriUsed = optimalUri
+        sourceContent = await client.getObjectSource(optimalUri);
+        uriUsed = optimalUri;
       } catch (primaryError) {
         if (optimalUri !== uri) {
           try {
-            sourceContent = await client.getObjectSource(uri)
-            uriUsed = uri
+            sourceContent = await client.getObjectSource(uri);
+            uriUsed = uri;
           } catch (originalError) {
-            const resolvedUri = await resolveCorrectURI(uri, actualConnectionId)
+            const resolvedUri = await resolveCorrectURI(uri, actualConnectionId);
             try {
-              sourceContent = await client.getObjectSource(resolvedUri)
-              uriUsed = resolvedUri
+              sourceContent = await client.getObjectSource(resolvedUri);
+              uriUsed = resolvedUri;
             } catch (resolvedError) {
               throw new Error(
-                `Could not get source content after trying multiple approaches. Last error: ${resolvedError}`
-              )
+                `Could not get source content after trying multiple approaches. Last error: ${resolvedError}`,
+              );
             }
           }
         } else {
-          const resolvedUri = await resolveCorrectURI(uri, actualConnectionId)
+          const resolvedUri = await resolveCorrectURI(uri, actualConnectionId);
           try {
-            sourceContent = await client.getObjectSource(resolvedUri)
-            uriUsed = resolvedUri
+            sourceContent = await client.getObjectSource(resolvedUri);
+            uriUsed = resolvedUri;
           } catch (resolvedError) {
             throw new Error(
-              `Could not get source content. Primary error: ${primaryError}. Resolved error: ${resolvedError}`
-            )
+              `Could not get source content. Primary error: ${primaryError}. Resolved error: ${resolvedError}`,
+            );
           }
         }
       }
 
       if (!sourceContent) {
-        throw new Error("Source content is empty")
+        throw new Error("Source content is empty");
       }
 
-      const lines = sourceContent.split("\n")
-      const totalLines = lines.length
-      const endLine = Math.min(startLine + lineCount, totalLines)
-      const actualLines = endLine - startLine
+      const lines = sourceContent.split("\n");
+      const totalLines = lines.length;
+      const endLine = Math.min(startLine + lineCount, totalLines);
+      const actualLines = endLine - startLine;
 
-      const requestedLines = lines.slice(startLine, endLine)
-      const content = requestedLines.join("\n")
+      const requestedLines = lines.slice(startLine, endLine);
+      const content = requestedLines.join("\n");
 
       try {
         const resultText =
@@ -162,42 +162,42 @@ export class GetObjectByURITool implements vscode.LanguageModelTool<IGetObjectBy
           `**URI Used:** \`${uriUsed}\`\n` +
           `**Lines:** ${startLine}-${endLine} (${actualLines} lines retrieved)\n` +
           `**Total Lines:** ${totalLines}\n\n` +
-          `\`\`\`abap\n${content.trim()}\n\`\`\``
+          `\`\`\`abap\n${content.trim()}\n\`\`\``;
 
-        return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(resultText)])
+        return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(resultText)]);
       } catch (docError) {
-        const objectName = this.extractObjectNameFromURI(uri)
+        const objectName = this.extractObjectNameFromURI(uri);
 
         if (objectName) {
           try {
-            const searcher = getSearchService(actualConnectionId)
-            const searchResults = await searcher.searchObjects(objectName, undefined, 1)
+            const searcher = getSearchService(actualConnectionId);
+            const searchResults = await searcher.searchObjects(objectName, undefined, 1);
 
             if (searchResults && searchResults.length > 0) {
-              const objectInfo = searchResults[0]
+              const objectInfo = searchResults[0];
               if (objectInfo.uri) {
-                const resolvedUri = await resolveCorrectURI(objectInfo.uri, actualConnectionId)
-                const fallbackUri = `adt://${actualConnectionId}${resolvedUri}`
-                const fallbackUriObj = vscode.Uri.parse(fallbackUri)
+                const resolvedUri = await resolveCorrectURI(objectInfo.uri, actualConnectionId);
+                const fallbackUri = `adt://${actualConnectionId}${resolvedUri}`;
+                const fallbackUriObj = vscode.Uri.parse(fallbackUri);
 
                 const existingEditor = window.visibleTextEditors.find(
-                  editor => editor.document.uri.toString() === fallbackUriObj.toString()
-                )
+                  (editor) => editor.document.uri.toString() === fallbackUriObj.toString(),
+                );
 
-                let document: vscode.TextDocument
+                let document: vscode.TextDocument;
                 if (existingEditor) {
-                  document = existingEditor.document
+                  document = existingEditor.document;
                 } else {
-                  document = await vscode.workspace.openTextDocument(fallbackUriObj)
+                  document = await vscode.workspace.openTextDocument(fallbackUriObj);
                 }
 
-                const totalLines = document.lineCount
-                const endLine = Math.min(startLine + lineCount, totalLines)
-                const actualLines = endLine - startLine
+                const totalLines = document.lineCount;
+                const endLine = Math.min(startLine + lineCount, totalLines);
+                const actualLines = endLine - startLine;
 
-                let content = ""
+                let content = "";
                 for (let i = startLine; i < endLine; i++) {
-                  content += document.lineAt(i).text + "\n"
+                  content += document.lineAt(i).text + "\n";
                 }
 
                 const resultText =
@@ -206,11 +206,11 @@ export class GetObjectByURITool implements vscode.LanguageModelTool<IGetObjectBy
                   `**Extracted Name:** ${objectName}\n` +
                   `**Resolved URI:** \`${resolvedUri}\`\n` +
                   `**Lines:** ${startLine}-${endLine} (${actualLines} lines)\n\n` +
-                  `\`\`\`abap\n${content.trim()}\n\`\`\``
+                  `\`\`\`abap\n${content.trim()}\n\`\`\``;
 
                 return new vscode.LanguageModelToolResult([
-                  new vscode.LanguageModelTextPart(resultText)
-                ])
+                  new vscode.LanguageModelTextPart(resultText),
+                ]);
               }
             }
           } catch {
@@ -219,11 +219,11 @@ export class GetObjectByURITool implements vscode.LanguageModelTool<IGetObjectBy
         }
 
         throw new Error(
-          `Could not access object via URI: ${uri}. Direct access failed: ${docError}`
-        )
+          `Could not access object via URI: ${uri}. Direct access failed: ${docError}`,
+        );
       }
     } catch (error) {
-      throw new Error(`Failed to access object by URI: ${String(error)}`)
+      throw new Error(`Failed to access object by URI: ${String(error)}`);
     }
   }
 
@@ -232,17 +232,17 @@ export class GetObjectByURITool implements vscode.LanguageModelTool<IGetObjectBy
       /\/programs\/programs\/([^\/]+)$/i,
       /\/oo\/classes\/([^\/]+)$/i,
       /\/functions\/groups\/([^\/]+)\/fmodules\/([^\/]+)$/i,
-      /\/ddic\/tables\/([^\/]+)$/i
-    ]
+      /\/ddic\/tables\/([^\/]+)$/i,
+    ];
 
     for (const pattern of patterns) {
-      const match = uri.match(pattern)
+      const match = uri.match(pattern);
       if (match) {
-        return match[match.length - 1].toUpperCase()
+        return match[match.length - 1].toUpperCase();
       }
     }
 
-    return null
+    return null;
   }
 }
 
@@ -251,5 +251,7 @@ export class GetObjectByURITool implements vscode.LanguageModelTool<IGetObjectBy
 // ============================================================================
 
 export function registerGetObjectByUriTool(context: vscode.ExtensionContext): void {
-  context.subscriptions.push(registerToolWithRegistry("get_object_by_uri", new GetObjectByURITool()))
+  context.subscriptions.push(
+    registerToolWithRegistry("get_object_by_uri", new GetObjectByURITool()),
+  );
 }

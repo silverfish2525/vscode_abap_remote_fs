@@ -4,7 +4,7 @@
  * Automatically makes messages more fun without changing every call site
  */
 
-import * as vscode from "vscode"
+import * as vscode from "vscode";
 
 // ============================================================================
 // MESSAGE PATTERNS & DETECTION
@@ -36,8 +36,8 @@ const PATTERNS = {
   transport: /transport/i,
   cleaner: /clean|abap cleaner/i,
   whitelist: /whitelist/i,
-  feed: /feed/i
-}
+  feed: /feed/i,
+};
 
 const FUN_PREFIXES = {
   success: [
@@ -60,7 +60,7 @@ const FUN_PREFIXES = {
     "🎪 Ta-da! ",
     "🎭 Bravo! ",
     "🎺 Fanfare! ",
-    "🥇 Gold medal! "
+    "🥇 Gold medal! ",
   ],
   error: [
     "🚨 Houston, we have a problem... ",
@@ -79,7 +79,7 @@ const FUN_PREFIXES = {
     "🔥 Dumpster fire alert! ",
     "🚧 Road closed! ",
     "🎯 Missed the target! ",
-    "🌊 Drowning in errors! "
+    "🌊 Drowning in errors! ",
   ],
   warning: [
     "⚠️ Heads up! ",
@@ -91,7 +91,7 @@ const FUN_PREFIXES = {
     "🎯 Friendly reminder: ",
     "🚦 Yellow light! ",
     "👉 By the way... ",
-    "🔊 Announcement: "
+    "🔊 Announcement: ",
   ],
   activation: [
     "🚀 Engage! ",
@@ -107,7 +107,7 @@ const FUN_PREFIXES = {
     "🎪 Showtime! ",
     "🔋 Charging... ",
     "🌟 Powering up! ",
-    "🎮 Game on! "
+    "🎮 Game on! ",
   ],
   test: [
     "🧪 Mixing potions... ",
@@ -118,7 +118,7 @@ const FUN_PREFIXES = {
     "🔍 Investigating... ",
     "🎲 Rolling the dice... ",
     "🧙 Casting test spells... ",
-    "🎭 Rehearsing... "
+    "🎭 Rehearsing... ",
   ],
   search: [
     "🔍 Sherlock mode activated... ",
@@ -129,7 +129,7 @@ const FUN_PREFIXES = {
     "🧭 Navigating... ",
     "🎪 Seeking... ",
     "👁️ Eagle eye engaged... ",
-    "🐕 Sniffing out... "
+    "🐕 Sniffing out... ",
   ],
   connection: [
     "🔌 Plugging in... ",
@@ -140,7 +140,7 @@ const FUN_PREFIXES = {
     "🌉 Building bridges... ",
     "🔗 Linking up... ",
     "📞 Calling home... ",
-    "🎪 Syncing... "
+    "🎪 Syncing... ",
   ],
   saved: [
     "💾 Committed! ",
@@ -150,7 +150,7 @@ const FUN_PREFIXES = {
     "🎯 Captured! ",
     "🔒 Secured! ",
     "📦 Packaged! ",
-    "🎪 Preserved! "
+    "🎪 Preserved! ",
   ],
   refresh: [
     "🔄 Refreshing like a morning breeze... ",
@@ -158,7 +158,7 @@ const FUN_PREFIXES = {
     "🌊 Splashing new data... ",
     "🎪 Updating the show... ",
     "🔮 Renewing the magic... ",
-    "🎯 Syncing reality... "
+    "🎯 Syncing reality... ",
   ],
   gui: [
     "🖥️ Opening portal... ",
@@ -166,7 +166,7 @@ const FUN_PREFIXES = {
     "🎪 Starting the show... ",
     "🚪 Opening doors... ",
     "🎬 Rolling film... ",
-    "🎮 Loading level... "
+    "🎮 Loading level... ",
   ],
   creation: [
     "🎨 Painting masterpiece... ",
@@ -175,38 +175,38 @@ const FUN_PREFIXES = {
     "🎪 Manufacturing magic... ",
     "🔨 Forging... ",
     "🎯 Materializing... ",
-    "🌱 Sprouting... "
-  ]
-}
+    "🌱 Sprouting... ",
+  ],
+};
 
 // ============================================================================
 // MESSAGE TYPE DETECTION
 // ============================================================================
 
 function detectMessageType(message: string): string {
-  const msg = message.toLowerCase()
+  const msg = message.toLowerCase();
 
   // Check more specific patterns first (order matters!)
   // Check success/error/warning FIRST before operation-specific patterns
-  if (PATTERNS.success.test(msg)) return "success"
-  if (PATTERNS.error.test(msg)) return "error"
-  if (PATTERNS.warning.test(msg)) return "warning"
+  if (PATTERNS.success.test(msg)) return "success";
+  if (PATTERNS.error.test(msg)) return "error";
+  if (PATTERNS.warning.test(msg)) return "warning";
 
   // Then check operation-specific patterns
-  if (PATTERNS.activation.test(msg)) return "activation"
-  if (PATTERNS.test.test(msg)) return "test"
-  if (PATTERNS.search.test(msg)) return "search"
-  if (PATTERNS.connection.test(msg)) return "connection"
-  if (PATTERNS.saved.test(msg)) return "saved"
-  if (PATTERNS.refresh.test(msg)) return "refresh"
-  if (PATTERNS.gui.test(msg)) return "gui"
-  if (PATTERNS.creation.test(msg)) return "creation"
+  if (PATTERNS.activation.test(msg)) return "activation";
+  if (PATTERNS.test.test(msg)) return "test";
+  if (PATTERNS.search.test(msg)) return "search";
+  if (PATTERNS.connection.test(msg)) return "connection";
+  if (PATTERNS.saved.test(msg)) return "saved";
+  if (PATTERNS.refresh.test(msg)) return "refresh";
+  if (PATTERNS.gui.test(msg)) return "gui";
+  if (PATTERNS.creation.test(msg)) return "creation";
 
-  return "normal"
+  return "normal";
 }
 
 function getRandom<T>(array: T[]): T {
-  return array[Math.floor(Math.random() * array.length)]
+  return array[Math.floor(Math.random() * array.length)];
 }
 
 // ============================================================================
@@ -217,17 +217,17 @@ function getRandom<T>(array: T[]): T {
  * Check if professional notifications mode is enabled
  */
 function isProfessionalMode(): boolean {
-  const config = vscode.workspace.getConfiguration("abapfs.copilot")
-  return config.get("professionalNotifications", false)
+  const config = vscode.workspace.getConfiguration("abapfs.copilot");
+  return config.get("professionalNotifications", false);
 }
 
 function enhanceMessage(message: string, type: "info" | "error" | "warning"): string {
   // Skip enhancement if professional mode is enabled
   if (isProfessionalMode()) {
-    return message
+    return message;
   }
 
-  const msgType = detectMessageType(message)
+  const msgType = detectMessageType(message);
 
   // Add fun prefix based on detected type
   const prefixMap: Record<string, string[]> = {
@@ -241,22 +241,22 @@ function enhanceMessage(message: string, type: "info" | "error" | "warning"): st
     gui: FUN_PREFIXES.gui,
     creation: FUN_PREFIXES.creation,
     error: FUN_PREFIXES.error,
-    warning: FUN_PREFIXES.warning
-  }
+    warning: FUN_PREFIXES.warning,
+  };
 
   // Try to get prefixes for detected message type first
-  let prefixes = prefixMap[msgType]
+  let prefixes = prefixMap[msgType];
 
   // If no specific type detected, fall back to the type parameter
   if (!prefixes || prefixes.length === 0) {
-    prefixes = prefixMap[type] || []
+    prefixes = prefixMap[type] || [];
   }
 
   if (prefixes && prefixes.length > 0) {
-    return getRandom(prefixes) + message
+    return getRandom(prefixes) + message;
   }
 
-  return message
+  return message;
 }
 
 // ============================================================================
@@ -265,23 +265,23 @@ function enhanceMessage(message: string, type: "info" | "error" | "warning"): st
 
 export const funWindow = {
   showInformationMessage: (message: string, ...items: any[]) => {
-    const enhanced = enhanceMessage(message, "info")
-    return vscode.window.showInformationMessage(enhanced, ...items)
+    const enhanced = enhanceMessage(message, "info");
+    return vscode.window.showInformationMessage(enhanced, ...items);
   },
 
   showErrorMessage: (message: string, ...items: any[]) => {
-    const enhanced = enhanceMessage(message, "error")
-    return vscode.window.showErrorMessage(enhanced, ...items)
+    const enhanced = enhanceMessage(message, "error");
+    return vscode.window.showErrorMessage(enhanced, ...items);
   },
 
   showWarningMessage: (message: string, ...items: any[]) => {
-    const enhanced = enhanceMessage(message, "warning")
-    return vscode.window.showWarningMessage(enhanced, ...items)
+    const enhanced = enhanceMessage(message, "warning");
+    return vscode.window.showWarningMessage(enhanced, ...items);
   },
 
   setStatusBarMessage: (message: string, hideAfterTimeout?: number | Thenable<any>) => {
-    const enhanced = enhanceMessage(message, "info")
-    return vscode.window.setStatusBarMessage(enhanced, hideAfterTimeout as any)
+    const enhanced = enhanceMessage(message, "info");
+    return vscode.window.setStatusBarMessage(enhanced, hideAfterTimeout as any);
   },
 
   // Enhanced withProgress that adds fun messages to progress titles
@@ -289,14 +289,14 @@ export const funWindow = {
     options: vscode.ProgressOptions,
     task: (
       progress: vscode.Progress<{ message?: string; increment?: number }>,
-      token: vscode.CancellationToken
-    ) => Thenable<R>
+      token: vscode.CancellationToken,
+    ) => Thenable<R>,
   ): Thenable<R> => {
     const enhancedOptions = {
       ...options,
-      title: options.title ? enhanceMessage(options.title, "info") : options.title
-    }
-    return vscode.window.withProgress(enhancedOptions, task)
+      title: options.title ? enhanceMessage(options.title, "info") : options.title,
+    };
+    return vscode.window.withProgress(enhancedOptions, task);
   },
 
   // Pass-through for comprehensive window API (using getters for dynamic properties)
@@ -306,28 +306,28 @@ export const funWindow = {
   showOpenDialog: vscode.window.showOpenDialog,
   showSaveDialog: vscode.window.showSaveDialog,
   get activeTextEditor() {
-    return vscode.window.activeTextEditor
+    return vscode.window.activeTextEditor;
   },
   get visibleTextEditors() {
-    return vscode.window.visibleTextEditors
+    return vscode.window.visibleTextEditors;
   },
   get state() {
-    return vscode.window.state
+    return vscode.window.state;
   },
   get activeNotebookEditor() {
-    return vscode.window.activeNotebookEditor
+    return vscode.window.activeNotebookEditor;
   },
   get visibleNotebookEditors() {
-    return vscode.window.visibleNotebookEditors
+    return vscode.window.visibleNotebookEditors;
   },
   get activeTerminal() {
-    return vscode.window.activeTerminal
+    return vscode.window.activeTerminal;
   },
   get terminals() {
-    return vscode.window.terminals
+    return vscode.window.terminals;
   },
   get tabGroups() {
-    return vscode.window.tabGroups
+    return vscode.window.tabGroups;
   },
   showTextDocument: vscode.window.showTextDocument,
   showNotebookDocument: vscode.window.showNotebookDocument,
@@ -357,5 +357,5 @@ export const funWindow = {
   onDidOpenTerminal: vscode.window.onDidOpenTerminal,
   onDidCloseTerminal: vscode.window.onDidCloseTerminal,
   onDidChangeTerminalState: vscode.window.onDidChangeTerminalState,
-  onDidChangeWindowState: vscode.window.onDidChangeWindowState
-}
+  onDidChangeWindowState: vscode.window.onDidChangeWindowState,
+};

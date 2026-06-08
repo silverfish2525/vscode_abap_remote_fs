@@ -11,12 +11,12 @@ View the contents of any database table directly in VS Code — similar to **SE1
 
 The results open in an interactive grid with the following capabilities:
 
-| Feature | How to use |
-|---|---|
-| **Sort** | Click a column header |
-| **Filter** | Use the filter row below the header |
+| Feature      | How to use                                      |
+| ------------ | ----------------------------------------------- |
+| **Sort**     | Click a column header                           |
+| **Filter**   | Use the filter row below the header             |
 | **Paginate** | Navigate pages using the controls at the bottom |
-| **Export** | Use the export button to download results |
+| **Export**   | Use the export button to download results       |
 
 ## Notes
 

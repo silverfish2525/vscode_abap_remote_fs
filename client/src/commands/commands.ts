@@ -1,8 +1,14 @@
-import { PACKAGE, AdtObjectCreator } from "../adt/operations/AdtObjectCreator"
-import { CreatableTypeIds, PackageTypes, CreatableTypes, isBindingOptions, NewObjectOptions } from "abap-adt-api"
-import { MySearchResult } from "../adt/operations/AdtObjectFinder"
-import { SapGuiPanel } from "../views/sapgui/SapGuiPanel"
-import { clearSystemInfoCache } from "../services/sapSystemInfo"
+import { PACKAGE, AdtObjectCreator } from "../adt/operations/AdtObjectCreator";
+import {
+  CreatableTypeIds,
+  PackageTypes,
+  CreatableTypes,
+  isBindingOptions,
+  NewObjectOptions,
+} from "abap-adt-api";
+import { MySearchResult } from "../adt/operations/AdtObjectFinder";
+import { SapGuiPanel } from "../views/sapgui/SapGuiPanel";
+import { clearSystemInfoCache } from "../services/sapSystemInfo";
 import {
   workspace,
   Uri,
@@ -10,11 +16,11 @@ import {
   ProgressLocation,
   Range,
   FileChangeType,
-  extensions
-} from "vscode"
-import * as vscode from "vscode"
-import { funWindow as window } from "../services/funMessenger"
-import { pickAdtRoot, RemoteManager } from "../config"
+  extensions,
+} from "vscode";
+import * as vscode from "vscode";
+import { funWindow as window } from "../services/funMessenger";
+import { pickAdtRoot, RemoteManager } from "../config";
 import {
   caughtToString,
   inputBox,
@@ -22,143 +28,143 @@ import {
   log,
   rangeVscToApi,
   splitAdtUri,
-  channel
-} from "../lib"
-import { FavouritesProvider, FavItem } from "../views/favourites"
-import { findEditor, vsCodeUri } from "../langClient"
-import { showHideActivate } from "../listeners"
-import { UnitTestRunner } from "../adt/operations/UnitTestRunner"
-import { selectTransport } from "../adt/AdtTransports"
-import { showInGuiCb, executeInGui, runInSapGui } from "../adt/sapgui/sapgui"
-import { storeTokens, clearTokens } from "../oauth"
-import { showAbapDoc } from "../views/help"
-import { showQuery } from "../views/query/query"
+  channel,
+} from "../lib";
+import { FavouritesProvider, FavItem } from "../views/favourites";
+import { findEditor, vsCodeUri } from "../langClient";
+import { showHideActivate } from "../listeners";
+import { UnitTestRunner } from "../adt/operations/UnitTestRunner";
+import { selectTransport } from "../adt/AdtTransports";
+import { showInGuiCb, executeInGui, runInSapGui } from "../adt/sapgui/sapgui";
+import { storeTokens, clearTokens } from "../oauth";
+import { showAbapDoc } from "../views/help";
+import { showQuery } from "../views/query/query";
 import {
   ADTSCHEME,
   getClient,
   getRoot,
   uriRoot,
   getOrCreateRoot,
-  disconnect
-} from "../adt/conections"
-import { isAbapFolder, isAbapFile, isAbapStat } from "abapfs"
-import { AdtObjectActivator } from "../adt/operations/AdtObjectActivator"
+  disconnect,
+} from "../adt/conections";
+import { isAbapFolder, isAbapFile, isAbapStat } from "abapfs";
+import { AdtObjectActivator } from "../adt/operations/AdtObjectActivator";
 import {
   AdtObjectFinder,
   createUri,
   findAbapObject,
-  uriAbapFile
-} from "../adt/operations/AdtObjectFinder"
-import { isAbapClassInclude } from "abapobject"
-import { IncludeProvider } from "../adt/includes" // resolve dependencies
-import { command, AbapFsCommands } from "."
-import { createConnection } from "./connectionwizard"
-import { openConnectionManager } from "../configuration/sapConnectionManager"
-import { context as extensionContext } from "../extension"
-import { types } from "util"
-import { atcProvider } from "../views/abaptestcockpit"
-import { FsProvider } from "../fs/FsProvider"
-import { logTelemetry } from "../services/telemetry"
-import { SapGui } from "../adt/sapgui/sapgui"
-import { AbapDebugSession } from "../adt/debugger/abapDebugSession"
-import { createObjectInEditorCommand } from "./createObjectInEditor"
-import { manageTextElementsCommand } from "./textElementsCommands"
-import { configureFeedsCommand } from "./configureFeeds"
-import { publishServiceBindingCommand } from "./publishServiceBinding"
-import { testServiceBindingCommand } from "./testServiceBinding"
+  uriAbapFile,
+} from "../adt/operations/AdtObjectFinder";
+import { isAbapClassInclude } from "abapobject";
+import { IncludeProvider } from "../adt/includes"; // resolve dependencies
+import { command, AbapFsCommands } from ".";
+import { createConnection } from "./connectionwizard";
+import { openConnectionManager } from "../configuration/sapConnectionManager";
+import { context as extensionContext } from "../extension";
+import { types } from "util";
+import { atcProvider } from "../views/abaptestcockpit";
+import { FsProvider } from "../fs/FsProvider";
+import { logTelemetry } from "../services/telemetry";
+import { SapGui } from "../adt/sapgui/sapgui";
+import { AbapDebugSession } from "../adt/debugger/abapDebugSession";
+import { createObjectInEditorCommand } from "./createObjectInEditor";
+import { manageTextElementsCommand } from "./textElementsCommands";
+import { configureFeedsCommand } from "./configureFeeds";
+import { publishServiceBindingCommand } from "./publishServiceBinding";
+import { testServiceBindingCommand } from "./testServiceBinding";
 
 export function currentUri() {
-  if (!window.activeTextEditor) return
-  const uri = window.activeTextEditor.document.uri
-  if (uri.scheme !== ADTSCHEME) return
-  return uri
+  if (!window.activeTextEditor) return;
+  const uri = window.activeTextEditor.document.uri;
+  if (uri.scheme !== ADTSCHEME) return;
+  return uri;
 }
 
 async function saveDirtyAdtDocuments(connectionId: string) {
   const dirtyDocuments = workspace.textDocuments.filter(
-    document =>
+    (document) =>
       document.isDirty &&
       document.uri.scheme === ADTSCHEME &&
-      document.uri.authority === connectionId
-  )
+      document.uri.authority === connectionId,
+  );
 
   for (const document of dirtyDocuments) {
-    const saved = await document.save()
+    const saved = await document.save();
     if (!saved) {
-      throw new Error(`Failed to save ${document.uri.path} before activation.`)
+      throw new Error(`Failed to save ${document.uri.path} before activation.`);
     }
   }
 }
 
 export function currentAbapFile() {
-  const uri = currentUri()
-  return uriAbapFile(uri)
+  const uri = currentUri();
+  return uriAbapFile(uri);
 }
 
 export function currentEditState() {
-  const uri = currentUri()
-  if (!uri) return
-  const line = window.activeTextEditor?.selection.active.line
-  return { uri, line }
+  const uri = currentUri();
+  if (!uri) return;
+  const line = window.activeTextEditor?.selection.active.line;
+  return { uri, line };
 }
 
 export function openObject(connId: string, uri: string, objectType?: string) {
   return window.withProgress(
     { location: ProgressLocation.Notification, title: "Opening..." },
     async () => {
-      const root = getRoot(connId)
-      let result = await root.findByAdtUri(uri, true)
+      const root = getRoot(connId);
+      let result = await root.findByAdtUri(uri, true);
 
       // If not found, try refreshing the workspace (for newly created objects)
       if (!result) {
         try {
-          await commands.executeCommand("workbench.files.action.refreshFilesExplorer")
-          await new Promise(resolve => setTimeout(resolve, 500)) // Give it a moment
-          result = await root.findByAdtUri(uri, true)
+          await commands.executeCommand("workbench.files.action.refreshFilesExplorer");
+          await new Promise((resolve) => setTimeout(resolve, 500)); // Give it a moment
+          result = await root.findByAdtUri(uri, true);
         } catch (e) {
           // Refresh failed or still not found
         }
       }
 
-      const { file, path } = result || {}
+      const { file, path } = result || {};
       if (!file || !path)
-        throw new Error("Object not found in workspace. Try refreshing the explorer.")
+        throw new Error("Object not found in workspace. Try refreshing the explorer.");
 
       if (isAbapFolder(file) && file.object.type === PACKAGE) {
-        await commands.executeCommand("revealInExplorer", createUri(connId, path))
-        return
+        await commands.executeCommand("revealInExplorer", createUri(connId, path));
+        return;
       } else if (isAbapFile(file)) {
-        const fileUri = createUri(connId, path)
+        const fileUri = createUri(connId, path);
 
         // For message classes, force open with custom editor
         if (objectType === "MSAG/N" || path.endsWith(".msagn.xml")) {
-          await commands.executeCommand("vscode.openWith", fileUri, "abapfs.msagn")
+          await commands.executeCommand("vscode.openWith", fileUri, "abapfs.msagn");
         } else {
-          await workspace.openTextDocument(fileUri).then(window.showTextDocument)
+          await workspace.openTextDocument(fileUri).then(window.showTextDocument);
         }
       }
-      return { file, path }
-    }
-  )
+      return { file, path };
+    },
+  );
 }
 interface ShowObjectArgument {
-  connId: string
-  uri: string
+  connId: string;
+  uri: string;
 }
 export class AdtCommands {
   private static hasEnabledAbapBreakpoints(connectionId: string) {
     return vscode.debug.breakpoints.some(
-      breakpoint =>
+      (breakpoint) =>
         breakpoint.enabled &&
         breakpoint instanceof vscode.SourceBreakpoint &&
         breakpoint.location.uri.scheme === ADTSCHEME &&
-        breakpoint.location.uri.authority === connectionId
-    )
+        breakpoint.location.uri.authority === connectionId,
+    );
   }
 
   private static async autoStartDebuggerIfNeeded(connectionId: string) {
-    if (AbapDebugSession.byConnection(connectionId)) return
-    if (!AdtCommands.hasEnabledAbapBreakpoints(connectionId)) return
+    if (AbapDebugSession.byConnection(connectionId)) return;
+    if (!AdtCommands.hasEnabledAbapBreakpoints(connectionId)) return;
 
     const started = await vscode.debug.startDebugging(undefined, {
       type: "abap",
@@ -166,111 +172,110 @@ export class AdtCommands {
       name: "Auto Attach to server",
       connId: connectionId,
       debugUser: "",
-      terminalMode: false
-    })
+      terminalMode: false,
+    });
 
     if (!started) {
-      throw new Error("Failed to auto-start ABAP debugger")
+      throw new Error("Failed to auto-start ABAP debugger");
     }
 
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await new Promise((resolve) => setTimeout(resolve, 500));
   }
 
   @command(AbapFsCommands.extractMethod)
   private static async extractMethod(url: string, range: Range) {
-    logTelemetry("command_extract_method_called")
-    const uri = Uri.parse(url)
-    const client = getClient(uri.authority)
-    const root = getRoot(uri.authority)
-    const file = await root.getNodeAsync(uri.path)
+    logTelemetry("command_extract_method_called");
+    const uri = Uri.parse(url);
+    const client = getClient(uri.authority);
+    const root = getRoot(uri.authority);
+    const file = await root.getNodeAsync(uri.path);
     if (isAbapFile(file)) {
-      const o = file.object
-      const proposal = await client.extractMethodEvaluate(o.path, rangeVscToApi(range))
-      const methodName = await window.showInputBox({ prompt: "Method name" })
-      if (!methodName) return
-      const transport = await selectTransport(o.path, "", client)
-      if (transport.cancelled) return
-      proposal.genericRefactoring.transport = transport.transport
-      proposal.name = methodName
-      const preview = await client.extractMethodPreview(proposal)
-      await client.extractMethodExecute(preview)
-      FsProvider.get().notifyChanges([{ type: FileChangeType.Changed, uri }])
+      const o = file.object;
+      const proposal = await client.extractMethodEvaluate(o.path, rangeVscToApi(range));
+      const methodName = await window.showInputBox({ prompt: "Method name" });
+      if (!methodName) return;
+      const transport = await selectTransport(o.path, "", client);
+      if (transport.cancelled) return;
+      proposal.genericRefactoring.transport = transport.transport;
+      proposal.name = methodName;
+      const preview = await client.extractMethodPreview(proposal);
+      await client.extractMethodExecute(preview);
+      FsProvider.get().notifyChanges([{ type: FileChangeType.Changed, uri }]);
     }
   }
   @command(AbapFsCommands.showDocumentation)
   private static async showAbapDoc() {
-    logTelemetry("command_show_documentation_called")
-    return showAbapDoc()
+    logTelemetry("command_show_documentation_called");
+    return showAbapDoc();
   }
 
   @command(AbapFsCommands.selectDB)
   private static async selectDB(table?: string) {
-    logTelemetry("command_select_db_called")
-    return showQuery(table)
+    logTelemetry("command_select_db_called");
+    return showQuery(table);
   }
 
   @command(AbapFsCommands.changeInclude)
   private static async changeMain(uri: Uri) {
-    return IncludeProvider.get().switchInclude(uri)
+    return IncludeProvider.get().switchInclude(uri);
   }
 
   @command(AbapFsCommands.createConnection)
   private static createConnectionCommand() {
-    return createConnection()
+    return createConnection();
   }
 
   @command(AbapFsCommands.connectionManager)
   private static connectionManagerCommand() {
-    return openConnectionManager(extensionContext)
+    return openConnectionManager(extensionContext);
   }
-
 
   @command(AbapFsCommands.connect)
   private static async connectAdtServer(selector: any) {
-    logTelemetry("command_connect_called")
-    let name = ""
+    logTelemetry("command_connect_called");
+    let name = "";
     try {
-      const connectionID = selector && selector.connection
-      const manager = RemoteManager.get()
+      const connectionID = selector && selector.connection;
+      const manager = RemoteManager.get();
 
-      const { remote, userCancel } = await manager.selectConnection(connectionID)
+      const { remote, userCancel } = await manager.selectConnection(connectionID);
       if (!remote)
-        if (!userCancel) throw Error("No remote configuration available in settings")
-        else return
-      name = remote.name
+        if (!userCancel) throw Error("No remote configuration available in settings");
+        else return;
+      name = remote.name;
 
-      log(`Connecting to server ${remote.name}`)
+      log(`Connecting to server ${remote.name}`);
       // this might involve asking for a password...
-      await getOrCreateRoot(remote.name) // if connection raises an exception don't mount any folder
+      await getOrCreateRoot(remote.name); // if connection raises an exception don't mount any folder
 
-      await storeTokens()
+      await storeTokens();
 
-      const folderCount = workspace.workspaceFolders?.length ?? 0
+      const folderCount = workspace.workspaceFolders?.length ?? 0;
       workspace.updateWorkspaceFolders(folderCount, 0, {
         uri: Uri.parse("adt://" + remote.name),
-        name: remote.name + "(ABAP)"
-      })
-      extensionContext.subscriptions.push(UnitTestRunner.get(connectionID).controller)
-      log(`Connected to server ${remote.name}`)
+        name: remote.name + "(ABAP)",
+      });
+      extensionContext.subscriptions.push(UnitTestRunner.get(connectionID).controller);
+      log(`Connected to server ${remote.name}`);
     } catch (e) {
-      const body = typeof e === "object" && (e as any)?.response?.body
-      if (body) log(body)
-      const isMissing = (e: any) => !!`${e}`.match("name.*org.freedesktop.secrets")
-      const errStr = caughtToString(e)
+      const body = typeof e === "object" && (e as any)?.response?.body;
+      if (body) log(body);
+      const isMissing = (e: any) => !!`${e}`.match("name.*org.freedesktop.secrets");
+      const errStr = caughtToString(e);
 
       // Recoverable config errors → open Connection Manager with helpful message
-      let configError = ""
+      let configError = "";
       if (errStr.includes("No remote configuration available")) {
-        configError = "No SAP systems configured yet. Opening Connection Manager to add one."
+        configError = "No SAP systems configured yet. Opening Connection Manager to add one.";
       } else if (errStr.includes("Invalid ADTClient configuration")) {
         configError = name
           ? `Connection "${name}" is incomplete (missing ADT URL or username). Opening Connection Manager to fix it.`
-          : "Connection is incomplete (missing ADT URL or username). Opening Connection Manager to fix it."
+          : "Connection is incomplete (missing ADT URL or username). Opening Connection Manager to fix it.";
       }
 
       if (configError) {
-        window.showInformationMessage(configError)
-        return commands.executeCommand("abapfs.connectionManager")
+        window.showInformationMessage(configError);
+        return commands.executeCommand("abapfs.connectionManager");
       }
 
       // HTTP errors with user-friendly messages
@@ -278,249 +283,249 @@ export class AdtCommands {
         return window.showErrorMessage(
           name
             ? `Authentication failed for "${name}". Check your username/password in Connection Manager.`
-            : `Authentication failed. Check your credentials.`
-        )
+            : `Authentication failed. Check your credentials.`,
+        );
       }
       if (errStr.includes("status code 503")) {
         return window.showErrorMessage(
           name
             ? `SAP system "${name}" is unreachable (HTTP 503). The ADT endpoint may be down or proxy settings may be incorrect — contact your Basis team.`
-            : `SAP system is unreachable (HTTP 503). The ADT endpoint may be down or proxy settings may be incorrect — contact your Basis team.`
-        )
+            : `SAP system is unreachable (HTTP 503). The ADT endpoint may be down or proxy settings may be incorrect — contact your Basis team.`,
+        );
       }
 
       const message = isMissing(e)
         ? `Password storage not supported. Please install gnome-keyring or add a password to the connection`
         : name
           ? `Failed to connect to ${name}: ${errStr}`
-          : `Failed to connect: ${errStr}`
-      return window.showErrorMessage(message)
+          : `Failed to connect: ${errStr}`;
+      return window.showErrorMessage(message);
     }
   }
 
   @command(AbapFsCommands.disconnect)
   private static async disconnectAdtServer(selector?: any) {
-    logTelemetry("command_disconnect_called")
+    logTelemetry("command_disconnect_called");
     try {
       // Show confirmation dialog
       const choice = await window.showWarningMessage(
         "This will disconnect from all ABAP systems and remove them from the workspace. Continue?",
         { modal: true },
         "Disconnect",
-        "Cancel"
-      )
+        "Cancel",
+      );
 
       if (choice !== "Disconnect") {
-        return
+        return;
       }
 
       // Get all current ABAP workspace folders
       const abapFolders =
-        workspace.workspaceFolders?.filter(folder => folder.uri.scheme === ADTSCHEME) || []
+        workspace.workspaceFolders?.filter((folder) => folder.uri.scheme === ADTSCHEME) || [];
 
       // Log out from all connections and clear cached data
-      await disconnect()
+      await disconnect();
 
       // Remove all ABAP folders from workspace
       if (abapFolders.length > 0) {
         const startIndex =
-          workspace.workspaceFolders?.findIndex(folder => folder.uri.scheme === ADTSCHEME) ?? 0
+          workspace.workspaceFolders?.findIndex((folder) => folder.uri.scheme === ADTSCHEME) ?? 0;
 
         workspace.updateWorkspaceFolders(
           startIndex,
-          abapFolders.length // Remove all ABAP folders
-        )
+          abapFolders.length, // Remove all ABAP folders
+        );
       }
 
       // Clear any cached tokens
-      clearTokens()
+      clearTokens();
 
       // Refresh file explorer to reflect changes
-      await commands.executeCommand("workbench.files.action.refreshFilesExplorer")
+      await commands.executeCommand("workbench.files.action.refreshFilesExplorer");
 
-      window.showInformationMessage("✅ Disconnected from all ABAP systems")
+      window.showInformationMessage("✅ Disconnected from all ABAP systems");
     } catch (e) {
-      const message = `Failed to disconnect: ${caughtToString(e)}`
-      return window.showErrorMessage(message)
+      const message = `Failed to disconnect: ${caughtToString(e)}`;
+      return window.showErrorMessage(message);
     }
   }
 
   @command(AbapFsCommands.activate)
   private static async activateCurrent(selector: Uri) {
     try {
-      const uri = selector || currentUri()
-      logTelemetry("command_activate_called", { connectionId: uri?.authority })
+      const uri = selector || currentUri();
+      logTelemetry("command_activate_called", { connectionId: uri?.authority });
       if (!uri) {
-        throw new Error("No ABAP file is currently open")
+        throw new Error("No ABAP file is currently open");
       }
 
-      const activator = AdtObjectActivator.get(uri.authority)
-      const editor = findEditor(uri.toString())
+      const activator = AdtObjectActivator.get(uri.authority);
+      const editor = findEditor(uri.toString());
 
       await window.withProgress(
         { location: ProgressLocation.Notification, title: "Activating..." },
-        async progress => {
+        async (progress) => {
           // Wait for any pending Copilot changes to complete
-          await new Promise(resolve => setTimeout(resolve, 3000))
+          await new Promise((resolve) => setTimeout(resolve, 3000));
 
-          progress.report({ message: "Validating object..." })
-          const obj = await findAbapObject(uri)
+          progress.report({ message: "Validating object..." });
+          const obj = await findAbapObject(uri);
 
           // Enhanced save logic with better error handling
           if (editor && editor.document.isDirty) {
-            progress.report({ message: "Saving changes..." })
-            const saved = await editor.document.save()
+            progress.report({ message: "Saving changes..." });
+            const saved = await editor.document.save();
             if (!saved) {
               throw new Error(
-                "Failed to save file before activation. Please save manually and try again."
-              )
+                "Failed to save file before activation. Please save manually and try again.",
+              );
             }
             // Small delay to ensure save is completed
-            await new Promise(resolve => setTimeout(resolve, 100))
+            await new Promise((resolve) => setTimeout(resolve, 100));
           }
 
-          progress.report({ message: "Activating object..." })
-          const { ok, summary } = await activator.activate(obj, uri)
+          progress.report({ message: "Activating object..." });
+          const { ok, summary } = await activator.activate(obj, uri);
           if (!ok) {
-            throw new Error(summary || "Activation failed; see ABAP FS output for details")
+            throw new Error(summary || "Activation failed; see ABAP FS output for details");
           }
 
           if (editor === window.activeTextEditor) {
-            await workspace.fs.stat(uri)
-            await showHideActivate(editor)
+            await workspace.fs.stat(uri);
+            await showHideActivate(editor);
           }
-        }
-      )
+        },
+      );
 
       // Show success message
-      const objectName = uri.path.split("/").pop() || "Object"
-      window.showInformationMessage(`✅ ${objectName} activated successfully`)
+      const objectName = uri.path.split("/").pop() || "Object";
+      window.showInformationMessage(`✅ ${objectName} activated successfully`);
     } catch (e) {
-      const errorMessage = caughtToString(e)
+      const errorMessage = caughtToString(e);
 
       const action = await window.showErrorMessage(
         `Activation failed: ${errorMessage}`,
-        "Show activation log"
-      )
+        "Show activation log",
+      );
       if (action === "Show activation log") {
-        channel.show(true)
+        channel.show(true);
       }
       // Don't re-throw or show additional notifications - user already saw the summary
-      return
+      return;
     }
   }
 
   @command(AbapFsCommands.activateMultiple)
   private static async activateMultiple(selector?: Uri) {
     try {
-      const activeUri = selector || currentUri()
-      const fsRoot = await pickAdtRoot(activeUri)
-      const connectionId = activeUri?.authority || fsRoot?.uri.authority
+      const activeUri = selector || currentUri();
+      const fsRoot = await pickAdtRoot(activeUri);
+      const connectionId = activeUri?.authority || fsRoot?.uri.authority;
 
       if (!connectionId) {
-        throw new Error("No ABAP connection available")
+        throw new Error("No ABAP connection available");
       }
 
-      const activator = AdtObjectActivator.get(connectionId)
+      const activator = AdtObjectActivator.get(connectionId);
 
       const result = await window.withProgress(
         { location: ProgressLocation.Notification, title: "Loading unactivated objects..." },
-        async progress => {
-          progress.report({ message: "Saving pending changes..." })
-          await saveDirtyAdtDocuments(connectionId)
+        async (progress) => {
+          progress.report({ message: "Saving pending changes..." });
+          await saveDirtyAdtDocuments(connectionId);
 
-          progress.report({ message: "Loading unactivated objects..." })
-          const activationResult = await activator.activateMultiple(true)
+          progress.report({ message: "Loading unactivated objects..." });
+          const activationResult = await activator.activateMultiple(true);
 
           if (activationResult.ok) {
-            progress.report({ message: "Refreshing explorer..." })
-            await commands.executeCommand("workbench.files.action.refreshFilesExplorer")
+            progress.report({ message: "Refreshing explorer..." });
+            await commands.executeCommand("workbench.files.action.refreshFilesExplorer");
 
-            const editor = window.activeTextEditor
+            const editor = window.activeTextEditor;
             if (
               editor?.document.uri.scheme === ADTSCHEME &&
               editor.document.uri.authority === connectionId
             ) {
-              await showHideActivate(editor, true)
+              await showHideActivate(editor, true);
             }
           }
 
-          return activationResult
-        }
-      )
+          return activationResult;
+        },
+      );
 
       if (result.cancelled) {
-        return
+        return;
       }
 
       if (!result.ok) {
-        throw new Error(result.summary || "Activation failed; see ABAP FS output for details")
+        throw new Error(result.summary || "Activation failed; see ABAP FS output for details");
       }
 
       if (!result.availableCount) {
-        window.showInformationMessage("No unactivated objects found")
-        return
+        window.showInformationMessage("No unactivated objects found");
+        return;
       }
 
       window.showInformationMessage(
-        `✅ Activated ${result.selectedCount || 0} object${result.selectedCount === 1 ? "" : "s"}`
-      )
+        `✅ Activated ${result.selectedCount || 0} object${result.selectedCount === 1 ? "" : "s"}`,
+      );
     } catch (e) {
-      const errorMessage = caughtToString(e)
+      const errorMessage = caughtToString(e);
 
       const action = await window.showErrorMessage(
         `Multiple activation failed: ${errorMessage}`,
-        "Show activation log"
-      )
+        "Show activation log",
+      );
       if (action === "Show activation log") {
-        channel.show(true)
+        channel.show(true);
       }
     }
   }
 
   @command(AbapFsCommands.pickAdtRootConn)
   private static async pickRoot() {
-    const uri = currentUri()
-    const fsRoot = await pickAdtRoot(uri)
-    if (!fsRoot) return
-    return fsRoot.uri.authority
+    const uri = currentUri();
+    const fsRoot = await pickAdtRoot(uri);
+    if (!fsRoot) return;
+    return fsRoot.uri.authority;
   }
 
   @command(AbapFsCommands.runClass)
   private static async runClass() {
-    logTelemetry("command_run_class_called")
+    logTelemetry("command_run_class_called");
     try {
-      const uri = currentUri()
-      if (!uri) return
-      const client = getClient(uri.authority)
-      const fsRoot = await pickAdtRoot(uri)
-      if (!fsRoot) return
-      const file = uriRoot(fsRoot.uri).getNode(uri.path)
-      const clas = isAbapFile(file) && isAbapClassInclude(file.object) && file.object.parent
+      const uri = currentUri();
+      if (!uri) return;
+      const client = getClient(uri.authority);
+      const fsRoot = await pickAdtRoot(uri);
+      if (!fsRoot) return;
+      const file = uriRoot(fsRoot.uri).getNode(uri.path);
+      const clas = isAbapFile(file) && isAbapClassInclude(file.object) && file.object.parent;
       if (clas) {
-        const text = await client.runClass(clas.name)
-        log(text)
+        const text = await client.runClass(clas.name);
+        log(text);
       }
     } catch (error) {
-      log(caughtToString(error))
+      log(caughtToString(error));
     }
   }
 
   @command(AbapFsCommands.search)
   private static async searchAdtObject(uri: Uri | undefined) {
     // find the adt relevant namespace roots, and let the user pick one if needed
-    const adtRoot = await pickAdtRoot(uri)
-    logTelemetry("command_search_for_object_called", { connectionId: adtRoot?.uri.authority })
-    if (!adtRoot) return
+    const adtRoot = await pickAdtRoot(uri);
+    logTelemetry("command_search_for_object_called", { connectionId: adtRoot?.uri.authority });
+    if (!adtRoot) return;
     try {
-      const connId = adtRoot.uri.authority
+      const connId = adtRoot.uri.authority;
       // Use enhanced search with type filter for manual command
-      const object = await new AdtObjectFinder(connId).findObjectWithTypeFilter()
-      if (!object) return // user cancelled
+      const object = await new AdtObjectFinder(connId).findObjectWithTypeFilter();
+      if (!object) return; // user cancelled
       // found, show progressbar as opening might take a while
-      await openObject(connId, object.uri, object.type)
+      await openObject(connId, object.uri, object.type);
     } catch (e) {
-      return window.showErrorMessage(caughtToString(e))
+      return window.showErrorMessage(caughtToString(e));
     }
   }
 
@@ -528,33 +533,33 @@ export class AdtCommands {
   private static async createAdtObject(uri: Uri | undefined) {
     try {
       // find the adt relevant namespace roots, and let the user pick one if needed
-      const fsRoot = await pickAdtRoot(uri)
-      logTelemetry("command_create_object_called", { connectionId: fsRoot?.uri.authority })
-      const connId = fsRoot?.uri.authority
-      if (!connId) return
-      const obj = await new AdtObjectCreator(connId).createObject(uri)
-      if (!obj) return // user aborted
-      log(`Created object ${obj.type} ${obj.name}`)
-      await obj.loadStructure()
+      const fsRoot = await pickAdtRoot(uri);
+      logTelemetry("command_create_object_called", { connectionId: fsRoot?.uri.authority });
+      const connId = fsRoot?.uri.authority;
+      if (!connId) return;
+      const obj = await new AdtObjectCreator(connId).createObject(uri);
+      if (!obj) return; // user aborted
+      log(`Created object ${obj.type} ${obj.name}`);
+      await obj.loadStructure();
 
       if (obj.type === PACKAGE) {
-        commands.executeCommand("workbench.files.action.refreshFilesExplorer")
-        return // Packages can't be opened perhaps could reveal it?
+        commands.executeCommand("workbench.files.action.refreshFilesExplorer");
+        return; // Packages can't be opened perhaps could reveal it?
       }
-      const nodePath = await openObject(connId, obj.path)
+      const nodePath = await openObject(connId, obj.path);
       if (nodePath) {
-        new AdtObjectFinder(connId).displayNode(nodePath)
+        new AdtObjectFinder(connId).displayNode(nodePath);
         try {
-          await commands.executeCommand("workbench.files.action.refreshFilesExplorer")
-          log("workspace refreshed")
+          await commands.executeCommand("workbench.files.action.refreshFilesExplorer");
+          log("workspace refreshed");
         } catch (e) {
-          log("error refreshing workspace")
+          log("error refreshing workspace");
         }
       }
     } catch (e) {
-      const stack = types.isNativeError(e) ? e.stack || "" : ""
-      log("Exception in createAdtObject:", stack)
-      return window.showErrorMessage(caughtToString(e))
+      const stack = types.isNativeError(e) ? e.stack || "" : "";
+      log("Exception in createAdtObject:", stack);
+      return window.showErrorMessage(caughtToString(e));
     }
   }
 
@@ -586,28 +591,28 @@ export class AdtCommands {
     connectionId?: string,
     additionalOptions?: {
       // For service bindings
-      serviceDefinition?: string
-      bindingType?: string
-      bindingCategory?: string
+      serviceDefinition?: string;
+      bindingType?: string;
+      bindingCategory?: string;
       // For packages
-      softwareComponent?: string
-      packageType?: PackageTypes
-      transportLayer?: string
+      softwareComponent?: string;
+      packageType?: PackageTypes;
+      transportLayer?: string;
       // For transport requests
       transportRequest?: {
-        type: "new" | "existing"
-        number?: string // For existing transport
-        description?: string // For new transport
-      }
-    }
+        type: "new" | "existing";
+        number?: string; // For existing transport
+        description?: string; // For new transport
+      };
+    },
   ) {
     try {
       // Use current connection or specified one
-      const connId = connectionId || (await pickAdtRoot())?.uri.authority
-      if (!connId) return
+      const connId = connectionId || (await pickAdtRoot())?.uri.authority;
+      if (!connId) return;
 
       // Create a special AdtObjectCreator that uses programmatic selections
-      const creator = new AdtObjectCreator(connId)
+      const creator = new AdtObjectCreator(connId);
 
       // Override the key methods based on AdtObjectCreator analysis
 
@@ -615,97 +620,98 @@ export class AdtCommands {
       creator["askInput"] = async (
         prompt: string,
         uppercase: boolean = true,
-        value = ""
+        value = "",
       ): Promise<string> => {
         if (prompt.toLowerCase().includes("name")) {
-          const result = uppercase ? name.toUpperCase() : name
-          return result
+          const result = uppercase ? name.toUpperCase() : name;
+          return result;
         } else if (prompt.toLowerCase().includes("description")) {
-          const result = uppercase ? description.toUpperCase() : description
-          return result
+          const result = uppercase ? description.toUpperCase() : description;
+          return result;
         }
-        return value
-      }
+        return value;
+      };
 
       // 2. Override guessParentByType - THIS IS THE KEY METHOD that prevents package popup
       creator["guessParentByType"] = (hierarchy: any[], type: string): string => {
         if (type === "DEVC/K") {
           // PACKAGE type - this is what prevents the "Select package" dialog
-          return packageName
+          return packageName;
         }
         // For other types, use original logic
         const original =
-          hierarchy.filter((n: any) => n.object?.type === type)?.[0]?.object?.name || ""
-        return original
-      }
+          hierarchy.filter((n: any) => n.object?.type === type)?.[0]?.object?.name || "";
+        return original;
+      };
 
       // 3. Override guessOrSelectObjectType to return the specified object type
       creator["guessOrSelectObjectType"] = async (hierarchy: any[]): Promise<any> => {
-        const objType = CreatableTypes.get(objectType)
+        const objType = CreatableTypes.get(objectType);
         if (objType) {
-          return { typeId: objectType, label: objType.label, maxLen: objType.maxLen }
+          return { typeId: objectType, label: objType.label, maxLen: objType.maxLen };
         }
-        throw new Error(`Unknown object type: ${objectType}`)
-      }
+        throw new Error(`Unknown object type: ${objectType}`);
+      };
 
       // 4. Override getServiceOptions to use programmatic values for service bindings
       if (objectType === "SRVB/SVB" && additionalOptions) {
-        const { serviceDefinition, bindingType, bindingCategory } = additionalOptions
+        const { serviceDefinition, bindingType, bindingCategory } = additionalOptions;
         if (!serviceDefinition || !bindingType || !bindingCategory) {
           return {
             success: false,
             error: "MISSING_SERVICE_BINDING_OPTIONS",
-            message: "Service bindings require additionalOptions with serviceDefinition, bindingType ('ODATA'), and bindingCategory ('0' for Web API, '1' for UI)",
+            message:
+              "Service bindings require additionalOptions with serviceDefinition, bindingType ('ODATA'), and bindingCategory ('0' for Web API, '1' for UI)",
             objectName: name,
-            objectType: objectType
-          }
+            objectType: objectType,
+          };
         }
         creator["getServiceOptions"] = async (options: NewObjectOptions) => {
           const opt = {
             ...options,
             bindingtype: bindingType as "ODATA",
             category: bindingCategory as "0" | "1",
-            service: serviceDefinition
-          }
-          if (isBindingOptions(opt)) return opt
-          throw new Error("Invalid service binding options")
-        }
+            service: serviceDefinition,
+          };
+          if (isBindingOptions(opt)) return opt;
+          throw new Error("Invalid service binding options");
+        };
       }
 
       // 5. Let ADT handle transport selection naturally - just call createObject
-      const obj = await creator.createObject(undefined)
+      const obj = await creator.createObject(undefined);
 
       if (!obj) {
-        log(`❌ Object creation was cancelled or failed`)
+        log(`❌ Object creation was cancelled or failed`);
         return {
           success: false,
           error: "CREATION_CANCELLED",
           message: "Object creation was cancelled or failed",
           objectName: name,
-          objectType: objectType
-        }
+          objectType: objectType,
+        };
       }
 
       // 🔧 FIX: Follow the same pattern as manual creation (like AbapFsCommands.create)
-      await obj.loadStructure()
+      await obj.loadStructure();
 
       if (obj.type === PACKAGE) {
-        commands.executeCommand("workbench.files.action.refreshFilesExplorer")
+        commands.executeCommand("workbench.files.action.refreshFilesExplorer");
         return {
           success: true,
           object: obj,
           objectName: obj.name,
           objectType: obj.type,
-          path: obj.path
-        }
+          path: obj.path,
+        };
       }
 
       // 🔧 FIX: Use the same flow as manual creation - no artificial delays
-      const nodePath = await openObject(connId, obj.path)
+      const nodePath = await openObject(connId, obj.path);
       if (nodePath) {
-        new AdtObjectFinder(connId).displayNode(nodePath)
+        new AdtObjectFinder(connId).displayNode(nodePath);
         try {
-          await commands.executeCommand("workbench.files.action.refreshFilesExplorer")
+          await commands.executeCommand("workbench.files.action.refreshFilesExplorer");
         } catch (e) {
           //log("error refreshing workspace")
         }
@@ -717,11 +723,11 @@ export class AdtCommands {
         objectName: obj.name,
         objectType: obj.type,
         path: obj.path,
-        nodePath: nodePath
-      }
+        nodePath: nodePath,
+      };
     } catch (e) {
-      const stack = types.isNativeError(e) ? e.stack || "" : ""
-      const errorMessage = caughtToString(e)
+      const stack = types.isNativeError(e) ? e.stack || "" : "";
+      const errorMessage = caughtToString(e);
 
       // ⚡ PROGRAMMATIC API: Return structured error result, don't show UI popups
       // This is used by AI systems that need to handle the response programmatically
@@ -731,8 +737,8 @@ export class AdtCommands {
           error: "OBJECT_ALREADY_EXISTS",
           message: errorMessage,
           objectName: name,
-          objectType: objectType
-        }
+          objectType: objectType,
+        };
       }
 
       // For other errors, return structured error response
@@ -742,50 +748,50 @@ export class AdtCommands {
         message: errorMessage,
         objectName: name,
         objectType: objectType,
-        stack: stack
-      }
+        stack: stack,
+      };
     }
   }
 
   @command(AbapFsCommands.showObject)
   private static async showObject(arg: ShowObjectArgument) {
-    logTelemetry("command_show_object_called")
-    const p = splitAdtUri(arg.uri)
-    const path = await vsCodeUri(arg.connId, arg.uri, true, true)
-    const uri = Uri.parse(path)
-    const doc = await workspace.openTextDocument(uri)
-    const selection = p.start?.line ? lineRange(p.start?.line + 1) : undefined
-    window.showTextDocument(doc, { selection })
+    logTelemetry("command_show_object_called");
+    const p = splitAdtUri(arg.uri);
+    const path = await vsCodeUri(arg.connId, arg.uri, true, true);
+    const uri = Uri.parse(path);
+    const doc = await workspace.openTextDocument(uri);
+    const selection = p.start?.line ? lineRange(p.start?.line + 1) : undefined;
+    window.showTextDocument(doc, { selection });
   }
   @command(AbapFsCommands.runInGui)
   private static async executeAbap() {
     try {
-      log("Execute ABAP")
-      const uri = currentUri()
-      if (!uri) return
-      const fsRoot = await pickAdtRoot(uri)
-      if (!fsRoot) return
-      logTelemetry("command_sap_gui_desktop_called", { connectionId: fsRoot.uri.authority })
-      const file = uriRoot(fsRoot.uri).getNode(uri.path)
-      if (!isAbapStat(file) || !file.object.sapGuiUri) return
+      log("Execute ABAP");
+      const uri = currentUri();
+      if (!uri) return;
+      const fsRoot = await pickAdtRoot(uri);
+      if (!fsRoot) return;
+      logTelemetry("command_sap_gui_desktop_called", { connectionId: fsRoot.uri.authority });
+      const file = uriRoot(fsRoot.uri).getNode(uri.path);
+      if (!isAbapStat(file) || !file.object.sapGuiUri) return;
 
       // 🎯 FORCE native SAP GUI by bypassing runInSapGui routing
-      const config = RemoteManager.get().byId(fsRoot.uri.authority)
+      const config = RemoteManager.get().byId(fsRoot.uri.authority);
       if (!config) {
-        window.showErrorMessage("Connection configuration not found")
-        return
+        window.showErrorMessage("Connection configuration not found");
+        return;
       }
 
-      await AdtCommands.autoStartDebuggerIfNeeded(fsRoot.uri.authority)
+      await AdtCommands.autoStartDebuggerIfNeeded(fsRoot.uri.authority);
 
       // Create SapGui instance and call startGui directly (no routing check)
-      const sapGui = SapGui.create(config)
-      const client = getClient(fsRoot.uri.authority)
+      const sapGui = SapGui.create(config);
+      const client = getClient(fsRoot.uri.authority);
 
-      const transactionInfo = SapGuiPanel.getTransactionInfo(file.object.type, file.object.name)
+      const transactionInfo = SapGuiPanel.getTransactionInfo(file.object.type, file.object.name);
 
       // For non-standard types, fall back to URI-based approach
-      let cmd = transactionInfo.sapGuiCommand
+      let cmd = transactionInfo.sapGuiCommand;
       if (
         file.object.type !== "PROG/P" &&
         file.object.type !== "FUGR/FF" &&
@@ -796,16 +802,16 @@ export class AdtCommands {
           command: "*SADT_START_WB_URI",
           parameters: [
             { name: "D_OBJECT_URI", value: file.object.sapGuiUri },
-            { name: "DYNP_OKCODE", value: "OKAY" }
-          ]
-        }
+            { name: "DYNP_OKCODE", value: "OKAY" },
+          ],
+        };
       }
 
       // Get ticket and call native SAP GUI directly (bypasses routing)
-      const ticket = await client.reentranceTicket()
-      await sapGui.startGui(cmd, ticket)
+      const ticket = await client.reentranceTicket();
+      await sapGui.startGui(cmd, ticket);
     } catch (e) {
-      return window.showErrorMessage(caughtToString(e))
+      return window.showErrorMessage(caughtToString(e));
     }
   }
 
@@ -816,66 +822,66 @@ export class AdtCommands {
   @command("abapfs.runInEmbeddedGui")
   private static async executeAbapEmbedded() {
     try {
-      const uri = currentUri()
+      const uri = currentUri();
       if (!uri) {
-        window.showErrorMessage("No ABAP file is currently open")
-        return
+        window.showErrorMessage("No ABAP file is currently open");
+        return;
       }
 
-      const fsRoot = await pickAdtRoot(uri)
+      const fsRoot = await pickAdtRoot(uri);
       if (!fsRoot) {
-        return
+        return;
       }
-      logTelemetry("command_sap_gui_embedded_called", { connectionId: fsRoot.uri.authority })
+      logTelemetry("command_sap_gui_embedded_called", { connectionId: fsRoot.uri.authority });
 
-      const file = uriRoot(fsRoot.uri).getNode(uri.path)
+      const file = uriRoot(fsRoot.uri).getNode(uri.path);
       if (!isAbapStat(file)) {
-        window.showErrorMessage("Current file is not an ABAP object")
-        return
+        window.showErrorMessage("Current file is not an ABAP object");
+        return;
       }
 
       // Import the SAP GUI Panel and authentication utilities
 
       // Get the remote configuration for authentication
-      const config = RemoteManager.get().byId(fsRoot.uri.authority)
+      const config = RemoteManager.get().byId(fsRoot.uri.authority);
       if (!config) {
-        window.showErrorMessage(`Connection configuration not found for ${fsRoot.uri.authority}`)
-        return
+        window.showErrorMessage(`Connection configuration not found for ${fsRoot.uri.authority}`);
+        return;
       }
 
       // Check if embedded GUI is configured
       if (config.sapGui?.guiType !== "WEBGUI_UNSAFE_EMBEDDED") {
-        await AdtCommands.autoStartDebuggerIfNeeded(fsRoot.uri.authority)
+        await AdtCommands.autoStartDebuggerIfNeeded(fsRoot.uri.authority);
         await runInSapGui(fsRoot.uri.authority, () => ({
           type: "Transaction" as const,
           command: "*SE38",
           parameters: [
             { name: "RS38M-PROGRAMM", value: file.object.name },
-            { name: "DYNP_OKCODE", value: "STRT" }
-          ]
-        }))
-        return
+            { name: "DYNP_OKCODE", value: "STRT" },
+          ],
+        }));
+        return;
       }
 
-      await AdtCommands.autoStartDebuggerIfNeeded(fsRoot.uri.authority)
+      await AdtCommands.autoStartDebuggerIfNeeded(fsRoot.uri.authority);
 
       // Get extension URI more reliably
-      let extensionUri: Uri
+      let extensionUri: Uri;
       try {
-        const extension = extensions.getExtension("murbani.vscode-abap-remote-fs")
+        const extension = extensions.getExtension("murbani.vscode-abap-remote-fs");
         if (extension) {
-          extensionUri = extension.extensionUri
+          extensionUri = extension.extensionUri;
         } else {
           // Fallback: try alternative extension ID
-          const altExtension = extensions.getExtension("abap-copilot")
+          const altExtension = extensions.getExtension("abap-copilot");
           if (altExtension) {
-            extensionUri = altExtension.extensionUri
+            extensionUri = altExtension.extensionUri;
           } else {
-            extensionUri = Uri.file(__dirname)
+            extensionUri = Uri.file(__dirname);
           }
         }
       } catch (error) {
-        extensionUri = Uri.file(__dirname)
+        extensionUri = Uri.file(__dirname);
       }
 
       // Create the panel first
@@ -884,24 +890,24 @@ export class AdtCommands {
         getClient(fsRoot.uri.authority),
         fsRoot.uri.authority,
         file.object.name,
-        file.object.type
-      )
+        file.object.type,
+      );
 
       // Build target URL using simple WebGUI format (no SSO ticket needed)
-      let baseUrl = config.url.replace(/\/sap\/bc\/adt.*$/, "") // Remove ADT path, keep base
+      let baseUrl = config.url.replace(/\/sap\/bc\/adt.*$/, ""); // Remove ADT path, keep base
 
       // Ensure HTTPS is used (fix certificate issues for hover etc.)
       if (!baseUrl.startsWith("https://") && !baseUrl.startsWith("http://")) {
-        baseUrl = "https://" + baseUrl
+        baseUrl = "https://" + baseUrl;
       } else if (baseUrl.startsWith("http://")) {
-        baseUrl = baseUrl.replace("http://", "https://")
+        baseUrl = baseUrl.replace("http://", "https://");
       }
 
       // 🎯 USE CENTRALIZED transaction mapping - NO MORE DUPLICATION! 🎉
-      const transactionInfo = SapGuiPanel.getTransactionInfo(file.object.type, file.object.name)
+      const transactionInfo = SapGuiPanel.getTransactionInfo(file.object.type, file.object.name);
 
       // Use the cleaned object name from transaction info (removes .main suffix for classes)
-      const cleanedObjectName = transactionInfo.sapGuiCommand.parameters[0].value
+      const cleanedObjectName = transactionInfo.sapGuiCommand.parameters[0].value;
 
       // Use the dynamic WebGUI URL format with correct transaction
       const webguiUrl =
@@ -909,13 +915,13 @@ export class AdtCommands {
         `%7etransaction=%2a${transactionInfo.transaction}%20${transactionInfo.dynprofield}%3d${cleanedObjectName}%3bDYNP_OKCODE%3d${transactionInfo.okcode}` +
         `&sap-client=${config.client}` +
         `&sap-language=${config.language || "EN"}` +
-        `&saml2=disabled`
+        `&saml2=disabled`;
 
       // Load the direct URL in the WebView panel (authentication will be handled by cookies)
-      panel.loadDirectWebGuiUrl(webguiUrl)
+      panel.loadDirectWebGuiUrl(webguiUrl);
     } catch (e) {
       //log(`Error in executeAbapEmbedded: ${caughtToString(e)}`)
-      return window.showErrorMessage(`Failed to open embedded GUI: ${caughtToString(e)}`)
+      return window.showErrorMessage(`Failed to open embedded GUI: ${caughtToString(e)}`);
     }
   }
 
@@ -927,112 +933,112 @@ export class AdtCommands {
   private static async runTransaction() {
     try {
       // 1. Select system
-      const fsRoot = await pickAdtRoot()
-      if (!fsRoot) return
+      const fsRoot = await pickAdtRoot();
+      if (!fsRoot) return;
 
-      const connectionId = fsRoot.uri.authority
-      const config = RemoteManager.get().byId(connectionId)
+      const connectionId = fsRoot.uri.authority;
+      const config = RemoteManager.get().byId(connectionId);
       if (!config) {
-        window.showErrorMessage("Connection configuration not found")
-        return
+        window.showErrorMessage("Connection configuration not found");
+        return;
       }
 
-      const client = getClient(connectionId)
+      const client = getClient(connectionId);
 
       // 2. Search for transaction code with QuickPick that allows Enter
-      const quickPick = window.createQuickPick()
+      const quickPick = window.createQuickPick();
       quickPick.placeholder =
-        "Type transaction code (e.g., MM43, SE16N) and press Enter, or search for transactions..."
-      quickPick.matchOnDescription = true
-      quickPick.matchOnDetail = true
-      quickPick.ignoreFocusOut = true
+        "Type transaction code (e.g., MM43, SE16N) and press Enter, or search for transactions...";
+      quickPick.matchOnDescription = true;
+      quickPick.matchOnDetail = true;
+      quickPick.ignoreFocusOut = true;
 
-      let currentInput = ""
+      let currentInput = "";
 
       // Function to perform search using ADT client
       const performSearch = async (searchTerm: string) => {
         if (!searchTerm || searchTerm.length < 3) {
-          quickPick.items = []
-          return
+          quickPick.items = [];
+          return;
         }
 
-        quickPick.busy = true
+        quickPick.busy = true;
         try {
-          const query = searchTerm.toUpperCase() + "*"
-          const raw = await client.searchObject(query, "TRAN/T")
+          const query = searchTerm.toUpperCase() + "*";
+          const raw = await client.searchObject(query, "TRAN/T");
 
-          const results = await MySearchResult.createResults(raw, client)
+          const results = await MySearchResult.createResults(raw, client);
 
-          quickPick.items = results.map(r => ({
+          quickPick.items = results.map((r) => ({
             label: `$(symbol-event) ${r.name}`,
             description: r.description || "",
             detail: `Package: ${r.packageName}`,
-            tcode: r.name
-          }))
+            tcode: r.name,
+          }));
         } catch (error) {
-          quickPick.items = []
+          quickPick.items = [];
         } finally {
-          quickPick.busy = false
+          quickPick.busy = false;
         }
-      }
+      };
 
       // Handle input changes
-      quickPick.onDidChangeValue(async value => {
-        currentInput = value
+      quickPick.onDidChangeValue(async (value) => {
+        currentInput = value;
         if (value.length >= 3) {
-          await performSearch(value)
+          await performSearch(value);
         } else {
-          quickPick.items = []
+          quickPick.items = [];
         }
-      })
+      });
 
       // Handle selection
       quickPick.onDidAccept(async () => {
-        const selected = quickPick.selectedItems[0]
-        let tcodeToRun = ""
+        const selected = quickPick.selectedItems[0];
+        let tcodeToRun = "";
 
         if (selected) {
           // User selected from list
-          tcodeToRun = (selected as any).tcode
+          tcodeToRun = (selected as any).tcode;
         } else if (currentInput) {
           // User pressed Enter without selecting - use typed value
-          tcodeToRun = currentInput.toUpperCase()
+          tcodeToRun = currentInput.toUpperCase();
         }
 
-        quickPick.hide()
+        quickPick.hide();
 
-        if (!tcodeToRun) return
+        if (!tcodeToRun) return;
 
-        logTelemetry("command_run_transaction_called", { connectionId })
-        await AdtCommands.autoStartDebuggerIfNeeded(connectionId)
+        logTelemetry("command_run_transaction_called", { connectionId });
+        await AdtCommands.autoStartDebuggerIfNeeded(connectionId);
 
         // 3. Execute transaction based on guiType preference
-        const guiType = config.sapGui?.guiType || "SAPGUI"
+        const guiType = config.sapGui?.guiType || "SAPGUI";
 
         switch (guiType) {
           case "WEBGUI_UNSAFE_EMBEDDED":
             // Embedded webview
-            await AdtCommands.launchTransactionInEmbeddedGui(config, client, tcodeToRun)
-            break
+            await AdtCommands.launchTransactionInEmbeddedGui(config, client, tcodeToRun);
+            break;
 
           case "WEBGUI_UNSAFE":
           case "WEBGUI_CONTROLLED":
             // External browser
-            await AdtCommands.launchTransactionInBrowser(config, client, tcodeToRun)
-            break
+            await AdtCommands.launchTransactionInBrowser(config, client, tcodeToRun);
+            break;
 
           case "SAPGUI":
           default:
             // Native SAP GUI
-            await AdtCommands.launchTransactionInNativeGui(config, client, tcodeToRun)
-            break
+            await AdtCommands.launchTransactionInNativeGui(config, client, tcodeToRun);
+            break;
         }
-      })
+      });
 
-      quickPick.onDidHide(() => quickPick.dispose())
-      quickPick.show()
+      quickPick.onDidHide(() => quickPick.dispose());
+      quickPick.show();
     } catch (e) {
-      return window.showErrorMessage(`Failed to run transaction: ${caughtToString(e)}`)
+      return window.showErrorMessage(`Failed to run transaction: ${caughtToString(e)}`);
     }
   }
 
@@ -1042,13 +1048,13 @@ export class AdtCommands {
   private static async launchTransactionInEmbeddedGui(config: any, client: any, tcode: string) {
     try {
       // Build base URL
-      let baseUrl = config.url.replace(/\/sap\/bc\/adt.*$/, "")
+      let baseUrl = config.url.replace(/\/sap\/bc\/adt.*$/, "");
 
       // Ensure HTTPS
       if (!baseUrl.startsWith("https://") && !baseUrl.startsWith("http://")) {
-        baseUrl = "https://" + baseUrl
+        baseUrl = "https://" + baseUrl;
       } else if (baseUrl.startsWith("http://")) {
-        baseUrl = baseUrl.replace("http://", "https://")
+        baseUrl = baseUrl.replace("http://", "https://");
       }
 
       // Direct WebGUI URL for transaction (no SSO, user will login manually)
@@ -1057,17 +1063,17 @@ export class AdtCommands {
         `%7etransaction=%2a${tcode}` +
         `&sap-client=${config.client}` +
         `&sap-language=${config.language || "EN"}` +
-        `&saml2=disabled`
+        `&saml2=disabled`;
 
-      let extensionUri: vscode.Uri
+      let extensionUri: vscode.Uri;
       try {
-        const extension = vscode.extensions.getExtension("murbani.vscode-abap-remote-fs")
+        const extension = vscode.extensions.getExtension("murbani.vscode-abap-remote-fs");
         extensionUri =
           extension?.extensionUri ||
           vscode.extensions.getExtension("abap-copilot")?.extensionUri ||
-          vscode.Uri.file(__dirname)
+          vscode.Uri.file(__dirname);
       } catch {
-        extensionUri = vscode.Uri.file(__dirname)
+        extensionUri = vscode.Uri.file(__dirname);
       }
 
       const panel = SapGuiPanel.createOrShow(
@@ -1075,14 +1081,14 @@ export class AdtCommands {
         client,
         config.name || "SAP",
         tcode,
-        "TRAN"
-      )
+        "TRAN",
+      );
 
-      panel.loadDirectWebGuiUrl(webguiUrl)
+      panel.loadDirectWebGuiUrl(webguiUrl);
     } catch (error) {
       window.showErrorMessage(
-        `Failed to open transaction in embedded GUI: ${caughtToString(error)}`
-      )
+        `Failed to open transaction in embedded GUI: ${caughtToString(error)}`,
+      );
     }
   }
 
@@ -1091,22 +1097,22 @@ export class AdtCommands {
    */
   private static async launchTransactionInBrowser(config: any, client: any, tcode: string) {
     try {
-      const ticket = await client.reentranceTicket()
+      const ticket = await client.reentranceTicket();
 
       const baseUrl = config.sapGui?.server
         ? `${config.url.startsWith("https") ? "https" : "https"}://${config.sapGui.server}`
-        : config.url
+        : config.url;
 
-      const tcodeUrl = `${baseUrl}/sap/bc/gui/sap/its/webgui?~transaction=*${tcode}&sap-client=${config.client}&sap-language=${config.language || "EN"}&saml2=disabled`
+      const tcodeUrl = `${baseUrl}/sap/bc/gui/sap/its/webgui?~transaction=*${tcode}&sap-client=${config.client}&sap-language=${config.language || "EN"}&saml2=disabled`;
 
       const authenticatedUrl = Uri.parse(baseUrl).with({
         path: `/sap/public/myssocntl`,
-        query: `sap-mysapsso=${config.client}${ticket}&sap-mysapred=${encodeURIComponent(tcodeUrl)}`
-      })
+        query: `sap-mysapsso=${config.client}${ticket}&sap-mysapred=${encodeURIComponent(tcodeUrl)}`,
+      });
 
-      commands.executeCommand("vscode.open", authenticatedUrl)
+      commands.executeCommand("vscode.open", authenticatedUrl);
     } catch (error) {
-      window.showErrorMessage(`Failed to open transaction in browser: ${caughtToString(error)}`)
+      window.showErrorMessage(`Failed to open transaction in browser: ${caughtToString(error)}`);
     }
   }
 
@@ -1115,41 +1121,41 @@ export class AdtCommands {
    */
   private static async launchTransactionInNativeGui(config: any, client: any, tcode: string) {
     try {
-      const sapGui = SapGui.create(config)
+      const sapGui = SapGui.create(config);
 
       const cmd = {
         type: "Transaction" as const,
         command: `*${tcode}`,
-        parameters: []
-      }
+        parameters: [],
+      };
 
-      const ticket = await client.reentranceTicket()
-      await sapGui.startGui(cmd, ticket)
+      const ticket = await client.reentranceTicket();
+      await sapGui.startGui(cmd, ticket);
     } catch (error) {
-      window.showErrorMessage(`Failed to open transaction in SAP GUI: ${caughtToString(error)}`)
+      window.showErrorMessage(`Failed to open transaction in SAP GUI: ${caughtToString(error)}`);
     }
   }
 
   @command(AbapFsCommands.execute)
   private static async openInGuiAbap() {
     try {
-      const uri = currentUri()
-      if (!uri) return
-      const fsRoot = await pickAdtRoot(uri)
-      if (!fsRoot) return
-      logTelemetry("command_sap_gui_browser_called", { connectionId: fsRoot.uri.authority })
-      const file = uriRoot(fsRoot.uri).getNode(uri.path)
-      if (!isAbapStat(file) || !file.object.sapGuiUri) return
+      const uri = currentUri();
+      if (!uri) return;
+      const fsRoot = await pickAdtRoot(uri);
+      if (!fsRoot) return;
+      logTelemetry("command_sap_gui_browser_called", { connectionId: fsRoot.uri.authority });
+      const file = uriRoot(fsRoot.uri).getNode(uri.path);
+      if (!isAbapStat(file) || !file.object.sapGuiUri) return;
 
       // 🎯 FORCE browser opening by bypassing runInSapGui routing
-      const config = RemoteManager.get().byId(fsRoot.uri.authority)
+      const config = RemoteManager.get().byId(fsRoot.uri.authority);
       if (!config) {
-        window.showErrorMessage("Connection configuration not found")
-        return
+        window.showErrorMessage("Connection configuration not found");
+        return;
       }
-      await AdtCommands.autoStartDebuggerIfNeeded(fsRoot.uri.authority)
+      await AdtCommands.autoStartDebuggerIfNeeded(fsRoot.uri.authority);
       // 🎯 USE CENTRALIZED transaction mapping - NO MORE DUPLICATION! 🎉
-      const transactionInfo = SapGuiPanel.getTransactionInfo(file.object.type, file.object.name)
+      const transactionInfo = SapGuiPanel.getTransactionInfo(file.object.type, file.object.name);
 
       // Build simple WebGUI URL (same format as WebView uses)
       const browserUrl =
@@ -1157,205 +1163,208 @@ export class AdtCommands {
         `%7etransaction=%2a${transactionInfo.transaction}%20${transactionInfo.dynprofield}%3d${file.object.name}%3bDYNP_OKCODE%3d${transactionInfo.okcode}` +
         `&sap-client=${config.client}` +
         `&sap-language=${config.language || "EN"}` +
-        `&saml2=disabled`
+        `&saml2=disabled`;
 
       // Open in external browser - user will authenticate themselves
-      commands.executeCommand("vscode.open", Uri.parse(browserUrl))
+      commands.executeCommand("vscode.open", Uri.parse(browserUrl));
     } catch (e) {
-      return window.showErrorMessage(caughtToString(e))
+      return window.showErrorMessage(caughtToString(e));
     }
   }
 
   @command(AbapFsCommands.addfavourite)
   private static addFavourite(uri: Uri | undefined) {
-    logTelemetry("command_add_favourite_called")
-    if (uri) FavouritesProvider.get().addFavourite(uri)
+    logTelemetry("command_add_favourite_called");
+    if (uri) FavouritesProvider.get().addFavourite(uri);
   }
 
   @command(AbapFsCommands.deletefavourite)
   private static deleteFavourite(node: FavItem) {
-    logTelemetry("command_delete_favourite_called")
-    FavouritesProvider.get().deleteFavourite(node)
+    logTelemetry("command_delete_favourite_called");
+    FavouritesProvider.get().deleteFavourite(node);
   }
 
   @command(AbapFsCommands.tableContents)
   private static showTableContents() {
-    const file = currentAbapFile()
-    const uri = currentUri()
-    logTelemetry("command_show_table_contents_called", { connectionId: uri?.authority })
+    const file = currentAbapFile();
+    const uri = currentUri();
+    logTelemetry("command_show_table_contents_called", { connectionId: uri?.authority });
     if (!file) {
-      window.showInformationMessage("Unable to determine the table to display")
-      return
+      window.showInformationMessage("Unable to determine the table to display");
+      return;
     }
-    commands.executeCommand(AbapFsCommands.selectDB, file.object.name)
+    commands.executeCommand(AbapFsCommands.selectDB, file.object.name);
   }
 
   @command(AbapFsCommands.unittest)
   private static async runAbapUnit(targetUri?: Uri) {
     try {
       // Use provided URI (from language model tool) or current active editor
-      const uri = targetUri || currentUri()
+      const uri = targetUri || currentUri();
       if (!uri) {
         window.showErrorMessage(
-          "No ABAP file specified. Please open an ABAP file or provide object details."
-        )
-        return
+          "No ABAP file specified. Please open an ABAP file or provide object details.",
+        );
+        return;
       }
 
       await window.withProgress(
         { location: ProgressLocation.Notification, title: "Running ABAP UNIT" },
-        () => UnitTestRunner.get(uri.authority).addResults(uri)
-      )
+        () => UnitTestRunner.get(uri.authority).addResults(uri),
+      );
     } catch (e) {
-      return window.showErrorMessage(caughtToString(e))
+      return window.showErrorMessage(caughtToString(e));
     }
   }
 
   @command(AbapFsCommands.atcChecks)
   private static async runAtc() {
-    logTelemetry("command_atc_checks_called")
+    logTelemetry("command_atc_checks_called");
     try {
-      const state = await currentEditState()
-      if (!state) return
+      const state = await currentEditState();
+      if (!state) return;
 
       await window.withProgress(
         { location: ProgressLocation.Window, title: "Running ABAP Test cockpit" },
-        progress => {
+        (progress) => {
           const setvariant = (variant: string) =>
-            progress.report({ message: "Using variant " + variant })
-          return atcProvider.runInspector(state.uri, setvariant)
-        }
-      )
+            progress.report({ message: "Using variant " + variant });
+          return atcProvider.runInspector(state.uri, setvariant);
+        },
+      );
     } catch (e) {
-      return window.showErrorMessage(caughtToString(e))
+      return window.showErrorMessage(caughtToString(e));
     }
   }
 
   @command(AbapFsCommands.createtestinclude)
   private static createTestInclude(uri?: Uri) {
     if (uri) {
-      if (uri.scheme !== ADTSCHEME) return
-      return this.createTI(uri)
+      if (uri.scheme !== ADTSCHEME) return;
+      return this.createTI(uri);
     }
-    const cur = currentEditState()
-    if (!cur) return
-    return this.createTI(cur.uri)
+    const cur = currentEditState();
+    if (!cur) return;
+    return this.createTI(cur.uri);
   }
 
   @command(AbapFsCommands.clearPassword)
   public static async clearPasswordCmd(connectionId?: string) {
-    return RemoteManager.get().clearPasswordCmd(connectionId)
+    return RemoteManager.get().clearPasswordCmd(connectionId);
   }
 
   @command(AbapFsCommands.changePassword)
   private static async changePasswordCmd() {
-    const manager = RemoteManager.get()
-    const { remote, userCancel } = await manager.selectConnection()
-    if (userCancel || !remote) return
+    const manager = RemoteManager.get();
+    const { remote, userCancel } = await manager.selectConnection();
+    if (userCancel || !remote) return;
 
     const newPassword = await window.showInputBox({
       prompt: `Enter new password for ${remote.name} (user: ${remote.username})`,
       password: true,
-      ignoreFocusOut: true
-    })
-    if (!newPassword) return
+      ignoreFocusOut: true,
+    });
+    if (!newPassword) return;
 
-    await manager.clearPassword(remote.name, remote.username)
-    await manager.savePassword(remote.name, remote.username, newPassword)
-    vscode.window.showInformationMessage(`Password updated for "${remote.name}". Reconnect to use the new credentials.`)
+    await manager.clearPassword(remote.name, remote.username);
+    await manager.savePassword(remote.name, remote.username, newPassword);
+    vscode.window.showInformationMessage(
+      `Password updated for "${remote.name}". Reconnect to use the new credentials.`,
+    );
   }
 
   private static async createTI(uri: Uri) {
-    logTelemetry("command_create_test_class_include_called", { connectionId: uri.authority })
+    logTelemetry("command_create_test_class_include_called", { connectionId: uri.authority });
     return window.withProgress(
       {
         location: ProgressLocation.Notification,
         title: "Creating test include...",
-        cancellable: false
+        cancellable: false,
       },
-      async progress => {
+      async (progress) => {
         try {
-          progress.report({ message: "Validating class..." })
+          progress.report({ message: "Validating class..." });
 
-          const obj = await findAbapObject(uri)
+          const obj = await findAbapObject(uri);
           // only makes sense for classes
           if (!isAbapClassInclude(obj)) {
-            throw new Error("This command only works with ABAP class files")
+            throw new Error("This command only works with ABAP class files");
           }
           if (!obj.parent) {
-            throw new Error("Class parent not found")
+            throw new Error("Class parent not found");
           }
-          if (!obj.parent.structure) await obj.parent.loadStructure()
+          if (!obj.parent.structure) await obj.parent.loadStructure();
           if (obj.parent.findInclude("testclasses")) {
-            window.showInformationMessage("Test include already exists")
-            return // This will properly close the progress window
+            window.showInformationMessage("Test include already exists");
+            return; // This will properly close the progress window
           }
 
-          progress.report({ message: "Acquiring lock..." })
-          const m = uriRoot(uri).lockManager
-          const lock = await m.requestLock(uri.path)
-          const lockId = lock.status === "locked" && lock.LOCK_HANDLE
+          progress.report({ message: "Acquiring lock..." });
+          const m = uriRoot(uri).lockManager;
+          const lock = await m.requestLock(uri.path);
+          const lockId = lock.status === "locked" && lock.LOCK_HANDLE;
           if (!lockId) {
-            throw new Error(`Can't acquire a lock for ${obj.name}`)
+            throw new Error(`Can't acquire a lock for ${obj.name}`);
           }
 
           try {
-            let created
-            const client = getClient(uri.authority)
+            let created;
+            const client = getClient(uri.authority);
 
-            progress.report({ message: "Selecting transport..." })
-            const transport = await selectTransport(obj.contentsPath(), "", client, true)
-            if (transport.cancelled) return
+            progress.report({ message: "Selecting transport..." });
+            const transport = await selectTransport(obj.contentsPath(), "", client, true);
+            if (transport.cancelled) return;
 
-            progress.report({ message: "Creating test include on SAP..." })
-            const parentName = obj.parent.name
-            await client.createTestInclude(parentName, lockId, transport.transport)
-            created = true
+            progress.report({ message: "Creating test include on SAP..." });
+            const parentName = obj.parent.name;
+            await client.createTestInclude(parentName, lockId, transport.transport);
+            created = true;
 
-            progress.report({ message: "Releasing lock..." })
-            if (lock) await m.requestUnlock(uri.path)
+            progress.report({ message: "Releasing lock..." });
+            if (lock) await m.requestUnlock(uri.path);
 
             if (created) {
-              progress.report({ message: "Refreshing structure..." })
+              progress.report({ message: "Refreshing structure..." });
               // Force fresh reload by invalidating cache first
-              const root = uriRoot(uri)
-              root.service.invalidateStructCache(obj.parent.path)
-              await obj.parent.loadStructure() // Fetch fresh structure from SAP
+              const root = uriRoot(uri);
+              root.service.invalidateStructCache(obj.parent.path);
+              await obj.parent.loadStructure(); // Fetch fresh structure from SAP
 
-              progress.report({ message: "Opening test include..." })
+              progress.report({ message: "Opening test include..." });
               // Find the newly created test include
-              const testInclude = obj.parent.findInclude("testclasses")
+              const testInclude = obj.parent.findInclude("testclasses");
               if (testInclude) {
                 // Get the test include URI from the structure
-                const testIncludeUri = testInclude["abapsource:sourceUri"] || "includes/testclasses"
-                const fullTestPath = `${obj.parent.path}/${testIncludeUri}`
+                const testIncludeUri =
+                  testInclude["abapsource:sourceUri"] || "includes/testclasses";
+                const fullTestPath = `${obj.parent.path}/${testIncludeUri}`;
 
                 try {
                   // Open the test include (like create object command)
-                  const nodePath = await openObject(uri.authority, fullTestPath)
+                  const nodePath = await openObject(uri.authority, fullTestPath);
                   if (nodePath) {
                     // Display the node (like create object command)
-                    new AdtObjectFinder(uri.authority).displayNode(nodePath)
+                    new AdtObjectFinder(uri.authority).displayNode(nodePath);
                   }
                 } catch (openError) {
                   // Fallback to manual refresh if opening fails
                 }
               }
 
-              progress.report({ message: "Refreshing file explorer..." })
+              progress.report({ message: "Refreshing file explorer..." });
               // Refresh file explorer
-              await commands.executeCommand("workbench.files.action.refreshFilesExplorer")
+              await commands.executeCommand("workbench.files.action.refreshFilesExplorer");
             }
           } catch (e) {
-            if (lock) await m.requestUnlock(uri.path)
-            throw e
+            if (lock) await m.requestUnlock(uri.path);
+            throw e;
           }
         } catch (e) {
-          const errorMsg = caughtToString(e)
-          window.showErrorMessage(`Error creating test include: ${errorMsg}`)
+          const errorMsg = caughtToString(e);
+          window.showErrorMessage(`Error creating test include: ${errorMsg}`);
         }
-      }
-    )
+      },
+    );
   }
 
   /**
@@ -1365,33 +1374,33 @@ export class AdtCommands {
   @command(AbapFsCommands.refreshSystemInfoCache)
   private static async refreshSystemInfoCache() {
     try {
-      clearSystemInfoCache()
+      clearSystemInfoCache();
       window.showInformationMessage(
-        "SAP system info cache cleared. Next request will fetch fresh data."
-      )
+        "SAP system info cache cleared. Next request will fetch fresh data.",
+      );
     } catch (e) {
-      window.showErrorMessage(`Failed to clear cache: ${caughtToString(e)}`)
+      window.showErrorMessage(`Failed to clear cache: ${caughtToString(e)}`);
     }
   }
 
   @command(AbapFsCommands.createInEditor)
   private static async createObjectInEditorCommand(uri?: Uri) {
-    return createObjectInEditorCommand(uri)
+    return createObjectInEditorCommand(uri);
   }
   @command(AbapFsCommands.manageTextElements)
   private static async manageTextElementsCommand(uri?: Uri) {
-    return manageTextElementsCommand(uri)
+    return manageTextElementsCommand(uri);
   }
   @command(AbapFsCommands.configureFeeds)
   private static async configureFeedsCommand() {
-    return configureFeedsCommand()
+    return configureFeedsCommand();
   }
   @command(AbapFsCommands.publishServiceBinding)
   private static async publishServiceBindingCommand() {
-    return publishServiceBindingCommand()
+    return publishServiceBindingCommand();
   }
   @command(AbapFsCommands.testServiceBinding)
   private static async testServiceBindingCommand() {
-    return testServiceBindingCommand()
+    return testServiceBindingCommand();
   }
 }

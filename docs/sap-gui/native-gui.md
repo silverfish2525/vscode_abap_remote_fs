@@ -11,11 +11,11 @@ Open the currently active ABAP object directly in your locally installed SAP GUI
 
 With an ABAP file open in the editor, use any of these methods:
 
-| Method | Action |
-|---|---|
-| Keyboard shortcut | `Ctrl+Shift+F5` |
-| Editor toolbar | Click the **Open in SAP GUI** icon |
-| Command Palette | `Ctrl+Shift+P` → `ABAP FS: Open in native SAP GUI desktop application` |
+| Method            | Action                                                                 |
+| ----------------- | ---------------------------------------------------------------------- |
+| Keyboard shortcut | `Ctrl+Shift+F5`                                                        |
+| Editor toolbar    | Click the **Open in SAP GUI** icon                                     |
+| Command Palette   | `Ctrl+Shift+P` → `ABAP FS: Open in native SAP GUI desktop application` |
 
 ## When to Use
 

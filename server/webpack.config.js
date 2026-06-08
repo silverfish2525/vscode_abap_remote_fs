@@ -1,20 +1,20 @@
 //@ts-check
 
-"use strict"
+"use strict";
 
-const path = require("path")
-const TerserPlugin = require("terser-webpack-plugin")
+const path = require("path");
+const TerserPlugin = require("terser-webpack-plugin");
 
 /**@type {import('webpack').Configuration}*/
 const config = {
   target: "node", // vscode extensions run in a Node.js-context 📖 -> https://webpack.js.org/configuration/node/
-  
+
   // Enable webpack caching for faster builds
   cache: {
-    type: 'filesystem',
+    type: "filesystem",
     buildDependencies: {
-      config: [__filename]
-    }
+      config: [__filename],
+    },
   },
 
   entry: "./src/server.ts", // the entry point of this extension, 📖 -> https://webpack.js.org/configuration/entry-context/
@@ -23,18 +23,18 @@ const config = {
     path: path.resolve(__dirname, "dist"),
     filename: "server.js",
     libraryTarget: "commonjs2",
-    devtoolModuleFilenameTemplate: "../[resource-path]"
+    devtoolModuleFilenameTemplate: "../[resource-path]",
   },
   devtool: "source-map",
   externals: {
-    vscode: "commonjs" // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
+    vscode: "commonjs", // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
   },
   resolve: {
     // support reading TypeScript and JavaScript files, 📖 -> https://github.com/TypeStrong/ts-loader
-    extensions: [".ts", ".js"]
+    extensions: [".ts", ".js"],
   },
   watchOptions: {
-    ignored: /node_modules|out/
+    ignored: /node_modules|out/,
   },
   module: {
     rules: [
@@ -47,13 +47,13 @@ const config = {
             // Match tsc's `useDefineForClassFields: false` semantics so that
             // class-field lowering uses direct property assignments instead
             // of the `@oxc-project/runtime/helpers/defineProperty` helper.
-            assumptions: { setPublicClassFields: true }
-          }
-        }
-      }
-    ]
-  }
-}
+            assumptions: { setPublicClassFields: true },
+          },
+        },
+      },
+    ],
+  },
+};
 /**@type {import('webpack').Configuration}*/
 const prodConfig = {
   ...config,
@@ -61,22 +61,22 @@ const prodConfig = {
   mode: "production",
   optimization: {
     minimizer: [
-      compiler => {
+      (compiler) => {
         new TerserPlugin({
           parallel: true,
           terserOptions: {
-            keep_classnames: true
-          }
-        }).apply(compiler)
-      }
-    ]
-  }
-}
+            keep_classnames: true,
+          },
+        }).apply(compiler);
+      },
+    ],
+  },
+};
 /**@type {import('webpack').Configuration}*/
 const devConfig = {
   ...config,
   name: "development",
   mode: "development",
-  infrastructureLogging: { level: "verbose" }
-}
-module.exports = [devConfig, prodConfig]
+  infrastructureLogging: { level: "verbose" },
+};
+module.exports = [devConfig, prodConfig];

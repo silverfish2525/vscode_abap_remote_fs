@@ -8,12 +8,12 @@ Search for your message class (e.g. `ZMY_MESSAGES`) using the ABAP FS file explo
 
 ## Working with Messages
 
-| Action | How |
-|--------|-----|
-| **Add** | Click the ➕ button — the next available number is suggested automatically |
-| **Edit** | Double-click the message text, or click ✏️ |
-| **Delete** | Click 🗑️ next to the message |
-| **Save** | **Ctrl+S** — all pending adds, edits, and deletes are sent to SAP together |
+| Action     | How                                                                        |
+| ---------- | -------------------------------------------------------------------------- |
+| **Add**    | Click the ➕ button — the next available number is suggested automatically |
+| **Edit**   | Double-click the message text, or click ✏️                                 |
+| **Delete** | Click 🗑️ next to the message                                               |
+| **Save**   | **Ctrl+S** — all pending adds, edits, and deletes are sent to SAP together |
 
 Validation runs as you type: message text is limited to **72 characters** and the number field is required.
 

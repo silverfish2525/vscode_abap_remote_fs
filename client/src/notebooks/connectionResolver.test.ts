@@ -1,153 +1,170 @@
-vi.mock("../config", () => ({ connectedRoots: vi.fn() }), { virtual: false })
-vi.mock("../adt/conections", () => ({ getClient: vi.fn() }), { virtual: false })
-vi.mock("../services/funMessenger", () => ({
-  funWindow: {
-    showWarningMessage: vi.fn(),
-    showQuickPick: vi.fn(),
-    showInputBox: vi.fn(),
-    showErrorMessage: vi.fn(),
-    createOutputChannel: vi.fn(() => ({
-      info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn(), trace: vi.fn(),
-    })),
-  },
-}), { virtual: false })
-vi.mock("vscode", () => ({}), { virtual: true })
+vi.mock("../config", () => ({ connectedRoots: vi.fn() }), { virtual: false });
+vi.mock("../adt/conections", () => ({ getClient: vi.fn() }), { virtual: false });
+vi.mock(
+  "../services/funMessenger",
+  () => ({
+    funWindow: {
+      showWarningMessage: vi.fn(),
+      showQuickPick: vi.fn(),
+      showInputBox: vi.fn(),
+      showErrorMessage: vi.fn(),
+      createOutputChannel: vi.fn(() => ({
+        info: vi.fn(),
+        warn: vi.fn(),
+        error: vi.fn(),
+        debug: vi.fn(),
+        trace: vi.fn(),
+      })),
+    },
+  }),
+  { virtual: false },
+);
+vi.mock("vscode", () => ({}), { virtual: true });
 
-import { resolveConnection, NotebookConnectionError } from "./connectionResolver"
-import { connectedRoots } from "../config"
-import { getClient } from "../adt/conections"
-import { funWindow as window } from "../services/funMessenger"
+import { resolveConnection, NotebookConnectionError } from "./connectionResolver";
+import { connectedRoots } from "../config";
+import { getClient } from "../adt/conections";
+import { funWindow as window } from "../services/funMessenger";
 
-const mockConnectedRoots = connectedRoots as Mock
-const mockGetClient = getClient as Mock
-const mockShowWarningMessage = (window as any).showWarningMessage as Mock
-const mockShowQuickPick = (window as any).showQuickPick as Mock
+const mockConnectedRoots = connectedRoots as Mock;
+const mockGetClient = getClient as Mock;
+const mockShowWarningMessage = (window as any).showWarningMessage as Mock;
+const mockShowQuickPick = (window as any).showQuickPick as Mock;
 
 describe("NotebookConnectionError", () => {
   test("is an Error subclass", () => {
-    const err = new NotebookConnectionError("test")
-    expect(err).toBeInstanceOf(Error)
-    expect(err).toBeInstanceOf(NotebookConnectionError)
-  })
+    const err = new NotebookConnectionError("test");
+    expect(err).toBeInstanceOf(Error);
+    expect(err).toBeInstanceOf(NotebookConnectionError);
+  });
 
   test("has name 'NotebookConnectionError'", () => {
-    const err = new NotebookConnectionError("oops")
-    expect(err.name).toBe("NotebookConnectionError")
-  })
+    const err = new NotebookConnectionError("oops");
+    expect(err.name).toBe("NotebookConnectionError");
+  });
 
   test("stores message correctly", () => {
-    const err = new NotebookConnectionError("no system")
-    expect(err.message).toBe("no system")
-  })
-})
+    const err = new NotebookConnectionError("no system");
+    expect(err.message).toBe("no system");
+  });
+});
 
 describe("resolveConnection — no systems", () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => vi.clearAllMocks());
 
   test("throws NotebookConnectionError when no systems are connected", async () => {
-    mockConnectedRoots.mockReturnValue(new Map())
-    await expect(resolveConnection()).rejects.toThrow(NotebookConnectionError)
-    await expect(resolveConnection()).rejects.toThrow("No SAP systems connected")
-  })
-})
+    mockConnectedRoots.mockReturnValue(new Map());
+    await expect(resolveConnection()).rejects.toThrow(NotebookConnectionError);
+    await expect(resolveConnection()).rejects.toThrow("No SAP systems connected");
+  });
+});
 
 describe("resolveConnection — single system", () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-    const map = new Map([["dev100", {}]])
-    mockConnectedRoots.mockReturnValue(map)
-  })
+    vi.clearAllMocks();
+    const map = new Map([["dev100", {}]]);
+    mockConnectedRoots.mockReturnValue(map);
+  });
 
   test("shows confirmation dialog when only one system connected", async () => {
-    mockShowWarningMessage.mockResolvedValue("Yes, run")
-    mockGetClient.mockReturnValue({ /* mock client */ })
-    await resolveConnection()
+    mockShowWarningMessage.mockResolvedValue("Yes, run");
+    mockGetClient.mockReturnValue({
+      /* mock client */
+    });
+    await resolveConnection();
     expect(mockShowWarningMessage).toHaveBeenCalledWith(
       expect.stringContaining("dev100"),
       { modal: true },
-      "Yes, run"
-    )
-  })
+      "Yes, run",
+    );
+  });
 
   test("returns resolved connection when user confirms", async () => {
-    const fakeClient = { runQuery: vi.fn() }
-    mockShowWarningMessage.mockResolvedValue("Yes, run")
-    mockGetClient.mockReturnValue(fakeClient)
-    const result = await resolveConnection()
-    expect(result.connectionId).toBe("dev100")
-    expect(result.client).toBe(fakeClient)
-  })
+    const fakeClient = { runQuery: vi.fn() };
+    mockShowWarningMessage.mockResolvedValue("Yes, run");
+    mockGetClient.mockReturnValue(fakeClient);
+    const result = await resolveConnection();
+    expect(result.connectionId).toBe("dev100");
+    expect(result.client).toBe(fakeClient);
+  });
 
   test("throws NotebookConnectionError when user cancels single-system prompt", async () => {
-    mockShowWarningMessage.mockResolvedValue(undefined)
-    await expect(resolveConnection()).rejects.toThrow(NotebookConnectionError)
-    await expect(resolveConnection()).rejects.toThrow("cancelled")
-  })
+    mockShowWarningMessage.mockResolvedValue(undefined);
+    await expect(resolveConnection()).rejects.toThrow(NotebookConnectionError);
+    await expect(resolveConnection()).rejects.toThrow("cancelled");
+  });
 
   test("throws NotebookConnectionError when getClient throws", async () => {
-    mockShowWarningMessage.mockResolvedValue("Yes, run")
-    mockGetClient.mockImplementation(() => { throw new Error("client creation failed") })
-    await expect(resolveConnection()).rejects.toThrow(NotebookConnectionError)
-    await expect(resolveConnection()).rejects.toThrow("connection failed")
-  })
-})
+    mockShowWarningMessage.mockResolvedValue("Yes, run");
+    mockGetClient.mockImplementation(() => {
+      throw new Error("client creation failed");
+    });
+    await expect(resolveConnection()).rejects.toThrow(NotebookConnectionError);
+    await expect(resolveConnection()).rejects.toThrow("connection failed");
+  });
+});
 
 describe("resolveConnection — multiple systems", () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-    const map = new Map([["dev100", {}], ["qas200", {}]])
-    mockConnectedRoots.mockReturnValue(map)
-  })
+    vi.clearAllMocks();
+    const map = new Map([
+      ["dev100", {}],
+      ["qas200", {}],
+    ]);
+    mockConnectedRoots.mockReturnValue(map);
+  });
 
   test("shows QuickPick with all connected system IDs", async () => {
-    mockShowQuickPick.mockResolvedValue(undefined)
-    await expect(resolveConnection()).rejects.toThrow(NotebookConnectionError)
+    mockShowQuickPick.mockResolvedValue(undefined);
+    await expect(resolveConnection()).rejects.toThrow(NotebookConnectionError);
     expect(mockShowQuickPick).toHaveBeenCalledWith(
       expect.arrayContaining([
         expect.objectContaining({ label: "dev100" }),
         expect.objectContaining({ label: "qas200" }),
       ]),
-      expect.objectContaining({ placeHolder: expect.any(String) })
-    )
-  })
+      expect.objectContaining({ placeHolder: expect.any(String) }),
+    );
+  });
 
   test("throws NotebookConnectionError when nothing selected from QuickPick", async () => {
-    mockShowQuickPick.mockResolvedValue(undefined)
-    await expect(resolveConnection()).rejects.toThrow(NotebookConnectionError)
-    await expect(resolveConnection()).rejects.toThrow("No system selected")
-  })
+    mockShowQuickPick.mockResolvedValue(undefined);
+    await expect(resolveConnection()).rejects.toThrow(NotebookConnectionError);
+    await expect(resolveConnection()).rejects.toThrow("No system selected");
+  });
 
   test("shows confirmation dialog after QuickPick selection", async () => {
-    mockShowQuickPick.mockResolvedValue({ label: "qas200" })
-    mockShowWarningMessage.mockResolvedValue(undefined)
-    await expect(resolveConnection()).rejects.toThrow(NotebookConnectionError)
+    mockShowQuickPick.mockResolvedValue({ label: "qas200" });
+    mockShowWarningMessage.mockResolvedValue(undefined);
+    await expect(resolveConnection()).rejects.toThrow(NotebookConnectionError);
     expect(mockShowWarningMessage).toHaveBeenCalledWith(
       expect.stringContaining("qas200"),
       { modal: true },
-      "Yes, run"
-    )
-  })
+      "Yes, run",
+    );
+  });
 
   test("throws when user declines confirmation for multi-system", async () => {
-    mockShowQuickPick.mockResolvedValue({ label: "dev100" })
-    mockShowWarningMessage.mockResolvedValue("No")
-    await expect(resolveConnection()).rejects.toThrow(NotebookConnectionError)
-  })
+    mockShowQuickPick.mockResolvedValue({ label: "dev100" });
+    mockShowWarningMessage.mockResolvedValue("No");
+    await expect(resolveConnection()).rejects.toThrow(NotebookConnectionError);
+  });
 
   test("returns resolved connection for selected system", async () => {
-    const fakeClient = { runQuery: vi.fn() }
-    mockShowQuickPick.mockResolvedValue({ label: "qas200" })
-    mockShowWarningMessage.mockResolvedValue("Yes, run")
-    mockGetClient.mockReturnValue(fakeClient)
-    const result = await resolveConnection()
-    expect(result.connectionId).toBe("qas200")
-    expect(result.client).toBe(fakeClient)
-  })
+    const fakeClient = { runQuery: vi.fn() };
+    mockShowQuickPick.mockResolvedValue({ label: "qas200" });
+    mockShowWarningMessage.mockResolvedValue("Yes, run");
+    mockGetClient.mockReturnValue(fakeClient);
+    const result = await resolveConnection();
+    expect(result.connectionId).toBe("qas200");
+    expect(result.client).toBe(fakeClient);
+  });
 
   test("throws NotebookConnectionError when getClient throws for selected system", async () => {
-    mockShowQuickPick.mockResolvedValue({ label: "dev100" })
-    mockShowWarningMessage.mockResolvedValue("Yes, run")
-    mockGetClient.mockImplementation(() => { throw new Error("net error") })
-    await expect(resolveConnection()).rejects.toThrow(NotebookConnectionError)
-  })
-})
+    mockShowQuickPick.mockResolvedValue({ label: "dev100" });
+    mockShowWarningMessage.mockResolvedValue("Yes, run");
+    mockGetClient.mockImplementation(() => {
+      throw new Error("net error");
+    });
+    await expect(resolveConnection()).rejects.toThrow(NotebookConnectionError);
+  });
+});

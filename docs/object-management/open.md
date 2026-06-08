@@ -16,7 +16,7 @@ Open any ABAP object from your connected SAP system directly in the VS Code edit
 
 **Option 3 — Ask Copilot**
 
-- In the Copilot chat, type: *"Open ZCL_MY_CLASS"* — the object opens automatically.
+- In the Copilot chat, type: _"Open ZCL_MY_CLASS"_ — the object opens automatically.
 
 ## What You Get
 

@@ -1,35 +1,39 @@
-vi.mock("vscode", () => ({
-  LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
-  LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
-  MarkdownString: vi.fn().mockImplementation((text: string) => ({ text })),
-  commands: { executeCommand: vi.fn() },
-  lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) }
-}), { virtual: true })
+vi.mock(
+  "vscode",
+  () => ({
+    LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
+    LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
+    MarkdownString: vi.fn().mockImplementation((text: string) => ({ text })),
+    commands: { executeCommand: vi.fn() },
+    lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) },
+  }),
+  { virtual: true },
+);
 
-vi.mock("../../adt/conections", () => ({}))
-vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("../../adt/conections", () => ({}));
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }));
 vi.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() }))
-}))
+  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() })),
+}));
 
-import { CreateABAPObjectTool } from "./createObjectTool"
-import * as vscode from "vscode"
-import { logTelemetry } from "../telemetry"
+import { CreateABAPObjectTool } from "./createObjectTool";
+import * as vscode from "vscode";
+import { logTelemetry } from "../telemetry";
 
-const mockToken = {} as any
+const mockToken = {} as any;
 
 function makeOptions(input: any = {}) {
-  return { input } as any
+  return { input } as any;
 }
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("CreateABAPObjectTool", () => {
-  let tool: CreateABAPObjectTool
+  let tool: CreateABAPObjectTool;
 
   beforeEach(() => {
-    tool = new CreateABAPObjectTool()
-    vi.clearAllMocks()
-  })
+    tool = new CreateABAPObjectTool();
+    vi.clearAllMocks();
+  });
 
   describe("prepareInvocation", () => {
     it("returns invocation message with type and name", async () => {
@@ -38,13 +42,13 @@ describe.skip("CreateABAPObjectTool", () => {
           objectType: "PROG/P",
           name: "ZPROG",
           description: "Test program",
-          connectionId: "dev100"
+          connectionId: "dev100",
         }),
-        mockToken
-      )
-      expect(result.invocationMessage).toContain("PROG/P")
-      expect(result.invocationMessage).toContain("ZPROG")
-    })
+        mockToken,
+      );
+      expect(result.invocationMessage).toContain("PROG/P");
+      expect(result.invocationMessage).toContain("ZPROG");
+    });
 
     it("includes object details in confirmation message", async () => {
       const result = await tool.prepareInvocation(
@@ -53,58 +57,58 @@ describe.skip("CreateABAPObjectTool", () => {
           name: "ZCL_TEST",
           description: "Test class",
           packageName: "ZTEST",
-          connectionId: "dev100"
+          connectionId: "dev100",
         }),
-        mockToken
-      )
-      const msgText = (result.confirmationMessages as any).message.text
-      expect(msgText).toContain("ZCL_TEST")
-      expect(msgText).toContain("CLAS/OC")
-      expect(msgText).toContain("Test class")
-      expect(msgText).toContain("ZTEST")
-    })
+        mockToken,
+      );
+      const msgText = (result.confirmationMessages as any).message.text;
+      expect(msgText).toContain("ZCL_TEST");
+      expect(msgText).toContain("CLAS/OC");
+      expect(msgText).toContain("Test class");
+      expect(msgText).toContain("ZTEST");
+    });
 
     it("defaults packageName to $TMP", async () => {
       const result = await tool.prepareInvocation(
         makeOptions({
           objectType: "PROG/P",
           name: "ZPROG",
-          description: "Test"
+          description: "Test",
         }),
-        mockToken
-      )
-      expect((result.confirmationMessages as any).message.text).toContain("$TMP")
-    })
-  })
+        mockToken,
+      );
+      expect((result.confirmationMessages as any).message.text).toContain("$TMP");
+    });
+  });
 
   describe("invoke", () => {
     it("logs telemetry with connectionId", async () => {
-      ;(vscode.commands.executeCommand as Mock).mockResolvedValue({ success: true })
+      (vscode.commands.executeCommand as Mock).mockResolvedValue({ success: true });
       await tool.invoke(
         makeOptions({
           objectType: "PROG/P",
           name: "ZPROG",
           description: "Test",
-          connectionId: "dev100"
+          connectionId: "dev100",
         }),
-        mockToken
-      )
+        mockToken,
+      );
       expect(logTelemetry).toHaveBeenCalledWith("tool_create_abap_object_called", {
-        connectionId: "dev100"
-      })
-    })
+        connectionId: "dev100",
+      });
+    });
 
     it("normalizes connectionId to lowercase", async () => {
-      ;(vscode.commands.executeCommand as Mock).mockResolvedValue({ success: true })
+      (vscode.commands.executeCommand as Mock).mockResolvedValue({ success: true });
       await tool.invoke(
         makeOptions({
           objectType: "PROG/P",
           name: "ZPROG",
           description: "Test",
-          connectionId: "DEV100"
+          connectionId: "DEV100",
         }),
-        mockToken
-      )
+        mockToken,
+      );
       expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
         "abapfs.createObjectProgrammatically",
         "PROG/P",
@@ -113,22 +117,22 @@ describe.skip("CreateABAPObjectTool", () => {
         "$TMP",
         undefined,
         "dev100",
-        undefined
-      )
-    })
+        undefined,
+      );
+    });
 
     it("calls createObjectProgrammatically command with correct args", async () => {
-      ;(vscode.commands.executeCommand as Mock).mockResolvedValue({ success: true })
+      (vscode.commands.executeCommand as Mock).mockResolvedValue({ success: true });
       await tool.invoke(
         makeOptions({
           objectType: "CLAS/OC",
           name: "ZCL_TEST",
           description: "My class",
           packageName: "ZPKG",
-          connectionId: "dev100"
+          connectionId: "dev100",
         }),
-        mockToken
-      )
+        mockToken,
+      );
       expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
         "abapfs.createObjectProgrammatically",
         "CLAS/OC",
@@ -137,59 +141,59 @@ describe.skip("CreateABAPObjectTool", () => {
         "ZPKG",
         undefined,
         "dev100",
-        undefined
-      )
-    })
+        undefined,
+      );
+    });
 
     it("returns success result when command returns {success:true}", async () => {
-      ;(vscode.commands.executeCommand as Mock).mockResolvedValue({
+      (vscode.commands.executeCommand as Mock).mockResolvedValue({
         success: true,
-        objectUri: "adt://dev100/path"
-      })
+        objectUri: "adt://dev100/path",
+      });
       const result: any = await tool.invoke(
         makeOptions({
           objectType: "PROG/P",
           name: "ZPROG",
           description: "Test",
-          connectionId: "dev100"
+          connectionId: "dev100",
         }),
-        mockToken
-      )
-      expect(result.parts[0].text).toContain("ZPROG")
-    })
+        mockToken,
+      );
+      expect(result.parts[0].text).toContain("ZPROG");
+    });
 
     it("returns error result when command returns {success:false}", async () => {
-      ;(vscode.commands.executeCommand as Mock).mockResolvedValue({
+      (vscode.commands.executeCommand as Mock).mockResolvedValue({
         success: false,
-        error: "Already exists"
-      })
+        error: "Already exists",
+      });
       const result: any = await tool.invoke(
         makeOptions({
           objectType: "PROG/P",
           name: "ZPROG",
           description: "Test",
-          connectionId: "dev100"
+          connectionId: "dev100",
         }),
-        mockToken
-      )
-      expect(result.parts[0].text).toContain("Already exists")
-    })
+        mockToken,
+      );
+      expect(result.parts[0].text).toContain("Already exists");
+    });
 
     it("passes additionalOptions to command", async () => {
-      ;(vscode.commands.executeCommand as Mock).mockResolvedValue({ success: true })
+      (vscode.commands.executeCommand as Mock).mockResolvedValue({ success: true });
       const additionalOptions = {
-        transportRequest: { type: "new" as const, description: "Test TR" }
-      }
+        transportRequest: { type: "new" as const, description: "Test TR" },
+      };
       await tool.invoke(
         makeOptions({
           objectType: "PROG/P",
           name: "ZPROG",
           description: "Test",
           connectionId: "dev100",
-          additionalOptions
+          additionalOptions,
         }),
-        mockToken
-      )
+        mockToken,
+      );
       expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
         "abapfs.createObjectProgrammatically",
         "PROG/P",
@@ -198,8 +202,8 @@ describe.skip("CreateABAPObjectTool", () => {
         "$TMP",
         undefined,
         "dev100",
-        additionalOptions
-      )
-    })
-  })
-})
+        additionalOptions,
+      );
+    });
+  });
+});

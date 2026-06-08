@@ -1,8 +1,8 @@
-import { AbapObjectCreator } from "../creator"
-import { AbapObjectBase, AbapObject } from ".."
-import { AbapObjectService } from "../AOService"
+import { AbapObjectCreator } from "../creator";
+import { AbapObjectBase, AbapObject } from "..";
+import { AbapObjectService } from "../AOService";
 
-const tag = Symbol("AbapInclude")
+const tag = Symbol("AbapInclude");
 @AbapObjectCreator("PROG/I", "FUGR/I")
 export class AbapInclude extends AbapObjectBase {
   constructor(
@@ -13,18 +13,18 @@ export class AbapInclude extends AbapObjectBase {
     techName: string,
     parent: AbapObject | undefined,
     sapGuiUri: string,
-    client: AbapObjectService
+    client: AbapObjectService,
   ) {
-    path = path.replace(/\/source\/main$/, "")
-    super(type, name, path, expandable, techName, parent, sapGuiUri, client)
-    this[tag] = true
+    path = path.replace(/\/source\/main$/, "");
+    super(type, name, path, expandable, techName, parent, sapGuiUri, client);
+    this[tag] = true;
   }
 
-  [tag]: boolean
+  [tag]: boolean;
 
   get extension() {
-    return ".prog.abap"
+    return ".prog.abap";
   }
 }
 
-export const isAbapInclude = (x: any): x is AbapInclude => !!x?.[tag]
+export const isAbapInclude = (x: any): x is AbapInclude => !!x?.[tag];

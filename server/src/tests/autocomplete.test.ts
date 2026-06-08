@@ -1,9 +1,9 @@
-import { CompletionItem } from "vscode-languageserver"
-import { formatItem } from "../completionutils"
+import { CompletionItem } from "vscode-languageserver";
+import { formatItem } from "../completionutils";
 
 test("formatItem_star_prefix", () => {
-  const line = "        select * from /foo/ba*au*"
-  const pos = { line: 1, character: 33 }
+  const line = "        select * from /foo/ba*au*";
+  const pos = { line: 1, character: 33 };
   const raw = {
     KIND: 2,
     IDENTIFIER: "/FOO/BA_AUTHACTV",
@@ -23,23 +23,26 @@ test("formatItem_star_prefix", () => {
     PROP1: 0,
     PROP2: 0,
     PROP3: 0,
-    SYNTCNTXT: 80
-  }
-  const parsed = formatItem(line, pos)(raw)
+    SYNTCNTXT: 80,
+  };
+  const parsed = formatItem(line, pos)(raw);
   const expected = {
     label: "/FOO/BA_AUTHACTV",
     sortText: "3  /FOO/BA_AUTHACTV",
     textEdit: {
       range: { start: { line: 1, character: 33 }, end: { line: 1, character: 33 } },
-      newText: "/FOO/BA_AUTHACTV"
+      newText: "/FOO/BA_AUTHACTV",
     },
     additionalTextEdits: [
-      { range: { start: { line: 1, character: 22 }, end: { line: 1, character: 33 } }, newText: "" }
+      {
+        range: { start: { line: 1, character: 22 }, end: { line: 1, character: 33 } },
+        newText: "",
+      },
     ],
-    data: raw
-  }
-  expect(parsed).toEqual(expected)
-})
+    data: raw,
+  };
+  expect(parsed).toEqual(expected);
+});
 
 test("simple method", () => {
   const raw = {
@@ -61,14 +64,14 @@ test("simple method", () => {
     PROP1: 1,
     PROP2: 0,
     PROP3: 0,
-    SYNTCNTXT: 2
-  }
-  const line = "      CL_SALV_TABLE=>fa"
-  const pos = { line: 1, character: 23 }
-  const parsed = formatItem(line, pos)(raw)
-  const expected = { label: "FACTORY", insertText: "FACTORY", sortText: "4  FACTORY", data: raw }
-  expect(parsed).toEqual(expected)
-})
+    SYNTCNTXT: 2,
+  };
+  const line = "      CL_SALV_TABLE=>fa";
+  const pos = { line: 1, character: 23 };
+  const parsed = formatItem(line, pos)(raw);
+  const expected = { label: "FACTORY", insertText: "FACTORY", sortText: "4  FACTORY", data: raw };
+  expect(parsed).toEqual(expected);
+});
 
 test("method", () => {
   const raw = {
@@ -90,25 +93,28 @@ test("method", () => {
     PROP1: 1,
     PROP2: 0,
     PROP3: 0,
-    SYNTCNTXT: 2
-  }
-  const line = "      CL_SALV_TABLE=>fa*r*.clear PHASE_COUNT_ROW."
-  const pos = { line: 1, character: 26 }
-  const parsed = formatItem(line, pos)(raw)
+    SYNTCNTXT: 2,
+  };
+  const line = "      CL_SALV_TABLE=>fa*r*.clear PHASE_COUNT_ROW.";
+  const pos = { line: 1, character: 26 };
+  const parsed = formatItem(line, pos)(raw);
   const expected = {
     label: "FACTORY",
     sortText: "4  FACTORY",
     textEdit: {
       range: { start: { line: 1, character: 26 }, end: { line: 1, character: 26 } },
-      newText: "FACTORY"
+      newText: "FACTORY",
     },
     additionalTextEdits: [
-      { range: { start: { line: 1, character: 21 }, end: { line: 1, character: 26 } }, newText: "" }
+      {
+        range: { start: { line: 1, character: 21 }, end: { line: 1, character: 26 } },
+        newText: "",
+      },
     ],
-    data: raw
-  }
-  expect(parsed).toEqual(expected)
-})
+    data: raw,
+  };
+  expect(parsed).toEqual(expected);
+});
 
 test("namespaced method pattern", () => {
   const raw = {
@@ -130,26 +136,29 @@ test("namespaced method pattern", () => {
     PROP1: 1,
     PROP2: 0,
     PROP3: 0,
-    SYNTCNTXT: 2
-  }
-  const line = "      /UI2/CL_ABAP2JSON=>CONV_*TO*"
-  const pos = { line: 1, character: 34 }
-  const parsed = formatItem(line, pos)(raw)
+    SYNTCNTXT: 2,
+  };
+  const line = "      /UI2/CL_ABAP2JSON=>CONV_*TO*";
+  const pos = { line: 1, character: 34 };
+  const parsed = formatItem(line, pos)(raw);
   const expected = {
     label: "CONV_XSTRING_TO_STRING",
     sortText: "4  CONV_XSTRING_TO_STRING",
     textEdit: {
       range: { start: { line: 1, character: 34 }, end: { line: 1, character: 34 } },
-      newText: "CONV_XSTRING_TO_STRING"
+      newText: "CONV_XSTRING_TO_STRING",
     },
     additionalTextEdits: [
-      { range: { start: { line: 1, character: 25 }, end: { line: 1, character: 34 } }, newText: "" }
+      {
+        range: { start: { line: 1, character: 25 }, end: { line: 1, character: 34 } },
+        newText: "",
+      },
     ],
-    data: raw
-  }
-  expect(parsed).toEqual(expected)
+    data: raw,
+  };
+  expect(parsed).toEqual(expected);
   // /UI2/CL_ABAP2JSON=>CONV_*TO*CONV_XSTRING_TO_STRING
-})
+});
 
 test("namespaced class", () => {
   const raw = {
@@ -171,19 +180,19 @@ test("namespaced class", () => {
     PROP1: 0,
     PROP2: 0,
     PROP3: 0,
-    SYNTCNTXT: 0
-  }
-  const line = "      /FOO/FOOBAR_.clear phase_count_row."
-  const pos = { line: 208, character: 18 }
-  const parsed = formatItem(line, pos)(raw)
+    SYNTCNTXT: 0,
+  };
+  const line = "      /FOO/FOOBAR_.clear phase_count_row.";
+  const pos = { line: 208, character: 18 };
+  const parsed = formatItem(line, pos)(raw);
   const expected = {
     label: "/FOO/FOOBAR_SOMETHING",
     insertText: "FOOBAR_SOMETHING",
     sortText: "3  /FOO/FOOBAR_SOMETHING",
-    data: raw
-  }
-  expect(parsed).toEqual(expected)
-})
+    data: raw,
+  };
+  expect(parsed).toEqual(expected);
+});
 test("field symbol", () => {
   const raw = {
     KIND: 1,
@@ -204,14 +213,14 @@ test("field symbol", () => {
     PROP1: 0,
     PROP2: 0,
     PROP3: 0,
-    SYNTCNTXT: 0
-  }
-  const line = "      <foo>.clear phase_count_row."
-  const pos = { line: 208, character: 10 }
-  const parsed = formatItem(line, pos)(raw)
-  const expected = { label: "<FOOBAR>", insertText: "FOOBAR", sortText: "0  <FOOBAR>", data: raw }
-  expect(parsed).toEqual(expected)
-})
+    SYNTCNTXT: 0,
+  };
+  const line = "      <foo>.clear phase_count_row.";
+  const pos = { line: 208, character: 10 };
+  const parsed = formatItem(line, pos)(raw);
+  const expected = { label: "<FOOBAR>", insertText: "FOOBAR", sortText: "0  <FOOBAR>", data: raw };
+  expect(parsed).toEqual(expected);
+});
 test("namespaced method pattern2", () => {
   const raw = {
     KIND: 3,
@@ -232,26 +241,26 @@ test("namespaced method pattern2", () => {
     PROP1: 1,
     PROP2: 0,
     PROP3: 0,
-    SYNTCNTXT: 2
-  }
-  const line = "      /UI2/CL_ABAP2JSON=>CONV_*TO*.clear phase_count_row."
-  const pos = { line: 208, character: 34 }
-  const parsed = formatItem(line, pos)(raw)
+    SYNTCNTXT: 2,
+  };
+  const line = "      /UI2/CL_ABAP2JSON=>CONV_*TO*.clear phase_count_row.";
+  const pos = { line: 208, character: 34 };
+  const parsed = formatItem(line, pos)(raw);
   const expected: CompletionItem = {
     label: "CONV_XSTRING_TO_STRING",
     sortText: "4  CONV_XSTRING_TO_STRING",
     textEdit: {
       range: { start: { line: 208, character: 34 }, end: { line: 208, character: 34 } },
-      newText: "CONV_XSTRING_TO_STRING"
+      newText: "CONV_XSTRING_TO_STRING",
     },
     additionalTextEdits: [
       {
         range: { start: { line: 208, character: 25 }, end: { line: 208, character: 34 } },
-        newText: ""
-      }
+        newText: "",
+      },
     ],
-    data: raw
-  }
-  expect(parsed).toEqual(expected)
+    data: raw,
+  };
+  expect(parsed).toEqual(expected);
   // /UI2/CL_ABAP2JSON=>CONV_*TO*CONV_XSTRING_TO_STRING
-})
+});

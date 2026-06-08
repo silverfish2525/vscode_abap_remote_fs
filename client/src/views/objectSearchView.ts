@@ -6,174 +6,174 @@ import {
   WebviewViewProvider,
   WebviewViewResolveContext,
   window,
-  workspace
-} from "vscode"
-import { connectedRoots } from "../config"
-import { MySearchResult } from "../adt/operations/AdtObjectFinder"
-import { getClient } from "../adt/conections"
-import { currentUri, openObject } from "../commands/commands"
-import { caughtToString } from "../lib"
-import { context } from "../extension"
-import { OBJECT_TYPE_FILTER_OPTIONS, getObjectTypeLabel } from "./objectTypeLabels"
+  workspace,
+} from "vscode";
+import { connectedRoots } from "../config";
+import { MySearchResult } from "../adt/operations/AdtObjectFinder";
+import { getClient } from "../adt/conections";
+import { currentUri, openObject } from "../commands/commands";
+import { caughtToString } from "../lib";
+import { context } from "../extension";
+import { OBJECT_TYPE_FILTER_OPTIONS, getObjectTypeLabel } from "./objectTypeLabels";
 
 type SearchResultMessage = {
-  uri: string
-  type: string
-  name: string
-  description?: string
-  detail?: string
-}
+  uri: string;
+  type: string;
+  name: string;
+  description?: string;
+  detail?: string;
+};
 
 type ConnectionOption = {
-  id: string
-  label: string
-}
+  id: string;
+  label: string;
+};
 
 export class ObjectSearchViewProvider implements WebviewViewProvider {
-  public static readonly viewType = "abapfs.views.objectSearch"
-  private static instance: ObjectSearchViewProvider | undefined
+  public static readonly viewType = "abapfs.views.objectSearch";
+  private static instance: ObjectSearchViewProvider | undefined;
 
   public static get() {
-    if (!this.instance) this.instance = new ObjectSearchViewProvider()
-    return this.instance
+    if (!this.instance) this.instance = new ObjectSearchViewProvider();
+    return this.instance;
   }
 
-  private view: WebviewView | undefined
-  private currentConnId: string | undefined
-  private searchGeneration = 0
+  private view: WebviewView | undefined;
+  private currentConnId: string | undefined;
+  private searchGeneration = 0;
 
   private constructor() {
     context.subscriptions.push(
       window.onDidChangeActiveTextEditor(() => {
-        this.postState().catch(() => undefined)
+        this.postState().catch(() => undefined);
       }),
       workspace.onDidChangeWorkspaceFolders(() => {
-        this.postState().catch(() => undefined)
-      })
-    )
+        this.postState().catch(() => undefined);
+      }),
+    );
   }
 
   public async resolveWebviewView(
     view: WebviewView,
     _context: WebviewViewResolveContext<unknown>,
-    _token: CancellationToken
+    _token: CancellationToken,
   ) {
-    this.view = view
+    this.view = view;
     view.webview.options = {
-      enableScripts: true
-    }
-    view.webview.html = this.getHtml(view.webview)
+      enableScripts: true,
+    };
+    view.webview.html = this.getHtml(view.webview);
 
-    view.webview.onDidReceiveMessage(async message => {
+    view.webview.onDidReceiveMessage(async (message) => {
       switch (message.command) {
         case "ready":
-          await this.postState()
-          break
+          await this.postState();
+          break;
         case "search":
-          await this.search(message.query || "", message.connectionId)
-          break
+          await this.search(message.query || "", message.connectionId);
+          break;
         case "open":
           if (message.connectionId && message.uri) {
-            await openObject(message.connectionId, message.uri, message.objectType)
+            await openObject(message.connectionId, message.uri, message.objectType);
           }
-          break
+          break;
         case "changeTypes":
-          await this.changeTypes(message.connectionId, message.query || "")
-          break
+          await this.changeTypes(message.connectionId, message.query || "");
+          break;
       }
-    })
+    });
 
     view.onDidDispose(() => {
-      if (this.view === view) this.view = undefined
-    })
+      if (this.view === view) this.view = undefined;
+    });
   }
 
   private getConnections(): ConnectionOption[] {
-    return [...connectedRoots().values()].map(root => ({
+    return [...connectedRoots().values()].map((root) => ({
       id: root.uri.authority,
-      label: root.name
-    }))
+      label: root.name,
+    }));
   }
 
   private resolveConnectionId(requested?: string) {
-    const connections = this.getConnections()
-    const ids = new Set(connections.map(connection => connection.id))
-    const activeConnId = currentUri()?.authority
+    const connections = this.getConnections();
+    const ids = new Set(connections.map((connection) => connection.id));
+    const activeConnId = currentUri()?.authority;
 
-    if (requested && ids.has(requested)) return requested
-    if (this.currentConnId && ids.has(this.currentConnId)) return this.currentConnId
-    if (activeConnId && ids.has(activeConnId)) return activeConnId
-    return connections[0]?.id
+    if (requested && ids.has(requested)) return requested;
+    if (this.currentConnId && ids.has(this.currentConnId)) return this.currentConnId;
+    if (activeConnId && ids.has(activeConnId)) return activeConnId;
+    return connections[0]?.id;
   }
 
   private async postState() {
-    if (!this.view) return
+    if (!this.view) return;
 
-    const connections = this.getConnections()
-    const connectionId = this.resolveConnectionId()
-    this.currentConnId = connectionId
-    const typeFilter = getSavedTypeFilter()
+    const connections = this.getConnections();
+    const connectionId = this.resolveConnectionId();
+    this.currentConnId = connectionId;
+    const typeFilter = getSavedTypeFilter();
 
     await this.view.webview.postMessage({
       type: "state",
       connections,
       connectionId,
       typeFilter,
-      hasConnections: connections.length > 0
-    })
+      hasConnections: connections.length > 0,
+    });
   }
 
   private async postResults(items: SearchResultMessage[], busy = false, error = "") {
-    if (!this.view) return
-    await this.view.webview.postMessage({ type: "results", items, busy, error })
+    if (!this.view) return;
+    await this.view.webview.postMessage({ type: "results", items, busy, error });
   }
 
   private async changeTypes(connectionId: string | undefined, query: string) {
-    const resolved = this.resolveConnectionId(connectionId)
-    if (!resolved) return
+    const resolved = this.resolveConnectionId(connectionId);
+    if (!resolved) return;
 
-    const selectedTypes = await pickTypeFilter()
-    if (selectedTypes === undefined) return
+    const selectedTypes = await pickTypeFilter();
+    if (selectedTypes === undefined) return;
 
-    await context.globalState.update(TYPE_FILTER_KEY, selectedTypes)
+    await context.globalState.update(TYPE_FILTER_KEY, selectedTypes);
 
-    await this.postState()
-    await this.search(query, resolved)
+    await this.postState();
+    await this.search(query, resolved);
   }
 
   private async search(query: string, connectionId: string | undefined) {
-    if (!this.view) return
+    if (!this.view) return;
 
-    const resolved = this.resolveConnectionId(connectionId)
-    this.currentConnId = resolved
-    const trimmed = query.trim()
-    const generation = ++this.searchGeneration
+    const resolved = this.resolveConnectionId(connectionId);
+    this.currentConnId = resolved;
+    const trimmed = query.trim();
+    const generation = ++this.searchGeneration;
 
     if (!resolved) {
-      await this.postResults([], false, "No ABAP system is mounted in this workspace.")
-      return
+      await this.postResults([], false, "No ABAP system is mounted in this workspace.");
+      return;
     }
 
     if (trimmed.length < 2) {
-      await this.postResults([])
-      return
+      await this.postResults([]);
+      return;
     }
 
-    await this.postResults([], true)
+    await this.postResults([], true);
 
     try {
-      const items = await searchObjects(resolved, trimmed, getSavedTypeFilter())
-      if (!this.view || generation !== this.searchGeneration) return
+      const items = await searchObjects(resolved, trimmed, getSavedTypeFilter());
+      if (!this.view || generation !== this.searchGeneration) return;
 
-      await this.postResults(items.map(toSearchResultMessage))
+      await this.postResults(items.map(toSearchResultMessage));
     } catch (error) {
-      if (!this.view || generation !== this.searchGeneration) return
-      await this.postResults([], false, caughtToString(error))
+      if (!this.view || generation !== this.searchGeneration) return;
+      await this.postResults([], false, caughtToString(error));
     }
   }
 
   private getHtml(webview: Webview) {
-    const nonce = getNonce()
+    const nonce = getNonce();
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -480,35 +480,35 @@ export class ObjectSearchViewProvider implements WebviewViewProvider {
       vscode.postMessage({ command: "ready" })
     </script>
   </body>
-</html>`
+</html>`;
   }
 }
 
 function getNonce() {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-  let value = ""
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let value = "";
   for (let index = 0; index < 32; index += 1) {
-    value += chars.charAt(Math.floor(Math.random() * chars.length))
+    value += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  return value
+  return value;
 }
 
 function getSavedTypeFilter(): string[] {
-  return context.globalState.get<string[]>(TYPE_FILTER_KEY) || []
+  return context.globalState.get<string[]>(TYPE_FILTER_KEY) || [];
 }
 
-const TYPE_FILTER_KEY = "abapfs.searchTypeFilter"
+const TYPE_FILTER_KEY = "abapfs.searchTypeFilter";
 
 function getDisplayDescription(item: MySearchResult): string | undefined {
-  const description = item.description?.trim()
-  if (!description) return undefined
-  return description === getObjectTypeLabel(item.type) ? undefined : description
+  const description = item.description?.trim();
+  if (!description) return undefined;
+  return description === getObjectTypeLabel(item.type) ? undefined : description;
 }
 
 function buildDetail(item: MySearchResult): string {
-  const detailParts = [getObjectTypeLabel(item.type)]
-  if (item.packageName) detailParts.push(`Package ${item.packageName}`)
-  return detailParts.join(" • ")
+  const detailParts = [getObjectTypeLabel(item.type)];
+  if (item.packageName) detailParts.push(`Package ${item.packageName}`);
+  return detailParts.join(" • ");
 }
 
 function toSearchResultMessage(item: MySearchResult): SearchResultMessage {
@@ -517,41 +517,42 @@ function toSearchResultMessage(item: MySearchResult): SearchResultMessage {
     type: item.type,
     name: item.name,
     description: getDisplayDescription(item),
-    detail: buildDetail(item)
-  }
+    detail: buildDetail(item),
+  };
 }
 
 async function pickTypeFilter(): Promise<string[] | undefined> {
-  const previousSelection = getSavedTypeFilter()
+  const previousSelection = getSavedTypeFilter();
   const selected = await window.showQuickPick(
-    OBJECT_TYPE_FILTER_OPTIONS.map(item => ({
+    OBJECT_TYPE_FILTER_OPTIONS.map((item) => ({
       label: item.label,
       description: item.type,
       picked: previousSelection.includes(item.type),
-      type: item.type
+      type: item.type,
     })),
     {
       canPickMany: true,
       placeHolder: "Select object types for the sidebar search",
       title: "Object Search Filters",
-      matchOnDescription: true
-    }
-  )
+      matchOnDescription: true,
+    },
+  );
 
-  if (!selected) return undefined
-  if (selected.length === OBJECT_TYPE_FILTER_OPTIONS.length) return []
-  return (selected as (QuickPickItem & { type: string })[]).map(item => item.type)
+  if (!selected) return undefined;
+  if (selected.length === OBJECT_TYPE_FILTER_OPTIONS.length) return [];
+  return (selected as (QuickPickItem & { type: string })[]).map((item) => item.type);
 }
 
 async function searchObjects(
   connectionId: string,
   query: string,
-  typeFilter: string[]
+  typeFilter: string[],
 ): Promise<MySearchResult[]> {
-  const raw = await getClient(connectionId).searchObject(query.toUpperCase() + "*", "")
-  const filtered = typeFilter.length > 0
-    ? raw.filter(result => typeFilter.includes(result["adtcore:type"]))
-    : raw
+  const raw = await getClient(connectionId).searchObject(query.toUpperCase() + "*", "");
+  const filtered =
+    typeFilter.length > 0
+      ? raw.filter((result) => typeFilter.includes(result["adtcore:type"]))
+      : raw;
 
-  return MySearchResult.createResults(filtered, getClient(connectionId))
+  return MySearchResult.createResults(filtered, getClient(connectionId));
 }

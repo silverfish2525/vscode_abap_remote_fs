@@ -4,4 +4,4 @@
 // `vi.mock("vscode", () => ({...}))`. Vitest still needs `vscode` to resolve
 // to *some* file before it can replace it with the test-supplied factory,
 // hence this stub.
-export {}
+export {};

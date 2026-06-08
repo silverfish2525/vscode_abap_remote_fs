@@ -3,15 +3,23 @@
   "displayName": "ABAPfs language server",
   "version": "1.0.0",
   "description": "Language server for ABAP remote filesystem",
+  "keywords": [
+    "ABAP"
+  ],
+  "license": "MIT",
+  "author": "Marcello Urbani",
   "repository": {
     "type": "git",
     "url": "https://github.com/marcellourbani/vscode_abap_remote_fs.git"
   },
-  "keywords": [
-    "ABAP"
-  ],
-  "author": "Marcello Urbani",
-  "license": "MIT",
+  "scripts": {
+    "clean": "node ../scripts/rmrf.mjs ./out ./dist node_modules",
+    "build": "npm run webpack",
+    "webpack": "webpack --config-name production",
+    "watch": "webpack --config-name development --watch --progress",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
   "dependencies": {
     "@oxc-project/runtime": "^0.134.0",
     "abap-adt-api": "^8.4.0",
@@ -33,13 +41,5 @@
     "vitest": "5.0.0-beta.4",
     "webpack": "^5.101.3",
     "webpack-cli": "^5.1.4"
-  },
-  "scripts": {
-    "clean": "node ../scripts/rmrf.mjs ./out ./dist node_modules",
-    "build": "npm run webpack",
-    "webpack": "webpack --config-name production",
-    "watch": "webpack --config-name development --watch --progress",
-    "test": "vitest run",
-    "test:watch": "vitest"
   }
 }

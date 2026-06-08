@@ -8,12 +8,12 @@ Click the ABAP FS icon in the **Activity Bar** (left sidebar), then select the *
 
 ## What It Shows
 
-| Section | Details |
-|---|---|
-| **Object metadata** | Type, package, responsible user, creation date, object URI |
-| **Lock status** | Whether the object is locked and by whom |
-| **Transport history** | All transport requests that contain this object |
-| **Revision history** | Each saved version — author, date, and transport number |
+| Section               | Details                                                    |
+| --------------------- | ---------------------------------------------------------- |
+| **Object metadata**   | Type, package, responsible user, creation date, object URI |
+| **Lock status**       | Whether the object is locked and by whom                   |
+| **Transport history** | All transport requests that contain this object            |
+| **Revision history**  | Each saved version — author, date, and transport number    |
 
 ## Comparing Revisions
 

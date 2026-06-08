@@ -16,20 +16,20 @@ If you're used to SE38, SE24, or ADT in Eclipse, ABAP FS brings that same direct
 
 This is a high-level summary. See the left navigation for full feature pages.
 
-| Area | Capabilities |
-|------|-------------|
+| Area                       | Capabilities                                                                                                             |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | **AI-Powered Development** | 40 tools give Copilot deep SAP awareness — search objects, read code, run tests, explain dumps, all via natural language |
-| **Edit & Activate** | Browse, open, edit, and activate ABAP objects on the live system |
-| **Editor Experience** | Enhanced hover info, custom editors, object properties, and dedicated ABAP views/panels |
-| **Debug** | Full ABAP debugger with breakpoints, variable inspection, stepping, and debug recording |
-| **Test** | Run unit tests, create test classes, generate test documentation |
-| **Code Quality** | ATC analysis, syntax validation, where-used, ABAP Cleaner formatting |
-| **Transport** | View and manage transport requests directly |
-| **Version Control** | abapGit integration, revision history, blame gutter |
-| **Data & SQL** | Run SQL queries against SAP tables, build multi-step data workbooks |
-| **SAP GUI** | Launch embedded, native, or browser-based SAP GUI from the editor |
-| **Diagrams & Docs** | Generate Mermaid diagrams and ABAP documentation from within VS Code |
-| **Developer Tools** | REPL, Dumps/traces analysis, regex search, dependency graph, feed reader, communication log, RAP generator |
+| **Edit & Activate**        | Browse, open, edit, and activate ABAP objects on the live system                                                         |
+| **Editor Experience**      | Enhanced hover info, custom editors, object properties, and dedicated ABAP views/panels                                  |
+| **Debug**                  | Full ABAP debugger with breakpoints, variable inspection, stepping, and debug recording                                  |
+| **Test**                   | Run unit tests, create test classes, generate test documentation                                                         |
+| **Code Quality**           | ATC analysis, syntax validation, where-used, ABAP Cleaner formatting                                                     |
+| **Transport**              | View and manage transport requests directly                                                                              |
+| **Version Control**        | abapGit integration, revision history, blame gutter                                                                      |
+| **Data & SQL**             | Run SQL queries against SAP tables, build multi-step data workbooks                                                      |
+| **SAP GUI**                | Launch embedded, native, or browser-based SAP GUI from the editor                                                        |
+| **Diagrams & Docs**        | Generate Mermaid diagrams and ABAP documentation from within VS Code                                                     |
+| **Developer Tools**        | REPL, Dumps/traces analysis, regex search, dependency graph, feed reader, communication log, RAP generator               |
 
 ---
 

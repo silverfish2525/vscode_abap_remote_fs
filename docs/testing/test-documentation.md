@@ -23,15 +23,15 @@ Copilot calls the generator and saves a `.docx` file to your workspace.
 
 ## What the Document Contains
 
-| Element | Details |
-|---|---|
-| Title | Custom report title (defaults to "Test Documentation Report") |
-| Date | Test date in DD-MM-YYYY format (defaults to today) |
-| Scenarios | Each scenario gets its own section with a name and description |
-| Screenshots | Embedded images with per-screenshot captions |
+| Element     | Details                                                        |
+| ----------- | -------------------------------------------------------------- |
+| Title       | Custom report title (defaults to "Test Documentation Report")  |
+| Date        | Test date in DD-MM-YYYY format (defaults to today)             |
+| Scenarios   | Each scenario gets its own section with a name and description |
+| Screenshots | Embedded images with per-screenshot captions                   |
 
 ## Tips
 
 - Use **absolute paths** for screenshots (e.g. `C:\tests\...`), not relative paths
 - You can include as many scenarios and screenshots per scenario as needed
-- Specify a custom title or date in your prompt if the defaults don't fit: *"Use title 'Regression Test April' and date 30-04-2026"*
+- Specify a custom title or date in your prompt if the defaults don't fit: _"Use title 'Regression Test April' and date 30-04-2026"_

@@ -7,6 +7,7 @@
 A local CSV file records basic usage statistics — which tools and commands you use, and how many lines of code Copilot changed. This file is stored on your machine only and is never uploaded anywhere.
 
 **File location:**
+
 ```
 <VS Code Global Storage>/extension-path/telemetry-<date>.csv
 ```

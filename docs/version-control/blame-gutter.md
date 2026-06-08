@@ -6,11 +6,11 @@ Shows who last changed each line of an ABAP file — author, date, and transport
 
 With an ABAP file open, use any of:
 
-| Method | Action |
-|--------|--------|
-| Keyboard | **Ctrl+Alt+B** (toggles on/off) |
+| Method           | Action                               |
+| ---------------- | ------------------------------------ |
+| Keyboard         | **Ctrl+Alt+B** (toggles on/off)      |
 | Editor title bar | Click the blame icon ($(git-commit)) |
-| Command Palette | `ABAP FS: Show Blame` |
+| Command Palette  | `ABAP FS: Show Blame`                |
 
 > Blame is per-file — it can be active on one file while other files show no annotations.
 
@@ -29,9 +29,9 @@ Example: `JSMITH · Jan 15, 2026 · KD1K900123 — S 8000005926: Fix pricing log
 
 Control the layout with the `abapfs.blame.renderMode` setting:
 
-| Value | Layout |
-|-------|--------|
-| `classic` | Blame text appears inline after each line of code |
+| Value     | Layout                                                |
+| --------- | ----------------------------------------------------- |
+| `classic` | Blame text appears inline after each line of code     |
 | `gitlens` | Blame moves into a fixed lane to the left of the code |
 
 Change via **File > Preferences > Settings**, search for `abapfs blame`.

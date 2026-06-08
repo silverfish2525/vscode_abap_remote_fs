@@ -1,5 +1,5 @@
-import { defineConfig, configDefaults } from "vitest/config"
-import { resolve } from "node:path"
+import { defineConfig, configDefaults } from "vitest/config";
+import { resolve } from "node:path";
 
 // Tests that previously failed during the jest -> vitest migration are
 // now marked with `describe.skip(...)` (and a `// TODO(vitest): ...` comment)
@@ -37,14 +37,14 @@ export default defineConfig({
       "src/views/traces/fsProvider.test.ts",
       "src/scm/abapGit/commands.test.ts",
       "src/scm/abaprevisions/documentprovider.test.ts",
-      "src/scm/abaprevisions/lenses.test.ts"
+      "src/scm/abaprevisions/lenses.test.ts",
     ],
     alias: {
       // The `vscode` module is only available inside the extension host.
       // Many tests use `vi.mock("vscode", () => ({...}))` to provide a
       // per-file factory, but vitest still needs the bare specifier to
       // resolve to *something* on disk before it can swap in the factory.
-      vscode: resolve(__dirname, "src/tests/vscode-stub.ts")
-    }
-  }
-})
+      vscode: resolve(__dirname, "src/tests/vscode-stub.ts"),
+    },
+  },
+});

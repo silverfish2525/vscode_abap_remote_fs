@@ -10,9 +10,9 @@ Search ABAP source code using plain text or regular expressions (regex). Regex i
 
 Just ask Copilot in plain language:
 
-- *"Find all usages of COMMIT WORK in ZCL_MY_CLASS"*
-- *"Search for methods matching 'get_\*' in ZREPORT_ORDERS"*
-- *"List all methods in CL_SALV_TABLE"*
+- _"Find all usages of COMMIT WORK in ZCL_MY_CLASS"_
+- _"Search for methods matching 'get\_\*' in ZREPORT_ORDERS"_
+- _"List all methods in CL_SALV_TABLE"_
 
 Copilot determines whether to use literal or regex matching automatically.
 
@@ -20,19 +20,19 @@ Copilot determines whether to use literal or regex matching automatically.
 
 ## Literal vs. Regex Mode
 
-| Mode | When to use | Example |
-|------|-------------|---------|
-| **Literal** (default) | Exact text match, fast | `COMMIT WORK` |
-| **Regex** | Patterns, wildcards, boundaries | `METHOD.*get` |
+| Mode                  | When to use                     | Example       |
+| --------------------- | ------------------------------- | ------------- |
+| **Literal** (default) | Exact text match, fast          | `COMMIT WORK` |
+| **Regex**             | Patterns, wildcards, boundaries | `METHOD.*get` |
 
 ### Common Regex Patterns
 
-| Pattern | What it matches | Example |
-|---------|-----------------|---------|
-| `\bICT\b` | Whole word `ICT` only (not `DICT`) | Word boundary |
-| `METHOD.*restrict` | `METHOD` followed by anything then `restrict` | Pattern match |
-| `[A-Z]+` | One or more uppercase letters | Character class |
-| `^\s*(CLASS-)?METHODS?\s+\w+` | Any method declaration | Class structure |
+| Pattern                       | What it matches                               | Example         |
+| ----------------------------- | --------------------------------------------- | --------------- |
+| `\bICT\b`                     | Whole word `ICT` only (not `DICT`)            | Word boundary   |
+| `METHOD.*restrict`            | `METHOD` followed by anything then `restrict` | Pattern match   |
+| `[A-Z]+`                      | One or more uppercase letters                 | Character class |
+| `^\s*(CLASS-)?METHODS?\s+\w+` | Any method declaration                        | Class structure |
 
 ---
 
@@ -40,7 +40,7 @@ Copilot determines whether to use literal or regex matching automatically.
 
 Use wildcard patterns to search across several objects at once:
 
-- *"Find SELECT \* in all Z\* reports"* — searches up to 10 matching objects
+- _"Find SELECT \* in all Z\* reports"_ — searches up to 10 matching objects
 - Copilot limits the scope automatically (1–10 objects) to keep results manageable
 
 ---
@@ -49,7 +49,7 @@ Use wildcard patterns to search across several objects at once:
 
 To list all methods in a class with their line numbers:
 
-- *"List all methods in ZCL_MY_CLASS"*
+- _"List all methods in ZCL_MY_CLASS"_
 
 Copilot returns each method name and the line where it's declared — useful for navigating large classes.
 
@@ -59,7 +59,7 @@ Copilot returns each method name and the line where it's declared — useful for
 
 To see the complete code of one method:
 
-- *"Show me the FACTORY method in CL_SALV_TABLE"*
+- _"Show me the FACTORY method in CL_SALV_TABLE"_
 
 Returns everything from `METHOD FACTORY.` to `ENDMETHOD.`, including interface method syntax like `IF_SALV_TABLE~FACTORY`.
 
@@ -69,4 +69,4 @@ Returns everything from `METHOD FACTORY.` to `ENDMETHOD.`, including interface m
 
 By default, Copilot shows 3 lines before and after each match. Ask for more or fewer:
 
-- *"Find RAISE EXCEPTION in ZCL_ORDERS, show 5 lines of context"*
+- _"Find RAISE EXCEPTION in ZCL_ORDERS, show 5 lines of context"_

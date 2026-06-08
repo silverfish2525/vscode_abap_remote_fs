@@ -1,57 +1,61 @@
-vi.mock("vscode", () => ({
-  LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
-  LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
-  MarkdownString: vi.fn().mockImplementation((text: string) => ({ text })),
-  lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) }
-}), { virtual: true })
+vi.mock(
+  "vscode",
+  () => ({
+    LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
+    LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
+    MarkdownString: vi.fn().mockImplementation((text: string) => ({ text })),
+    lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) },
+  }),
+  { virtual: true },
+);
 
 vi.mock("../../adt/conections", () => ({
   getClient: vi.fn(),
-  abapUri: vi.fn()
-}))
-vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+  abapUri: vi.fn(),
+}));
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }));
 vi.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() }))
-}))
-vi.mock("../abapSearchService", () => ({ getSearchService: vi.fn() }))
-vi.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }))
+  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() })),
+}));
+vi.mock("../abapSearchService", () => ({ getSearchService: vi.fn() }));
+vi.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }));
 vi.mock("./shared", () => ({
   getOptimalObjectURI: vi.fn((type: string, uri: string) => uri + "/source/main"),
-  resolveCorrectURI: vi.fn((uri: string) => Promise.resolve(uri))
-}))
+  resolveCorrectURI: vi.fn((uri: string) => Promise.resolve(uri)),
+}));
 
-import { GetObjectByURITool } from "./getObjectByUriTool"
-import { getClient } from "../../adt/conections"
-import { logTelemetry } from "../telemetry"
-import { funWindow as window } from "../funMessenger"
+import { GetObjectByURITool } from "./getObjectByUriTool";
+import { getClient } from "../../adt/conections";
+import { logTelemetry } from "../telemetry";
+import { funWindow as window } from "../funMessenger";
 
-const mockToken = {} as any
+const mockToken = {} as any;
 
 function makeOptions(input: any = {}) {
-  return { input } as any
+  return { input } as any;
 }
 
-const mockClient = { getObjectSource: vi.fn() }
+const mockClient = { getObjectSource: vi.fn() };
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("GetObjectByURITool", () => {
-  let tool: GetObjectByURITool
+  let tool: GetObjectByURITool;
 
   beforeEach(() => {
-    tool = new GetObjectByURITool()
-    vi.clearAllMocks()
-    ;(getClient as Mock).mockReturnValue(mockClient)
-    ;(window as any).activeTextEditor = undefined
-  })
+    tool = new GetObjectByURITool();
+    vi.clearAllMocks();
+    (getClient as Mock).mockReturnValue(mockClient);
+    (window as any).activeTextEditor = undefined;
+  });
 
   describe("prepareInvocation", () => {
     it("returns invocation message with URI", async () => {
       const result = await tool.prepareInvocation(
         makeOptions({ uri: "/sap/bc/adt/programs/programs/zprog", connectionId: "dev100" }),
-        mockToken
-      )
-      expect(result.invocationMessage).toContain("/sap/bc/adt/programs/programs/zprog")
-    })
+        mockToken,
+      );
+      expect(result.invocationMessage).toContain("/sap/bc/adt/programs/programs/zprog");
+    });
 
     it("includes line range in confirmation message", async () => {
       const result = await tool.prepareInvocation(
@@ -59,111 +63,111 @@ describe.skip("GetObjectByURITool", () => {
           uri: "/sap/bc/adt/programs/programs/zprog",
           startLine: 10,
           lineCount: 20,
-          connectionId: "dev100"
+          connectionId: "dev100",
         }),
-        mockToken
-      )
-      const msgText = (result.confirmationMessages as any).message.text
-      expect(msgText).toContain("10")
-    })
-  })
+        mockToken,
+      );
+      const msgText = (result.confirmationMessages as any).message.text;
+      expect(msgText).toContain("10");
+    });
+  });
 
   describe("invoke", () => {
     it("logs telemetry", async () => {
-      mockClient.getObjectSource.mockResolvedValue("line1\nline2\nline3")
+      mockClient.getObjectSource.mockResolvedValue("line1\nline2\nline3");
       await tool.invoke(
         makeOptions({ uri: "/sap/bc/adt/programs/zprog", connectionId: "dev100" }),
-        mockToken
-      )
+        mockToken,
+      );
       expect(logTelemetry).toHaveBeenCalledWith("tool_get_object_by_uri_called", {
-        connectionId: "dev100"
-      })
-    })
+        connectionId: "dev100",
+      });
+    });
 
     it("normalizes connectionId to lowercase", async () => {
-      mockClient.getObjectSource.mockResolvedValue("line1")
+      mockClient.getObjectSource.mockResolvedValue("line1");
       await tool.invoke(
         makeOptions({ uri: "/sap/bc/adt/programs/zprog", connectionId: "DEV100" }),
-        mockToken
-      )
-      expect(getClient).toHaveBeenCalledWith("dev100")
-    })
+        mockToken,
+      );
+      expect(getClient).toHaveBeenCalledWith("dev100");
+    });
 
     it("returns source content on success", async () => {
-      const content = Array.from({ length: 100 }, (_, i) => `LINE ${i + 1}`).join("\n")
-      mockClient.getObjectSource.mockResolvedValue(content)
+      const content = Array.from({ length: 100 }, (_, i) => `LINE ${i + 1}`).join("\n");
+      mockClient.getObjectSource.mockResolvedValue(content);
       const result: any = await tool.invoke(
         makeOptions({ uri: "/sap/bc/adt/programs/zprog", connectionId: "dev100" }),
-        mockToken
-      )
-      expect(result.parts[0].text).toContain("LINE 1")
-    })
+        mockToken,
+      );
+      expect(result.parts[0].text).toContain("LINE 1");
+    });
 
     it("respects startLine and lineCount", async () => {
-      const content = Array.from({ length: 100 }, (_, i) => `LINE ${i + 1}`).join("\n")
-      mockClient.getObjectSource.mockResolvedValue(content)
+      const content = Array.from({ length: 100 }, (_, i) => `LINE ${i + 1}`).join("\n");
+      mockClient.getObjectSource.mockResolvedValue(content);
       const result: any = await tool.invoke(
         makeOptions({
           uri: "/sap/bc/adt/programs/zprog",
           connectionId: "dev100",
           startLine: 10,
-          lineCount: 5
+          lineCount: 5,
         }),
-        mockToken
-      )
+        mockToken,
+      );
       // Lines 10-14 (0-based slice) shown as LINE 11-15, not line 1
-      expect(result.parts[0].text).toContain("LINE 11")
-      expect(result.parts[0].text).not.toContain("LINE 1\n")
-    })
+      expect(result.parts[0].text).toContain("LINE 11");
+      expect(result.parts[0].text).not.toContain("LINE 1\n");
+    });
 
     it("applies defaults: startLine=0, lineCount=50", async () => {
-      const content = Array.from({ length: 100 }, (_, i) => `LINE ${i + 1}`).join("\n")
-      mockClient.getObjectSource.mockResolvedValue(content)
+      const content = Array.from({ length: 100 }, (_, i) => `LINE ${i + 1}`).join("\n");
+      mockClient.getObjectSource.mockResolvedValue(content);
       const result: any = await tool.invoke(
         makeOptions({ uri: "/sap/bc/adt/programs/zprog", connectionId: "dev100" }),
-        mockToken
-      )
+        mockToken,
+      );
       // Default 50 lines from start
-      expect(result.parts[0].text).toContain("LINE 1")
-    })
+      expect(result.parts[0].text).toContain("LINE 1");
+    });
 
     it("throws when no connectionId and no active ABAP editor", async () => {
       await expect(
-        tool.invoke(makeOptions({ uri: "/sap/bc/adt/programs/zprog" }), mockToken)
-      ).rejects.toThrow()
-    })
+        tool.invoke(makeOptions({ uri: "/sap/bc/adt/programs/zprog" }), mockToken),
+      ).rejects.toThrow();
+    });
 
     it("adds /source/main to detected program URIs", async () => {
-      mockClient.getObjectSource.mockResolvedValue("content")
+      mockClient.getObjectSource.mockResolvedValue("content");
       await tool.invoke(
         makeOptions({ uri: "/sap/bc/adt/programs/programs/zprog", connectionId: "dev100" }),
-        mockToken
-      )
+        mockToken,
+      );
       // getOptimalObjectURI should be called (it's mocked to append /source/main)
-      expect(mockClient.getObjectSource).toHaveBeenCalled()
-    })
+      expect(mockClient.getObjectSource).toHaveBeenCalled();
+    });
 
     it("throws when source content is empty", async () => {
-      mockClient.getObjectSource.mockResolvedValue("")
+      mockClient.getObjectSource.mockResolvedValue("");
       await expect(
         tool.invoke(
           makeOptions({ uri: "/sap/bc/adt/programs/zprog", connectionId: "dev100" }),
-          mockToken
-        )
-      ).rejects.toThrow()
-    })
+          mockToken,
+        ),
+      ).rejects.toThrow();
+    });
 
     it("falls back to original URI when optimal URI fails", async () => {
-      const { getOptimalObjectURI } = require("./shared")
-      getOptimalObjectURI.mockReturnValueOnce("/sap/bc/adt/programs/zprog/source/main")
+      const { getOptimalObjectURI } = require("./shared");
+      getOptimalObjectURI.mockReturnValueOnce("/sap/bc/adt/programs/zprog/source/main");
       mockClient.getObjectSource
         .mockRejectedValueOnce(new Error("optimal URI failed"))
-        .mockResolvedValueOnce("fallback content")
+        .mockResolvedValueOnce("fallback content");
       const result: any = await tool.invoke(
         makeOptions({ uri: "/sap/bc/adt/programs/zprog", connectionId: "dev100" }),
-        mockToken
-      )
-      expect(result.parts[0].text).toContain("fallback content")
-    })
-  })
-})
+        mockToken,
+      );
+      expect(result.parts[0].text).toContain("fallback content");
+    });
+  });
+});

@@ -9,12 +9,12 @@
  * - Handle all RemoteConfig fields including sapGui, atcapprover, etc.
  */
 
-import * as vscode from "vscode"
-import { funWindow as window } from "../services/funMessenger"
-import { RemoteConfig, GuiType, validateNewConfigId, formatKey } from "../config"
-import { logCommands } from "../services/abapCopilotLogger"
-import { logTelemetry } from "../services/telemetry"
-import { PasswordVault } from "../lib"
+import * as vscode from "vscode";
+import { funWindow as window } from "../services/funMessenger";
+import { RemoteConfig, GuiType, validateNewConfigId, formatKey } from "../config";
+import { logCommands } from "../services/abapCopilotLogger";
+import { logTelemetry } from "../services/telemetry";
+import { PasswordVault } from "../lib";
 import {
   isAbapServiceKey,
   cfCodeGrant,
@@ -27,46 +27,46 @@ import {
   cfSpaces,
   cfServices,
   cfServiceInstances,
-  cfInstanceServiceKeys
-} from "abap_cloud_platform"
+  cfInstanceServiceKeys,
+} from "abap_cloud_platform";
 
 interface ConnectionData extends RemoteConfig {
   // All fields from RemoteConfig are inherited
 }
 
 export class SapConnectionManager {
-  private static currentPanel: SapConnectionManager | undefined
-  private readonly panel: vscode.WebviewPanel
-  private readonly extensionUri: vscode.Uri
-  private disposables: vscode.Disposable[] = []
+  private static currentPanel: SapConnectionManager | undefined;
+  private readonly panel: vscode.WebviewPanel;
+  private readonly extensionUri: vscode.Uri;
+  private disposables: vscode.Disposable[] = [];
 
   private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
-    this.panel = panel
-    this.extensionUri = extensionUri
+    this.panel = panel;
+    this.extensionUri = extensionUri;
 
     // Set the webview's initial html content
-    this.update()
+    this.update();
 
     // Listen for when the panel is disposed
-    this.panel.onDidDispose(() => this.dispose(), null, this.disposables)
+    this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
 
     // Handle messages from the webview
     this.panel.webview.onDidReceiveMessage(
-      message => {
-        this.handleMessage(message)
+      (message) => {
+        this.handleMessage(message);
       },
       null,
-      this.disposables
-    )
+      this.disposables,
+    );
   }
 
   public static createOrShow(extensionUri: vscode.Uri) {
-    const column = vscode.ViewColumn.One
+    const column = vscode.ViewColumn.One;
 
     // If we already have a panel, show it
     if (SapConnectionManager.currentPanel) {
-      SapConnectionManager.currentPanel.panel.reveal(column)
-      return
+      SapConnectionManager.currentPanel.panel.reveal(column);
+      return;
     }
 
     // Otherwise, create a new panel
@@ -78,159 +78,162 @@ export class SapConnectionManager {
         enableScripts: true,
         localResourceRoots: [
           vscode.Uri.joinPath(extensionUri, "client", "media"),
-          vscode.Uri.joinPath(extensionUri, "client", "dist", "media")
+          vscode.Uri.joinPath(extensionUri, "client", "dist", "media"),
         ],
-        retainContextWhenHidden: true
-      }
-    )
+        retainContextWhenHidden: true,
+      },
+    );
 
-    SapConnectionManager.currentPanel = new SapConnectionManager(panel, extensionUri)
+    SapConnectionManager.currentPanel = new SapConnectionManager(panel, extensionUri);
   }
 
   private update() {
-    const webview = this.panel.webview
-    this.panel.webview.html = this.getHtmlForWebview(webview)
+    const webview = this.panel.webview;
+    this.panel.webview.html = this.getHtmlForWebview(webview);
   }
 
   private async handleMessage(message: any) {
     switch (message.type) {
       case "ready":
         // Webview is ready, send initial data
-        await this.sendConnectionsToWebview()
-        break
+        await this.sendConnectionsToWebview();
+        break;
 
       case "loadConnections":
-        await this.sendConnectionsToWebview()
-        break
+        await this.sendConnectionsToWebview();
+        break;
 
       case "saveConnection":
         await this.saveConnection(
           message.connectionId,
           message.connection,
           message.target,
-          message.isEdit
-        )
-        break
+          message.isEdit,
+        );
+        break;
 
       case "deleteConnection":
-        await this.deleteConnection(message.connectionId, message.target)
-        break
+        await this.deleteConnection(message.connectionId, message.target);
+        break;
 
       case "exportConnections":
-        await this.exportConnections(message.target)
-        break
+        await this.exportConnections(message.target);
+        break;
 
       case "importFromJson":
-        await this.importFromJson(message.jsonContent, message.target)
-        break
+        await this.importFromJson(message.jsonContent, message.target);
+        break;
 
       case "createCloudConnection":
         if (message.cloudType === "serviceKey") {
-          await this.createCloudConnectionFromServiceKey(message.serviceKey, message.target)
+          await this.createCloudConnectionFromServiceKey(message.serviceKey, message.target);
         } else if (message.cloudType === "endpoint") {
-          await this.createCloudConnectionFromEndpoint(message.endpoint, message.target)
+          await this.createCloudConnectionFromEndpoint(message.endpoint, message.target);
         }
-        break
+        break;
 
       case "confirmDeleteConnection":
-        await this.confirmDeleteConnection(message.connectionId, message.target)
-        break
+        await this.confirmDeleteConnection(message.connectionId, message.target);
+        break;
 
       case "confirmBulkDelete":
-        await this.confirmBulkDelete(message.connectionNames, message.target)
-        break
+        await this.confirmBulkDelete(message.connectionNames, message.target);
+        break;
 
       case "requestBulkUsernameEdit":
-        await this.requestBulkUsernameEdit(message.connectionNames, message.target)
-        break
+        await this.requestBulkUsernameEdit(message.connectionNames, message.target);
+        break;
 
       case "bulkEditUsername":
-        await this.bulkEditUsername(message.connectionNames, message.newUsername, message.target)
-        break
+        await this.bulkEditUsername(message.connectionNames, message.newUsername, message.target);
+        break;
 
       case "bulkDelete":
-        await this.bulkDelete(message.connectionNames, message.target)
-        break
+        await this.bulkDelete(message.connectionNames, message.target);
+        break;
     }
   }
 
   private async sendConnectionsToWebview() {
-    const config = vscode.workspace.getConfiguration("abapfs")
-    const userRemotes = (config.inspect("remote")?.globalValue as Record<string, any>) || {}
-    const workspaceRemotes = (config.inspect("remote")?.workspaceValue as Record<string, any>) || {}
+    const config = vscode.workspace.getConfiguration("abapfs");
+    const userRemotes = (config.inspect("remote")?.globalValue as Record<string, any>) || {};
+    const workspaceRemotes =
+      (config.inspect("remote")?.workspaceValue as Record<string, any>) || {};
 
     this.panel.webview.postMessage({
       type: "connections",
       data: {
         user: userRemotes,
-        workspace: workspaceRemotes
-      }
-    })
+        workspace: workspaceRemotes,
+      },
+    });
   }
 
   private async saveConnection(
     connectionId: string,
     connection: ConnectionData,
     target: "user" | "workspace",
-    isEdit: boolean
+    isEdit: boolean,
   ) {
-    let backupRemotes: Record<string, RemoteConfig> | undefined
+    let backupRemotes: Record<string, RemoteConfig> | undefined;
 
     try {
       const configTarget =
-        target === "user" ? vscode.ConfigurationTarget.Global : vscode.ConfigurationTarget.Workspace
+        target === "user"
+          ? vscode.ConfigurationTarget.Global
+          : vscode.ConfigurationTarget.Workspace;
 
-      const config = vscode.workspace.getConfiguration("abapfs")
+      const config = vscode.workspace.getConfiguration("abapfs");
       const currentRemotes =
         target === "user"
           ? (config.inspect("remote")?.globalValue as Record<string, RemoteConfig>) || {}
-          : (config.inspect("remote")?.workspaceValue as Record<string, RemoteConfig>) || {}
+          : (config.inspect("remote")?.workspaceValue as Record<string, RemoteConfig>) || {};
 
       // Backup current state for rollback
-      backupRemotes = { ...currentRemotes }
+      backupRemotes = { ...currentRemotes };
 
       // Validate connection ID for new connections
       if (!isEdit) {
-        const validator = validateNewConfigId(configTarget)
-        const validation = validator(connectionId)
+        const validator = validateNewConfigId(configTarget);
+        const validation = validator(connectionId);
         if (validation) {
           this.panel.webview.postMessage({
             type: "formValidationError",
-            message: validation
-          })
-          return
+            message: validation,
+          });
+          return;
         }
       }
 
       // Clean up connection object - remove empty values
-      const cleanConnection = this.cleanConnectionObject(connection)
+      const cleanConnection = this.cleanConnectionObject(connection);
 
       // Build updated remotes
       const updatedRemotes = {
         ...currentRemotes,
-        [connectionId]: cleanConnection
-      }
+        [connectionId]: cleanConnection,
+      };
 
       // Validate JSON syntax by attempting to stringify/parse
       try {
-        const jsonString = JSON.stringify(updatedRemotes)
-        JSON.parse(jsonString) // Verify it's valid JSON
+        const jsonString = JSON.stringify(updatedRemotes);
+        JSON.parse(jsonString); // Verify it's valid JSON
       } catch (jsonError) {
-        throw new Error(`Invalid JSON structure: ${jsonError}`)
+        throw new Error(`Invalid JSON structure: ${jsonError}`);
       }
 
       // Save connection
-      await config.update("remote", updatedRemotes, configTarget)
+      await config.update("remote", updatedRemotes, configTarget);
 
       // Verify the save was successful by reading it back
-      const verifyConfig = vscode.workspace.getConfiguration("abapfs")
+      const verifyConfig = vscode.workspace.getConfiguration("abapfs");
       const savedRemotes =
         target === "user"
           ? (verifyConfig.inspect("remote")?.globalValue as Record<string, RemoteConfig>) || {}
-          : (verifyConfig.inspect("remote")?.workspaceValue as Record<string, RemoteConfig>) || {}
+          : (verifyConfig.inspect("remote")?.workspaceValue as Record<string, RemoteConfig>) || {};
 
       if (!savedRemotes[connectionId]) {
-        throw new Error("Verification failed: Connection not found after save")
+        throw new Error("Verification failed: Connection not found after save");
       }
 
       // Note: Password is NOT stored in settings for security
@@ -238,15 +241,15 @@ export class SapConnectionManager {
 
       this.panel.webview.postMessage({
         type: "success",
-        message: `Connection "${connectionId}" saved successfully`
-      })
+        message: `Connection "${connectionId}" saved successfully`,
+      });
 
-      logTelemetry("command_connection_manager_save_called")
+      logTelemetry("command_connection_manager_save_called");
 
       // Refresh connections in webview
-      await this.sendConnectionsToWebview()
+      await this.sendConnectionsToWebview();
     } catch (error) {
-      logCommands.error(`Error saving connection: ${error}`)
+      logCommands.error(`Error saving connection: ${error}`);
 
       // Rollback changes if backup exists
       if (backupRemotes) {
@@ -254,19 +257,19 @@ export class SapConnectionManager {
           const configTarget =
             target === "user"
               ? vscode.ConfigurationTarget.Global
-              : vscode.ConfigurationTarget.Workspace
-          const config = vscode.workspace.getConfiguration("abapfs")
-          await config.update("remote", backupRemotes, configTarget)
-          logCommands.info("Rolled back changes due to error")
+              : vscode.ConfigurationTarget.Workspace;
+          const config = vscode.workspace.getConfiguration("abapfs");
+          await config.update("remote", backupRemotes, configTarget);
+          logCommands.info("Rolled back changes due to error");
         } catch (rollbackError) {
-          logCommands.error(`Failed to rollback changes: ${rollbackError}`)
+          logCommands.error(`Failed to rollback changes: ${rollbackError}`);
         }
       }
 
       this.panel.webview.postMessage({
         type: "error",
-        message: `Failed to save connection: ${error}. Changes have been reverted.`
-      })
+        message: `Failed to save connection: ${error}. Changes have been reverted.`,
+      });
     }
   }
 
@@ -278,44 +281,44 @@ export class SapConnectionManager {
       client: connection.client,
       language: connection.language || "en",
       allowSelfSigned: connection.allowSelfSigned || false,
-      diff_formatter: connection.diff_formatter || "ADT formatter"
-    }
+      diff_formatter: connection.diff_formatter || "ADT formatter",
+    };
 
     // IMPORTANT: Password field must be present but empty - actual password stored in OS credential manager
 
     // Add optional fields only if they have values
-    if (connection.atcapprover) cleaned.atcapprover = connection.atcapprover
-    if (connection.atcVariant) cleaned.atcVariant = connection.atcVariant
-    if (connection.maxDebugThreads) cleaned.maxDebugThreads = connection.maxDebugThreads
-    if (connection.customCA) cleaned.customCA = connection.customCA
+    if (connection.atcapprover) cleaned.atcapprover = connection.atcapprover;
+    if (connection.atcVariant) cleaned.atcVariant = connection.atcVariant;
+    if (connection.maxDebugThreads) cleaned.maxDebugThreads = connection.maxDebugThreads;
+    if (connection.customCA) cleaned.customCA = connection.customCA;
 
     // Handle sapGui configuration
     if (connection.sapGui && this.hasSapGuiValues(connection.sapGui)) {
       cleaned.sapGui = {
         disabled: connection.sapGui.disabled || false,
-        guiType: connection.sapGui.guiType || "SAPGUI"
-      }
+        guiType: connection.sapGui.guiType || "SAPGUI",
+      };
 
       // Add optional sapGui fields
-      if (connection.sapGui.server) cleaned.sapGui.server = connection.sapGui.server
+      if (connection.sapGui.server) cleaned.sapGui.server = connection.sapGui.server;
       if (connection.sapGui.systemNumber)
-        cleaned.sapGui.systemNumber = connection.sapGui.systemNumber
+        cleaned.sapGui.systemNumber = connection.sapGui.systemNumber;
       if (connection.sapGui.routerString)
-        cleaned.sapGui.routerString = connection.sapGui.routerString
+        cleaned.sapGui.routerString = connection.sapGui.routerString;
       if (connection.sapGui.messageServer)
-        cleaned.sapGui.messageServer = connection.sapGui.messageServer
+        cleaned.sapGui.messageServer = connection.sapGui.messageServer;
       if (connection.sapGui.messageServerPort)
-        cleaned.sapGui.messageServerPort = connection.sapGui.messageServerPort
-      if (connection.sapGui.group) cleaned.sapGui.group = connection.sapGui.group
+        cleaned.sapGui.messageServerPort = connection.sapGui.messageServerPort;
+      if (connection.sapGui.group) cleaned.sapGui.group = connection.sapGui.group;
     }
 
     // Handle OAuth if present
     if (connection.oauth) {
-      cleaned.oauth = connection.oauth
+      cleaned.oauth = connection.oauth;
     }
 
     // Cast to RemoteConfig - password field will be populated from credential manager at runtime
-    return cleaned as RemoteConfig
+    return cleaned as RemoteConfig;
   }
 
   private hasSapGuiValues(sapGui: any): boolean {
@@ -327,66 +330,68 @@ export class SapConnectionManager {
       sapGui.group ||
       sapGui.routerString ||
       sapGui.guiType !== "SAPGUI"
-    )
+    );
   }
 
   private async deleteConnection(connectionId: string, target: "user" | "workspace") {
-    let backupRemotes: Record<string, RemoteConfig> | undefined
+    let backupRemotes: Record<string, RemoteConfig> | undefined;
 
     try {
       const configTarget =
-        target === "user" ? vscode.ConfigurationTarget.Global : vscode.ConfigurationTarget.Workspace
+        target === "user"
+          ? vscode.ConfigurationTarget.Global
+          : vscode.ConfigurationTarget.Workspace;
 
-      const config = vscode.workspace.getConfiguration("abapfs")
+      const config = vscode.workspace.getConfiguration("abapfs");
       const currentRemotes =
         target === "user"
           ? (config.inspect("remote")?.globalValue as Record<string, RemoteConfig>) || {}
-          : (config.inspect("remote")?.workspaceValue as Record<string, RemoteConfig>) || {}
+          : (config.inspect("remote")?.workspaceValue as Record<string, RemoteConfig>) || {};
 
       // Backup current state for rollback
-      backupRemotes = { ...currentRemotes }
+      backupRemotes = { ...currentRemotes };
 
       // Remove the connection
-      const { [connectionId]: removed, ...remaining } = currentRemotes
+      const { [connectionId]: removed, ...remaining } = currentRemotes;
 
       // Validate JSON syntax
       try {
-        const jsonString = JSON.stringify(remaining)
-        JSON.parse(jsonString)
+        const jsonString = JSON.stringify(remaining);
+        JSON.parse(jsonString);
       } catch (jsonError) {
-        throw new Error(`Invalid JSON structure: ${jsonError}`)
+        throw new Error(`Invalid JSON structure: ${jsonError}`);
       }
 
-      await config.update("remote", remaining, configTarget)
+      await config.update("remote", remaining, configTarget);
 
       // Verify deletion
-      const verifyConfig = vscode.workspace.getConfiguration("abapfs")
+      const verifyConfig = vscode.workspace.getConfiguration("abapfs");
       const savedRemotes =
         target === "user"
           ? (verifyConfig.inspect("remote")?.globalValue as Record<string, RemoteConfig>) || {}
-          : (verifyConfig.inspect("remote")?.workspaceValue as Record<string, RemoteConfig>) || {}
+          : (verifyConfig.inspect("remote")?.workspaceValue as Record<string, RemoteConfig>) || {};
 
       if (savedRemotes[connectionId]) {
-        throw new Error("Verification failed: Connection still exists after deletion")
+        throw new Error("Verification failed: Connection still exists after deletion");
       }
 
       // Clear password from secure storage
-      const vault = PasswordVault.get()
+      const vault = PasswordVault.get();
       if (removed) {
-        await vault.deletePassword(`vscode.abapfs.${formatKey(connectionId)}`, removed.username)
+        await vault.deletePassword(`vscode.abapfs.${formatKey(connectionId)}`, removed.username);
       }
 
       this.panel.webview.postMessage({
         type: "success",
-        message: `Connection "${connectionId}" deleted successfully`
-      })
+        message: `Connection "${connectionId}" deleted successfully`,
+      });
 
-      logTelemetry("command_connection_manager_delete_called")
+      logTelemetry("command_connection_manager_delete_called");
 
       // Refresh connections in webview
-      await this.sendConnectionsToWebview()
+      await this.sendConnectionsToWebview();
     } catch (error) {
-      logCommands.error(`Error deleting connection: ${error}`)
+      logCommands.error(`Error deleting connection: ${error}`);
 
       // Rollback changes if backup exists
       if (backupRemotes) {
@@ -394,47 +399,47 @@ export class SapConnectionManager {
           const configTarget =
             target === "user"
               ? vscode.ConfigurationTarget.Global
-              : vscode.ConfigurationTarget.Workspace
-          const config = vscode.workspace.getConfiguration("abapfs")
-          await config.update("remote", backupRemotes, configTarget)
-          logCommands.info("Rolled back deletion due to error")
+              : vscode.ConfigurationTarget.Workspace;
+          const config = vscode.workspace.getConfiguration("abapfs");
+          await config.update("remote", backupRemotes, configTarget);
+          logCommands.info("Rolled back deletion due to error");
         } catch (rollbackError) {
-          logCommands.error(`Failed to rollback deletion: ${rollbackError}`)
+          logCommands.error(`Failed to rollback deletion: ${rollbackError}`);
         }
       }
 
       this.panel.webview.postMessage({
         type: "error",
-        message: `Failed to delete connection: ${error}. Changes have been reverted.`
-      })
+        message: `Failed to delete connection: ${error}. Changes have been reverted.`,
+      });
     }
   }
 
   private async createCloudConnectionFromServiceKey(
     serviceKeyJson: string,
-    target: "user" | "workspace"
+    target: "user" | "workspace",
   ) {
     try {
       // Parse service key
-      const serviceKey = JSON.parse(serviceKeyJson)
+      const serviceKey = JSON.parse(serviceKeyJson);
 
       // Validate it's an ABAP service key
       if (!isAbapServiceKey(serviceKey)) {
-        throw new Error("Invalid ABAP service key format")
+        throw new Error("Invalid ABAP service key format");
       }
 
       // Extract connection details from service key
       const {
         url,
-        uaa: { clientid, clientsecret, url: loginUrl }
-      } = serviceKey
+        uaa: { clientid, clientsecret, url: loginUrl },
+      } = serviceKey;
 
       // Get system info to determine name
-      const server = loginServer()
-      const grant = await cfCodeGrant(loginUrl, clientid, clientsecret, server)
-      const user = await getAbapUserInfo(url, grant.accessToken)
-      const info = await getAbapSystemInfo(url, grant.accessToken)
-      server.server.close()
+      const server = loginServer();
+      const grant = await cfCodeGrant(loginUrl, clientid, clientsecret, server);
+      const user = await getAbapUserInfo(url, grant.accessToken);
+      const info = await getAbapSystemInfo(url, grant.accessToken);
+      server.server.close();
 
       // Create connection configuration (password not included - stored in credential manager only)
       const connection: any = {
@@ -449,26 +454,26 @@ export class SapConnectionManager {
           clientId: clientid,
           clientSecret: clientsecret,
           loginUrl,
-          saveCredentials: true
-        }
-      }
+          saveCredentials: true,
+        },
+      };
 
       // Send to webview for user to review/edit before saving
       this.panel.webview.postMessage({
         type: "cloudConnectionCreated",
         connection: connection,
         availableLanguages: info.INSTALLED_LANGUAGES.map(
-          (l: any) => l.ISOLANG?.toLowerCase() || "en"
-        )
-      })
+          (l: any) => l.ISOLANG?.toLowerCase() || "en",
+        ),
+      });
 
-      logTelemetry("command_connection_manager_cloud_connection_created")
+      logTelemetry("command_connection_manager_cloud_connection_created");
     } catch (error) {
-      logCommands.error(`Error creating cloud connection from service key: ${error}`)
+      logCommands.error(`Error creating cloud connection from service key: ${error}`);
       this.panel.webview.postMessage({
         type: "error",
-        message: `Failed to create cloud connection: ${error}`
-      })
+        message: `Failed to create cloud connection: ${error}`,
+      });
     }
   }
 
@@ -480,195 +485,199 @@ export class SapConnectionManager {
       // Import cloud platform utilities (static imports above)
 
       // Get CF info
-      const info = await cfInfo(endpoint)
-      const loginUrl = info.links.login?.href
+      const info = await cfInfo(endpoint);
+      const loginUrl = info.links.login?.href;
       if (!loginUrl) {
-        throw new Error("Could not determine login URL from endpoint")
+        throw new Error("Could not determine login URL from endpoint");
       }
 
       // Get username and password from user
       const username = await window.showInputBox({
         prompt: "Enter Cloud Foundry username",
-        ignoreFocusOut: true
-      })
-      if (!username) return
+        ignoreFocusOut: true,
+      });
+      if (!username) return;
 
       const password = await window.showInputBox({
         prompt: "Enter Cloud Foundry password",
         password: true,
-        ignoreFocusOut: true
-      })
-      if (!password) return
+        ignoreFocusOut: true,
+      });
+      if (!password) return;
 
       // Login
-      const grant = await cfPasswordGrant(loginUrl, username, password)
+      const grant = await cfPasswordGrant(loginUrl, username, password);
 
       // Get org
-      const orgs = await cfOrganizations(endpoint, grant.accessToken)
+      const orgs = await cfOrganizations(endpoint, grant.accessToken);
       if (orgs.length === 0) {
-        throw new Error("No organizations found")
+        throw new Error("No organizations found");
       }
 
-      const orgItems = orgs.map(o => ({ label: o.entity.name, org: o }))
+      const orgItems = orgs.map((o) => ({ label: o.entity.name, org: o }));
       const selectedOrg = await window.showQuickPick(orgItems, {
-        placeHolder: "Select Cloud Foundry organization"
-      })
-      if (!selectedOrg) return
+        placeHolder: "Select Cloud Foundry organization",
+      });
+      if (!selectedOrg) return;
 
       // Get space
-      const spaces = await cfSpaces(endpoint, selectedOrg.org.entity, grant.accessToken)
+      const spaces = await cfSpaces(endpoint, selectedOrg.org.entity, grant.accessToken);
       if (spaces.length === 0) {
-        throw new Error("No spaces found")
+        throw new Error("No spaces found");
       }
 
-      const spaceItems = spaces.map(s => ({ label: s.entity.name, space: s }))
+      const spaceItems = spaces.map((s) => ({ label: s.entity.name, space: s }));
       const selectedSpace = await window.showQuickPick(spaceItems, {
-        placeHolder: "Select Cloud Foundry space"
-      })
-      if (!selectedSpace) return
+        placeHolder: "Select Cloud Foundry space",
+      });
+      if (!selectedSpace) return;
 
       // Get services and instances to find ABAP service
-      const services = await cfServices(endpoint, grant.accessToken)
+      const services = await cfServices(endpoint, grant.accessToken);
       const instances = await cfServiceInstances(
         endpoint,
         selectedSpace.space.entity,
-        grant.accessToken
-      )
+        grant.accessToken,
+      );
 
       // Find ABAP service by tag
-      const abapService = services.find(s => s.entity.tags && s.entity.tags.includes("abapcp"))
+      const abapService = services.find((s) => s.entity.tags && s.entity.tags.includes("abapcp"));
       if (!abapService) {
-        throw new Error("No ABAP service found in this space")
+        throw new Error("No ABAP service found in this space");
       }
 
       // Find instance matching ABAP service
-      const abapInstance = instances.find(i => i.entity.service_guid === abapService.metadata.guid)
+      const abapInstance = instances.find(
+        (i) => i.entity.service_guid === abapService.metadata.guid,
+      );
       if (!abapInstance) {
-        throw new Error("No ABAP service instance found")
+        throw new Error("No ABAP service instance found");
       }
 
       // Get service keys
-      const keys = await cfInstanceServiceKeys(endpoint, abapInstance.entity, grant.accessToken)
+      const keys = await cfInstanceServiceKeys(endpoint, abapInstance.entity, grant.accessToken);
       if (keys.length === 0) {
-        throw new Error("No service keys found for this instance")
+        throw new Error("No service keys found for this instance");
       }
 
       // Filter for keys with valid names and credentials
-      const validKeys = keys.filter(k => k.entity && typeof (k.entity as any).name === "string")
+      const validKeys = keys.filter((k) => k.entity && typeof (k.entity as any).name === "string");
       if (validKeys.length === 0) {
-        throw new Error("No valid service keys found")
+        throw new Error("No valid service keys found");
       }
 
-      const keyItems = validKeys.map(k => ({
+      const keyItems = validKeys.map((k) => ({
         label: (k.entity as any).name,
-        key: k
-      }))
+        key: k,
+      }));
       const selectedKey = await window.showQuickPick(keyItems, {
-        placeHolder: "Select service key"
-      })
-      if (!selectedKey) return
+        placeHolder: "Select service key",
+      });
+      if (!selectedKey) return;
 
       // Extract credentials from the selected key
-      const credentials = (selectedKey.key.entity as any).credentials
+      const credentials = (selectedKey.key.entity as any).credentials;
       if (!credentials) {
-        throw new Error("Selected key has no credentials")
+        throw new Error("Selected key has no credentials");
       }
 
       // Now use the credentials to create connection
-      await this.createCloudConnectionFromServiceKey(JSON.stringify(credentials), target)
+      await this.createCloudConnectionFromServiceKey(JSON.stringify(credentials), target);
     } catch (error) {
-      logCommands.error(`Error creating cloud connection from endpoint: ${error}`)
+      logCommands.error(`Error creating cloud connection from endpoint: ${error}`);
       this.panel.webview.postMessage({
         type: "error",
-        message: `Failed to create cloud connection: ${error}`
-      })
+        message: `Failed to create cloud connection: ${error}`,
+      });
     }
   }
 
   private async exportConnections(target: "user" | "workspace") {
     try {
-      const config = vscode.workspace.getConfiguration("abapfs")
+      const config = vscode.workspace.getConfiguration("abapfs");
       const rawConnections =
         target === "user"
           ? ((config.inspect("remote")?.globalValue || {}) as Record<string, any>)
-          : ((config.inspect("remote")?.workspaceValue || {}) as Record<string, any>)
+          : ((config.inspect("remote")?.workspaceValue || {}) as Record<string, any>);
 
       // Sanitize connections for export - clear username and password values but keep fields.
-      const sanitizedConnections: Record<string, any> = {}
+      const sanitizedConnections: Record<string, any> = {};
       for (const [name, conn] of Object.entries(rawConnections)) {
         sanitizedConnections[name] = {
           ...conn,
           username: "", // Clear value but keep field for import compatibility
-          password: "" // Clear value but keep field for import compatibility
-        }
+          password: "", // Clear value but keep field for import compatibility
+        };
       }
 
-      const json = JSON.stringify(sanitizedConnections, null, 2)
+      const json = JSON.stringify(sanitizedConnections, null, 2);
 
       // Prompt user to save file
       const uri = await window.showSaveDialog({
         defaultUri: vscode.Uri.file(`abap-connections-${target}.json`),
         filters: {
           "JSON files": ["json"],
-          "All files": ["*"]
-        }
-      })
+          "All files": ["*"],
+        },
+      });
 
       if (!uri) {
-        return // User cancelled
+        return; // User cancelled
       }
 
       // Write to file
-      await vscode.workspace.fs.writeFile(uri, Buffer.from(json, "utf8"))
+      await vscode.workspace.fs.writeFile(uri, Buffer.from(json, "utf8"));
 
       this.panel.webview.postMessage({
         type: "success",
-        message: `Connections exported (no passwords)`
-      })
+        message: `Connections exported (no passwords)`,
+      });
 
-      logTelemetry("command_connection_manager_export_called")
+      logTelemetry("command_connection_manager_export_called");
     } catch (error) {
-      logCommands.error(`Error exporting connections: ${error}`)
+      logCommands.error(`Error exporting connections: ${error}`);
       this.panel.webview.postMessage({
         type: "error",
-        message: `Failed to export connections: ${error}`
-      })
+        message: `Failed to export connections: ${error}`,
+      });
     }
   }
 
   private async importFromJson(jsonContent: string, target: "user" | "workspace") {
     try {
-      const connections = JSON.parse(jsonContent)
+      const connections = JSON.parse(jsonContent);
 
       const configTarget =
-        target === "user" ? vscode.ConfigurationTarget.Global : vscode.ConfigurationTarget.Workspace
+        target === "user"
+          ? vscode.ConfigurationTarget.Global
+          : vscode.ConfigurationTarget.Workspace;
 
-      const config = vscode.workspace.getConfiguration("abapfs")
+      const config = vscode.workspace.getConfiguration("abapfs");
       const currentRemotes =
         target === "user"
           ? (config.inspect("remote")?.globalValue as Record<string, RemoteConfig>) || {}
-          : (config.inspect("remote")?.workspaceValue as Record<string, RemoteConfig>) || {}
+          : (config.inspect("remote")?.workspaceValue as Record<string, RemoteConfig>) || {};
 
       // Merge imported connections with existing
-      const merged = { ...currentRemotes, ...connections }
+      const merged = { ...currentRemotes, ...connections };
 
-      await config.update("remote", merged, configTarget)
+      await config.update("remote", merged, configTarget);
 
       this.panel.webview.postMessage({
         type: "success",
-        message: `Imported ${Object.keys(connections).length} connection(s) successfully`
-      })
+        message: `Imported ${Object.keys(connections).length} connection(s) successfully`,
+      });
 
-      logTelemetry("command_connection_manager_import_json_called")
+      logTelemetry("command_connection_manager_import_json_called");
 
       // Refresh connections in webview
-      await this.sendConnectionsToWebview()
+      await this.sendConnectionsToWebview();
     } catch (error) {
-      logCommands.error(`Error importing JSON: ${error}`)
+      logCommands.error(`Error importing JSON: ${error}`);
       this.panel.webview.postMessage({
         type: "error",
-        message: `Failed to import JSON: ${error}`
-      })
+        message: `Failed to import JSON: ${error}`,
+      });
     }
   }
 
@@ -676,11 +685,11 @@ export class SapConnectionManager {
     const result = await window.showWarningMessage(
       `Delete connection "${connectionId}"?`,
       { modal: true },
-      "Delete"
-    )
+      "Delete",
+    );
 
     if (result === "Delete") {
-      await this.deleteConnection(connectionId, target)
+      await this.deleteConnection(connectionId, target);
     }
   }
 
@@ -688,11 +697,11 @@ export class SapConnectionManager {
     const result = await window.showWarningMessage(
       `Delete ${connectionNames.length} connection(s)? This cannot be undone.`,
       { modal: true },
-      "Delete All"
-    )
+      "Delete All",
+    );
 
     if (result === "Delete All") {
-      await this.bulkDelete(connectionNames, target)
+      await this.bulkDelete(connectionNames, target);
     }
   }
 
@@ -700,104 +709,108 @@ export class SapConnectionManager {
     const newUsername = await window.showInputBox({
       prompt: `Enter new username for ${connectionNames.length} connection(s)`,
       placeHolder: "username",
-      ignoreFocusOut: true
-    })
+      ignoreFocusOut: true,
+    });
 
     if (newUsername) {
-      await this.bulkEditUsername(connectionNames, newUsername, target)
+      await this.bulkEditUsername(connectionNames, newUsername, target);
     }
   }
 
   private async bulkEditUsername(
     connectionNames: string[],
     newUsername: string,
-    target: "user" | "workspace"
+    target: "user" | "workspace",
   ) {
     try {
       const configTarget =
-        target === "user" ? vscode.ConfigurationTarget.Global : vscode.ConfigurationTarget.Workspace
+        target === "user"
+          ? vscode.ConfigurationTarget.Global
+          : vscode.ConfigurationTarget.Workspace;
 
-      const config = vscode.workspace.getConfiguration("abapfs")
+      const config = vscode.workspace.getConfiguration("abapfs");
       const currentRemotes =
         target === "user"
           ? (config.inspect("remote")?.globalValue as Record<string, RemoteConfig>) || {}
-          : (config.inspect("remote")?.workspaceValue as Record<string, RemoteConfig>) || {}
+          : (config.inspect("remote")?.workspaceValue as Record<string, RemoteConfig>) || {};
 
       // Update usernames for selected connections
-      const updatedRemotes = { ...currentRemotes }
-      connectionNames.forEach(name => {
+      const updatedRemotes = { ...currentRemotes };
+      connectionNames.forEach((name) => {
         if (updatedRemotes[name]) {
           updatedRemotes[name] = {
             ...updatedRemotes[name],
-            username: newUsername
-          }
+            username: newUsername,
+          };
         }
-      })
+      });
 
-      await config.update("remote", updatedRemotes, configTarget)
+      await config.update("remote", updatedRemotes, configTarget);
 
       this.panel.webview.postMessage({
         type: "success",
-        message: `Updated username for ${connectionNames.length} connection(s)`
-      })
+        message: `Updated username for ${connectionNames.length} connection(s)`,
+      });
 
       // Refresh connections in webview
-      await this.sendConnectionsToWebview()
+      await this.sendConnectionsToWebview();
     } catch (error) {
-      logCommands.error(`Error in bulk edit username: ${error}`)
+      logCommands.error(`Error in bulk edit username: ${error}`);
       this.panel.webview.postMessage({
         type: "error",
-        message: `Failed to update usernames: ${error}`
-      })
+        message: `Failed to update usernames: ${error}`,
+      });
     }
   }
 
   private async bulkDelete(connectionNames: string[], target: "user" | "workspace") {
     try {
       const configTarget =
-        target === "user" ? vscode.ConfigurationTarget.Global : vscode.ConfigurationTarget.Workspace
+        target === "user"
+          ? vscode.ConfigurationTarget.Global
+          : vscode.ConfigurationTarget.Workspace;
 
-      const config = vscode.workspace.getConfiguration("abapfs")
+      const config = vscode.workspace.getConfiguration("abapfs");
       const currentRemotes =
         target === "user"
           ? (config.inspect("remote")?.globalValue as Record<string, RemoteConfig>) || {}
-          : (config.inspect("remote")?.workspaceValue as Record<string, RemoteConfig>) || {}
+          : (config.inspect("remote")?.workspaceValue as Record<string, RemoteConfig>) || {};
 
       // Remove selected connections
-      const updatedRemotes = { ...currentRemotes }
-      connectionNames.forEach(name => {
-        delete updatedRemotes[name]
-      })
+      const updatedRemotes = { ...currentRemotes };
+      connectionNames.forEach((name) => {
+        delete updatedRemotes[name];
+      });
 
-      await config.update("remote", updatedRemotes, configTarget)
+      await config.update("remote", updatedRemotes, configTarget);
 
       // Clear passwords from secure storage
-      const vault = PasswordVault.get()
+      const vault = PasswordVault.get();
       for (const name of connectionNames) {
-        const conn = currentRemotes[name]
+        const conn = currentRemotes[name];
         if (conn) {
-          await vault.deletePassword(`vscode.abapfs.${formatKey(name)}`, conn.username)
+          await vault.deletePassword(`vscode.abapfs.${formatKey(name)}`, conn.username);
         }
       }
 
       this.panel.webview.postMessage({
         type: "success",
-        message: `Deleted ${connectionNames.length} connection(s)`
-      })
+        message: `Deleted ${connectionNames.length} connection(s)`,
+      });
 
       // Refresh connections in webview
-      await this.sendConnectionsToWebview()
+      await this.sendConnectionsToWebview();
     } catch (error) {
-      logCommands.error(`Error in bulk delete: ${error}`)
+      logCommands.error(`Error in bulk delete: ${error}`);
       this.panel.webview.postMessage({
         type: "error",
-        message: `Failed to delete connections: ${error}`
-      })
+        message: `Failed to delete connections: ${error}`,
+      });
     }
   }
 
   private getHtmlForWebview(webview: vscode.Webview) {
-    const nonce = getNonce()
+    const nonce = getNonce();
 
     return `<!DOCTYPE html>
         <html lang="en">
@@ -899,7 +912,7 @@ export class SapConnectionManager {
                 ${this.getScript()}
             </script>
         </body>
-        </html>`
+        </html>`;
   }
 
   private getStyles() {
@@ -1243,7 +1256,7 @@ export class SapConnectionManager {
             .conditional-field.show {
                 display: block;
             }
-        `
+        `;
   }
 
   private getFormHtml() {
@@ -1409,7 +1422,7 @@ export class SapConnectionManager {
                 <button type="button" class="btn btn-secondary" id="cancelEditorBtn">Cancel</button>
                 <button type="submit" class="btn btn-primary">💾 Save Connection</button>
             </div>
-        `
+        `;
   }
 
   private getScript() {
@@ -2082,31 +2095,31 @@ export class SapConnectionManager {
             window.closeCloudModal = closeCloudModal;
             window.processCloudConnection = processCloudConnection;
             window.handleCloudTypeChange = handleCloudTypeChange;
-        `
+        `;
   }
 
   public dispose() {
-    SapConnectionManager.currentPanel = undefined
+    SapConnectionManager.currentPanel = undefined;
 
     // Clean up our resources
-    this.panel.dispose()
+    this.panel.dispose();
 
     while (this.disposables.length) {
-      const disposable = this.disposables.pop()
+      const disposable = this.disposables.pop();
       if (disposable) {
-        disposable.dispose()
+        disposable.dispose();
       }
     }
   }
 }
 
 function getNonce() {
-  let text = ""
-  const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+  let text = "";
+  const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   for (let i = 0; i < 32; i++) {
-    text += possible.charAt(Math.floor(Math.random() * possible.length))
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
   }
-  return text
+  return text;
 }
 
 /**
@@ -2114,10 +2127,10 @@ function getNonce() {
  */
 export async function openConnectionManager(context: vscode.ExtensionContext) {
   try {
-    logTelemetry("command_connection_manager_opened")
-    SapConnectionManager.createOrShow(context.extensionUri)
+    logTelemetry("command_connection_manager_opened");
+    SapConnectionManager.createOrShow(context.extensionUri);
   } catch (error) {
-    logCommands.error(`Error opening connection manager: ${error}`)
-    window.showErrorMessage(`Failed to open connection manager: ${error}`)
+    logCommands.error(`Error opening connection manager: ${error}`);
+    window.showErrorMessage(`Failed to open connection manager: ${error}`);
   }
 }

@@ -1,1 +1,1 @@
-export { tracesProvider } from "./views"
+export { tracesProvider } from "./views";

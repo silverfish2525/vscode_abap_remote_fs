@@ -23,9 +23,9 @@ Right-click the class file in the Explorer → **Create test class include**
 
 Open the Copilot chat and ask:
 
-- *"Create test class for ZCL_MY_CLASS"*
-- *"Add unit tests to ZCL_PRICING"*
-- *"Set up testing for this class"*
+- _"Create test class for ZCL_MY_CLASS"_
+- _"Add unit tests to ZCL_PRICING"_
+- _"Set up testing for this class"_
 
 ## What Gets Created
 

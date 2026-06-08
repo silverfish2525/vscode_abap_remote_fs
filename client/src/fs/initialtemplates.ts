@@ -1,6 +1,6 @@
 interface Template {
-  name: string
-  content: string
+  name: string;
+  content: string;
 }
 
 const abaplint = `{
@@ -29,7 +29,7 @@ const abaplint = `{
     "unknown_types": true,
     "xml_consistency": true
   }
-}`
+}`;
 
 const agentsMD = `# AGENTS.md
 
@@ -46,15 +46,15 @@ The best way to find out if a class works correctly is running unit tests with t
 
 **CRITICAL** file changes are only relevant once activated. Always activate files after writing them. 
 Note that you might have to modify several includes before you can activate them.
-`
+`;
 
 export const templates: Template[] = [
   {
     name: "AGENTS.md",
-    content: agentsMD
+    content: agentsMD,
   },
   {
     name: "abaplint.jsonc",
-    content: abaplint
-  }
-]
+    content: abaplint,
+  },
+];

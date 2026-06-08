@@ -4,7 +4,7 @@
  * Contains agent metadata, types, and the registry of all available subagents.
  */
 
-import * as vscode from "vscode"
+import * as vscode from "vscode";
 
 // ============================================================================
 // TYPES
@@ -12,31 +12,31 @@ import * as vscode from "vscode"
 
 /** Agent metadata (templates loaded from files) */
 export interface AgentMeta {
-  id: string
-  name: string
-  description: string
-  tier: 1 | 2 | 3
-  defaultModel: string
-  tools: string[] | null // null means all tools (no restriction)
-  templateFile: string // filename in subagent-templates folder
+  id: string;
+  name: string;
+  description: string;
+  tier: 1 | 2 | 3;
+  defaultModel: string;
+  tools: string[] | null; // null means all tools (no restriction)
+  templateFile: string; // filename in subagent-templates folder
 }
 
 export interface EnableResult {
-  success: boolean
-  error?: "no_workspace" | "missing_models" | "validation_failed"
-  missingModels?: string[]
-  fileErrors?: Array<{ agentId: string; errors: string[] }>
-  fileStatus?: string
+  success: boolean;
+  error?: "no_workspace" | "missing_models" | "validation_failed";
+  missingModels?: string[];
+  fileErrors?: Array<{ agentId: string; errors: string[] }>;
+  fileStatus?: string;
 }
 
 export interface DisableResult {
-  success: boolean
-  preserved: boolean
+  success: boolean;
+  preserved: boolean;
 }
 
 export interface SubagentSettings {
-  enabled: boolean
-  models: Record<string, string>
+  enabled: boolean;
+  models: Record<string, string>;
 }
 
 // ============================================================================
@@ -56,7 +56,7 @@ export const AGENT_REGISTRY: AgentMeta[] = [
     tier: 3,
     defaultModel: "",
     tools: null,
-    templateFile: "abap-orchestrator.agent.md"
+    templateFile: "abap-orchestrator.agent.md",
   },
   {
     id: "abap-code-reviewer",
@@ -65,7 +65,7 @@ export const AGENT_REGISTRY: AgentMeta[] = [
     tier: 3,
     defaultModel: "",
     tools: null,
-    templateFile: "abap-code-reviewer.agent.md"
+    templateFile: "abap-code-reviewer.agent.md",
   },
   {
     id: "abap-discoverer",
@@ -74,7 +74,7 @@ export const AGENT_REGISTRY: AgentMeta[] = [
     tier: 1,
     defaultModel: "",
     tools: ["abap-search", "abap-info", "connected-systems"],
-    templateFile: "abap-discoverer.agent.md"
+    templateFile: "abap-discoverer.agent.md",
   },
   {
     id: "abap-reader",
@@ -83,7 +83,7 @@ export const AGENT_REGISTRY: AgentMeta[] = [
     tier: 1,
     defaultModel: "",
     tools: ["abap-lines", "abap-batch", "abap-uri", "abap-search-lines", "abap-info"],
-    templateFile: "abap-reader.agent.md"
+    templateFile: "abap-reader.agent.md",
   },
   {
     id: "abap-usage-analyzer",
@@ -92,7 +92,7 @@ export const AGENT_REGISTRY: AgentMeta[] = [
     tier: 2,
     defaultModel: "",
     tools: ["abap-where-used", "abap-search", "abap-lines", "abap-info"],
-    templateFile: "abap-usage-analyzer.agent.md"
+    templateFile: "abap-usage-analyzer.agent.md",
   },
   {
     id: "abap-quality-checker",
@@ -106,9 +106,9 @@ export const AGENT_REGISTRY: AgentMeta[] = [
       "abap-test",
       "abap_activate",
       "test-include",
-      "abap-info"
+      "abap-info",
     ],
-    templateFile: "abap-quality-checker.agent.md"
+    templateFile: "abap-quality-checker.agent.md",
   },
   {
     id: "abap-historian",
@@ -117,7 +117,7 @@ export const AGENT_REGISTRY: AgentMeta[] = [
     tier: 2,
     defaultModel: "",
     tools: ["version-history", "transport-requests", "abap-info", "abap-lines"],
-    templateFile: "abap-historian.agent.md"
+    templateFile: "abap-historian.agent.md",
   },
   {
     id: "abap-debugger",
@@ -133,9 +133,9 @@ export const AGENT_REGISTRY: AgentMeta[] = [
       "debug-stack",
       "debug-status",
       "abap-workspace-uri",
-      "abap-lines"
+      "abap-lines",
     ],
-    templateFile: "abap-debugger.agent.md"
+    templateFile: "abap-debugger.agent.md",
   },
   {
     id: "abap-troubleshooter",
@@ -149,9 +149,9 @@ export const AGENT_REGISTRY: AgentMeta[] = [
       "abap-lines",
       "abap-info",
       "abap-search-lines",
-      "abap_activate"
+      "abap_activate",
     ],
-    templateFile: "abap-troubleshooter.agent.md"
+    templateFile: "abap-troubleshooter.agent.md",
   },
   {
     id: "abap-data-analyst",
@@ -160,7 +160,7 @@ export const AGENT_REGISTRY: AgentMeta[] = [
     tier: 2,
     defaultModel: "",
     tools: ["sap-data", "abap-sql-syntax", "connected-systems", "sap-system-info"],
-    templateFile: "abap-data-analyst.agent.md"
+    templateFile: "abap-data-analyst.agent.md",
   },
   {
     id: "abap-creator",
@@ -169,7 +169,7 @@ export const AGENT_REGISTRY: AgentMeta[] = [
     tier: 1,
     defaultModel: "",
     tools: ["abap-create", "connected-systems", "abap-search", "abap_activate", "abap-test"],
-    templateFile: "abap-creator.agent.md"
+    templateFile: "abap-creator.agent.md",
   },
   {
     id: "abap-visualizer",
@@ -184,9 +184,9 @@ export const AGENT_REGISTRY: AgentMeta[] = [
       "abap-lines",
       "abap-search-lines",
       "abap-where-used",
-      "abap-info"
+      "abap-info",
     ],
-    templateFile: "abap-visualizer.agent.md"
+    templateFile: "abap-visualizer.agent.md",
   },
   {
     id: "abap-documenter",
@@ -200,11 +200,11 @@ export const AGENT_REGISTRY: AgentMeta[] = [
       "abap-search-lines",
       "abap-info",
       "abap-where-used",
-      "test-docs"
+      "test-docs",
     ],
-    templateFile: "abap-documenter.agent.md"
-  }
-]
+    templateFile: "abap-documenter.agent.md",
+  },
+];
 
 // ============================================================================
 // UTILITY FUNCTIONS
@@ -214,28 +214,28 @@ export const AGENT_REGISTRY: AgentMeta[] = [
  * Get subagent settings from workspace configuration
  */
 export function getSubagentSettings(): SubagentSettings {
-  const config = vscode.workspace.getConfiguration("abapfs.subagents")
+  const config = vscode.workspace.getConfiguration("abapfs.subagents");
   return {
     enabled: config.get("enabled", false),
-    models: config.get("models", {})
-  }
+    models: config.get("models", {}),
+  };
 }
 
 /**
  * Get the workspace folder for agent files (first non-ADT folder)
  */
 export function getWorkspaceFolder(): vscode.Uri | undefined {
-  const workspaceFolders = vscode.workspace.workspaceFolders
+  const workspaceFolders = vscode.workspace.workspaceFolders;
   if (!workspaceFolders || workspaceFolders.length === 0) {
-    return undefined
+    return undefined;
   }
   // Find first non-ADT workspace folder
   for (const folder of workspaceFolders) {
     if (!folder.uri.scheme.startsWith("adt")) {
-      return folder.uri
+      return folder.uri;
     }
   }
-  return workspaceFolders[0].uri
+  return workspaceFolders[0].uri;
 }
 
 /**
@@ -245,15 +245,15 @@ export async function getAvailableModels(): Promise<
   Array<{ id: string; name: string; vendor: string; family: string }>
 > {
   try {
-    const models = await vscode.lm.selectChatModels({})
-    return models.map(m => ({
+    const models = await vscode.lm.selectChatModels({});
+    return models.map((m) => ({
       id: m.id,
       name: m.name,
       vendor: m.vendor,
-      family: m.family
-    }))
+      family: m.family,
+    }));
   } catch {
-    return []
+    return [];
   }
 }
 
@@ -261,14 +261,14 @@ export async function getAvailableModels(): Promise<
  * Get current extension ID dynamically
  */
 export function getExtensionId(context: vscode.ExtensionContext): string {
-  return context.extension.id
+  return context.extension.id;
 }
 
 /**
  * Build full tool name with extension prefix
  */
 export function buildFullToolName(extensionId: string, toolName: string): string {
-  return `${extensionId}/${toolName}`
+  return `${extensionId}/${toolName}`;
 }
 
 /**
@@ -277,28 +277,28 @@ export function buildFullToolName(extensionId: string, toolName: string): string
 export async function validateModelConfiguration(): Promise<
   Array<{ agentId: string; configuredModel: string; available: boolean }>
 > {
-  const settings = getSubagentSettings()
-  const availableModels = await getAvailableModels()
-  const availableNames = new Set(availableModels.map(m => m.name))
+  const settings = getSubagentSettings();
+  const availableModels = await getAvailableModels();
+  const availableNames = new Set(availableModels.map((m) => m.name));
 
-  const results: Array<{ agentId: string; configuredModel: string; available: boolean }> = []
+  const results: Array<{ agentId: string; configuredModel: string; available: boolean }> = [];
 
   for (const agent of AGENT_REGISTRY) {
-    const configuredModel = settings.models[agent.id]
+    const configuredModel = settings.models[agent.id];
     if (!configuredModel) {
       results.push({
         agentId: agent.id,
         configuredModel: "",
-        available: false
-      })
+        available: false,
+      });
     } else {
       results.push({
         agentId: agent.id,
         configuredModel,
-        available: availableNames.has(configuredModel)
-      })
+        available: availableNames.has(configuredModel),
+      });
     }
   }
 
-  return results
+  return results;
 }

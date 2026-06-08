@@ -6,35 +6,35 @@ Analyze ABAP runtime performance directly in VS Code — the equivalent of **SAT
 
 **Activity Bar → ABAP FS icon → Traces**
 
-Or ask Copilot (Ctrl+Alt+I): *"Show me recent trace runs"*
+Or ask Copilot (Ctrl+Alt+I): _"Show me recent trace runs"_
 
 ## Workflow
 
 1. **Record a trace** in the SAP system first (via SAT or ST05 as usual).
 2. In VS Code, open the **Traces** panel to see your recorded runs.
 3. Click a trace run to open it, then choose an analysis action.
-4. Ask Copilot to interpret results: *"Analyze this trace for bottlenecks"*
+4. Ask Copilot to interpret results: _"Analyze this trace for bottlenecks"_
 
 ## Analysis Actions
 
-| Action | What it shows | Equivalent in SAP GUI |
-|---|---|---|
-| **List runs** | Recent trace executions with summary | SAT / ST05 hit list |
-| **Analyze run** | Automatic bottleneck detection | SAT summary screen |
-| **Get statements** | Statement-level timing (non-aggregated traces) | ST05 statement list |
-| **Get hitlist** | Hit counts and total timing (aggregated traces) | SAT aggregated view |
-| **List configurations** | Available trace configs on the system | SAT configuration |
+| Action                  | What it shows                                   | Equivalent in SAP GUI |
+| ----------------------- | ----------------------------------------------- | --------------------- |
+| **List runs**           | Recent trace executions with summary            | SAT / ST05 hit list   |
+| **Analyze run**         | Automatic bottleneck detection                  | SAT summary screen    |
+| **Get statements**      | Statement-level timing (non-aggregated traces)  | ST05 statement list   |
+| **Get hitlist**         | Hit counts and total timing (aggregated traces) | SAT aggregated view   |
+| **List configurations** | Available trace configs on the system           | SAT configuration     |
 
-> **Note:** For aggregated traces, *Get statements* automatically falls back to the hitlist.
+> **Note:** For aggregated traces, _Get statements_ automatically falls back to the hitlist.
 
 ## What Copilot Can Do
 
 Ask Copilot directly instead of navigating the panel:
 
-- *"Show me trace runs from today"*
-- *"Analyze trace [name] for bottlenecks"*
-- *"What are the slowest SQL statements in the last trace?"*
-- *"Is there a database bottleneck in trace [name]?"*
+- _"Show me trace runs from today"_
+- _"Analyze trace [name] for bottlenecks"_
+- _"What are the slowest SQL statements in the last trace?"_
+- _"Is there a database bottleneck in trace [name]?"_
 
 Copilot automatically identifies:
 

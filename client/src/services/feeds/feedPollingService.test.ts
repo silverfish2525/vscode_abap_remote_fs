@@ -1,49 +1,53 @@
 // Mock vscode BEFORE any imports
-vi.mock("vscode", () => ({
-  workspace: {
-    getConfiguration: vi.fn(),
-    onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() })),
-    workspaceFolders: []
-  },
-  commands: {
-    executeCommand: vi.fn()
-  }
-}), { virtual: true })
+vi.mock(
+  "vscode",
+  () => ({
+    workspace: {
+      getConfiguration: vi.fn(),
+      onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() })),
+      workspaceFolders: [],
+    },
+    commands: {
+      executeCommand: vi.fn(),
+    },
+  }),
+  { virtual: true },
+);
 
 // Mock modules that have vscode deps
-vi.mock("../../lib", () => ({ log: () => {} }))
+vi.mock("../../lib", () => ({ log: () => {} }));
 vi.mock("../funMessenger", () => ({
   funWindow: {
     showWarningMessage: vi.fn().mockResolvedValue(undefined),
     showErrorMessage: vi.fn().mockResolvedValue(undefined),
-    showInformationMessage: vi.fn().mockResolvedValue(undefined)
-  }
-}))
+    showInformationMessage: vi.fn().mockResolvedValue(undefined),
+  },
+}));
 vi.mock("../../adt/conections", () => ({
-  getOrCreateClient: vi.fn()
-}))
+  getOrCreateClient: vi.fn(),
+}));
 vi.mock("../../config", () => ({
-  connectedRoots: vi.fn(() => new Map())
-}))
+  connectedRoots: vi.fn(() => new Map()),
+}));
 vi.mock("./feedParsers", () => ({
   parseFeedResponse: vi.fn(() => []),
-  toFeedMetadata: vi.fn((f: any) => f)
-}))
+  toFeedMetadata: vi.fn((f: any) => f),
+}));
 vi.mock("abap-adt-api/build/utilities", () => ({
   fullParse: vi.fn(),
-  xmlArray: vi.fn(() => [])
-}))
-vi.mock("fs")
-vi.mock("path", () => ({ join: (...parts: string[]) => parts.join("/") }))
+  xmlArray: vi.fn(() => []),
+}));
+vi.mock("fs");
+vi.mock("path", () => ({ join: (...parts: string[]) => parts.join("/") }));
 
-import { workspace } from "vscode"
-import { FeedPollingService } from "./feedPollingService"
-import { FeedStateManager } from "./feedStateManager"
-import { connectedRoots } from "../../config"
-import { getOrCreateClient } from "../../adt/conections"
-import { parseFeedResponse } from "./feedParsers"
-import { FeedEntry, FeedType } from "./feedTypes"
-import * as fs from "fs"
+import { workspace } from "vscode";
+import { FeedPollingService } from "./feedPollingService";
+import { FeedStateManager } from "./feedStateManager";
+import { connectedRoots } from "../../config";
+import { getOrCreateClient } from "../../adt/conections";
+import { parseFeedResponse } from "./feedParsers";
+import { FeedEntry, FeedType } from "./feedTypes";
+import * as fs from "fs";
 
 // ---- helpers ----------------------------------------------------------------
 
@@ -52,16 +56,16 @@ function makeContext() {
     globalStorageUri: { fsPath: "/storage" },
     globalState: {
       get: vi.fn(),
-      update: vi.fn(async () => {})
+      update: vi.fn(async () => {}),
     },
-    subscriptions: [] as { dispose: () => void }[]
-  }
+    subscriptions: [] as { dispose: () => void }[],
+  };
 }
 
 function makeStateManager(ctx: any): FeedStateManager {
-  ;(fs.existsSync as Mock).mockReturnValue(false)
-  ;(fs.mkdirSync as Mock).mockReturnValue(undefined)
-  return new FeedStateManager(ctx as any)
+  (fs.existsSync as Mock).mockReturnValue(false);
+  (fs.mkdirSync as Mock).mockReturnValue(undefined);
+  return new FeedStateManager(ctx as any);
 }
 
 function makeEntry(id = "e1"): FeedEntry {
@@ -76,18 +80,18 @@ function makeEntry(id = "e1"): FeedEntry {
     summary: "",
     isNew: true,
     isRead: false,
-    rawData: {}
-  }
+    rawData: {},
+  };
 }
 
 function setupWorkspaceConfig(subscriptions = {}) {
   const mockConfig = {
     get: vi.fn((key: string, def: any) => {
-      if (key === "abapfs.feedSubscriptions") return subscriptions
-      return def
-    })
-  }
-  ;(workspace.getConfiguration as Mock).mockReturnValue(mockConfig)
+      if (key === "abapfs.feedSubscriptions") return subscriptions;
+      return def;
+    }),
+  };
+  (workspace.getConfiguration as Mock).mockReturnValue(mockConfig);
 }
 
 // ---- constructor ------------------------------------------------------------
@@ -95,338 +99,370 @@ function setupWorkspaceConfig(subscriptions = {}) {
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("FeedPollingService construction", () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-    ;(fs.existsSync as Mock).mockReturnValue(false)
-    ;(fs.mkdirSync as Mock).mockReturnValue(undefined)
-  })
+    vi.clearAllMocks();
+    (fs.existsSync as Mock).mockReturnValue(false);
+    (fs.mkdirSync as Mock).mockReturnValue(undefined);
+  });
 
   test("can be instantiated", () => {
-    const ctx = makeContext()
-    const sm = makeStateManager(ctx)
-    const service = new FeedPollingService(ctx as any, sm)
-    expect(service).toBeDefined()
-  })
+    const ctx = makeContext();
+    const sm = makeStateManager(ctx);
+    const service = new FeedPollingService(ctx as any, sm);
+    expect(service).toBeDefined();
+  });
 
   test("setOnEntriesChanged stores callback", () => {
-    const ctx = makeContext()
-    const sm = makeStateManager(ctx)
-    const service = new FeedPollingService(ctx as any, sm)
-    const cb = vi.fn()
-    service.setOnEntriesChanged(cb)
+    const ctx = makeContext();
+    const sm = makeStateManager(ctx);
+    const service = new FeedPollingService(ctx as any, sm);
+    const cb = vi.fn();
+    service.setOnEntriesChanged(cb);
     // No throw; callback stored for later invocation
-    expect(true).toBe(true)
-  })
-})
+    expect(true).toBe(true);
+  });
+});
 
 // ---- start / stop / isRunning state -----------------------------------------
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("start / stop", () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-    ;(fs.existsSync as Mock).mockReturnValue(false)
-    ;(fs.mkdirSync as Mock).mockReturnValue(undefined)
-    setupWorkspaceConfig({})
-    ;(connectedRoots as Mock).mockReturnValue(new Map())
-    ;(workspace.onDidChangeConfiguration as Mock).mockReturnValue({ dispose: vi.fn() })
-  })
+    vi.clearAllMocks();
+    (fs.existsSync as Mock).mockReturnValue(false);
+    (fs.mkdirSync as Mock).mockReturnValue(undefined);
+    setupWorkspaceConfig({});
+    (connectedRoots as Mock).mockReturnValue(new Map());
+    (workspace.onDidChangeConfiguration as Mock).mockReturnValue({ dispose: vi.fn() });
+  });
 
   test("start registers config change listener", async () => {
-    const ctx = makeContext()
-    const sm = makeStateManager(ctx)
-    const service = new FeedPollingService(ctx as any, sm)
-    await service.start()
-    expect(workspace.onDidChangeConfiguration).toHaveBeenCalled()
-    service.stop()
-  })
+    const ctx = makeContext();
+    const sm = makeStateManager(ctx);
+    const service = new FeedPollingService(ctx as any, sm);
+    await service.start();
+    expect(workspace.onDidChangeConfiguration).toHaveBeenCalled();
+    service.stop();
+  });
 
   test("start does not run twice", async () => {
-    const ctx = makeContext()
-    const sm = makeStateManager(ctx)
-    const service = new FeedPollingService(ctx as any, sm)
-    await service.start()
-    const callsBefore = (workspace.onDidChangeConfiguration as Mock).mock.calls.length
-    await service.start() // second call should be no-op
-    expect((workspace.onDidChangeConfiguration as Mock).mock.calls.length).toBe(callsBefore)
-    service.stop()
-  })
+    const ctx = makeContext();
+    const sm = makeStateManager(ctx);
+    const service = new FeedPollingService(ctx as any, sm);
+    await service.start();
+    const callsBefore = (workspace.onDidChangeConfiguration as Mock).mock.calls.length;
+    await service.start(); // second call should be no-op
+    expect((workspace.onDidChangeConfiguration as Mock).mock.calls.length).toBe(callsBefore);
+    service.stop();
+  });
 
   test("stop clears all polling tasks", async () => {
-    const ctx = makeContext()
-    const sm = makeStateManager(ctx)
-    const service = new FeedPollingService(ctx as any, sm)
-    await service.start()
-    service.stop()
+    const ctx = makeContext();
+    const sm = makeStateManager(ctx);
+    const service = new FeedPollingService(ctx as any, sm);
+    await service.start();
+    service.stop();
     // stop should call dispose on the config listener
     // We verify by checking it doesn't throw on second stop
-    service.stop()
-  })
+    service.stop();
+  });
 
   test("stop disposes config listener", async () => {
-    const disposeMock = vi.fn()
-    ;(workspace.onDidChangeConfiguration as Mock).mockReturnValue({ dispose: disposeMock })
-    const ctx = makeContext()
-    const sm = makeStateManager(ctx)
-    const service = new FeedPollingService(ctx as any, sm)
-    await service.start()
-    service.stop()
-    expect(disposeMock).toHaveBeenCalled()
-  })
+    const disposeMock = vi.fn();
+    (workspace.onDidChangeConfiguration as Mock).mockReturnValue({ dispose: disposeMock });
+    const ctx = makeContext();
+    const sm = makeStateManager(ctx);
+    const service = new FeedPollingService(ctx as any, sm);
+    await service.start();
+    service.stop();
+    expect(disposeMock).toHaveBeenCalled();
+  });
 
   test("stop while not running is safe", () => {
-    const ctx = makeContext()
-    const sm = makeStateManager(ctx)
-    const service = new FeedPollingService(ctx as any, sm)
-    expect(() => service.stop()).not.toThrow()
-  })
-})
+    const ctx = makeContext();
+    const sm = makeStateManager(ctx);
+    const service = new FeedPollingService(ctx as any, sm);
+    expect(() => service.stop()).not.toThrow();
+  });
+});
 
 // ---- restart ----------------------------------------------------------------
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("restart", () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-    ;(fs.existsSync as Mock).mockReturnValue(false)
-    ;(fs.mkdirSync as Mock).mockReturnValue(undefined)
-    setupWorkspaceConfig({})
-    ;(connectedRoots as Mock).mockReturnValue(new Map())
-    ;(workspace.onDidChangeConfiguration as Mock).mockReturnValue({ dispose: vi.fn() })
-  })
+    vi.clearAllMocks();
+    (fs.existsSync as Mock).mockReturnValue(false);
+    (fs.mkdirSync as Mock).mockReturnValue(undefined);
+    setupWorkspaceConfig({});
+    (connectedRoots as Mock).mockReturnValue(new Map());
+    (workspace.onDidChangeConfiguration as Mock).mockReturnValue({ dispose: vi.fn() });
+  });
 
   test("restart stops and starts the service", async () => {
-    const ctx = makeContext()
-    const sm = makeStateManager(ctx)
-    const service = new FeedPollingService(ctx as any, sm)
-    await service.start()
-    const callsBefore = (workspace.onDidChangeConfiguration as Mock).mock.calls.length
-    await service.restart()
+    const ctx = makeContext();
+    const sm = makeStateManager(ctx);
+    const service = new FeedPollingService(ctx as any, sm);
+    await service.start();
+    const callsBefore = (workspace.onDidChangeConfiguration as Mock).mock.calls.length;
+    await service.restart();
     // After restart, onDidChangeConfiguration should have been called again (new listener)
     expect((workspace.onDidChangeConfiguration as Mock).mock.calls.length).toBeGreaterThan(
-      callsBefore
-    )
-    service.stop()
-  })
-})
+      callsBefore,
+    );
+    service.stop();
+  });
+});
 
 // ---- pause / resume ---------------------------------------------------------
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("pause / resume", () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-    ;(fs.existsSync as Mock).mockReturnValue(false)
-    ;(fs.mkdirSync as Mock).mockReturnValue(undefined)
-    setupWorkspaceConfig({})
-    ;(connectedRoots as Mock).mockReturnValue(new Map())
-    ;(workspace.onDidChangeConfiguration as Mock).mockReturnValue({ dispose: vi.fn() })
-  })
+    vi.clearAllMocks();
+    (fs.existsSync as Mock).mockReturnValue(false);
+    (fs.mkdirSync as Mock).mockReturnValue(undefined);
+    setupWorkspaceConfig({});
+    (connectedRoots as Mock).mockReturnValue(new Map());
+    (workspace.onDidChangeConfiguration as Mock).mockReturnValue({ dispose: vi.fn() });
+  });
 
   test("pause while not running is safe", () => {
-    const ctx = makeContext()
-    const sm = makeStateManager(ctx)
-    const service = new FeedPollingService(ctx as any, sm)
-    expect(() => service.pause()).not.toThrow()
-  })
+    const ctx = makeContext();
+    const sm = makeStateManager(ctx);
+    const service = new FeedPollingService(ctx as any, sm);
+    expect(() => service.pause()).not.toThrow();
+  });
 
   test("resume while not running is safe", async () => {
-    const ctx = makeContext()
-    const sm = makeStateManager(ctx)
-    const service = new FeedPollingService(ctx as any, sm)
-    await expect(service.resume()).resolves.toBeUndefined()
-  })
+    const ctx = makeContext();
+    const sm = makeStateManager(ctx);
+    const service = new FeedPollingService(ctx as any, sm);
+    await expect(service.resume()).resolves.toBeUndefined();
+  });
 
   test("resume while not paused does nothing", async () => {
-    const ctx = makeContext()
-    const sm = makeStateManager(ctx)
-    const service = new FeedPollingService(ctx as any, sm)
-    await service.start()
+    const ctx = makeContext();
+    const sm = makeStateManager(ctx);
+    const service = new FeedPollingService(ctx as any, sm);
+    await service.start();
     // Not paused, resume should be no-op
-    await expect(service.resume()).resolves.toBeUndefined()
-    service.stop()
-  })
+    await expect(service.resume()).resolves.toBeUndefined();
+    service.stop();
+  });
 
   test("pause then resume re-schedules polls", async () => {
-    const ctx = makeContext()
-    const sm = makeStateManager(ctx)
-    const service = new FeedPollingService(ctx as any, sm)
-    await service.start()
-    service.pause()
-    await service.resume()
-    service.stop()
+    const ctx = makeContext();
+    const sm = makeStateManager(ctx);
+    const service = new FeedPollingService(ctx as any, sm);
+    await service.start();
+    service.pause();
+    await service.resume();
+    service.stop();
     // No error means success
-  })
-})
+  });
+});
 
 // ---- loadAndSchedulePolls: no connected systems -----------------------------
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("loadAndSchedulePolls with no connected systems", () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-    ;(fs.existsSync as Mock).mockReturnValue(false)
-    ;(fs.mkdirSync as Mock).mockReturnValue(undefined)
-    ;(connectedRoots as Mock).mockReturnValue(new Map())
-    ;(workspace.onDidChangeConfiguration as Mock).mockReturnValue({ dispose: vi.fn() })
-  })
+    vi.clearAllMocks();
+    (fs.existsSync as Mock).mockReturnValue(false);
+    (fs.mkdirSync as Mock).mockReturnValue(undefined);
+    (connectedRoots as Mock).mockReturnValue(new Map());
+    (workspace.onDidChangeConfiguration as Mock).mockReturnValue({ dispose: vi.fn() });
+  });
 
   test("starts cleanly with no connected systems and no subscriptions", async () => {
-    setupWorkspaceConfig({})
-    const ctx = makeContext()
-    const sm = makeStateManager(ctx)
-    const service = new FeedPollingService(ctx as any, sm)
-    await expect(service.start()).resolves.toBeUndefined()
-    service.stop()
-  })
-})
+    setupWorkspaceConfig({});
+    const ctx = makeContext();
+    const sm = makeStateManager(ctx);
+    const service = new FeedPollingService(ctx as any, sm);
+    await expect(service.start()).resolves.toBeUndefined();
+    service.stop();
+  });
+});
 
 // ---- validatePollingInterval (tested via loadAndSchedulePolls) --------------
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("validatePollingInterval (indirectly via scheduling)", () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-    ;(fs.existsSync as Mock).mockReturnValue(false)
-    ;(fs.mkdirSync as Mock).mockReturnValue(undefined)
-    ;(workspace.onDidChangeConfiguration as Mock).mockReturnValue({ dispose: vi.fn() })
-  })
+    vi.clearAllMocks();
+    (fs.existsSync as Mock).mockReturnValue(false);
+    (fs.mkdirSync as Mock).mockReturnValue(undefined);
+    (workspace.onDidChangeConfiguration as Mock).mockReturnValue({ dispose: vi.fn() });
+  });
 
   test("clamps too-short interval to MIN (120s)", async () => {
     // Set up a connected system with a subscription that has a very short interval
-    const systems = new Map([["sys1", { uri: { authority: "sys1" } }]])
-    ;(connectedRoots as Mock).mockReturnValue(systems)
-    ;(getOrCreateClient as Mock).mockResolvedValue({
-      feeds: vi.fn().mockResolvedValue([{ href: "/sap/bc/adt/runtime/dumps/feeds", title: "Dumps", queryVariants: [] }])
-    })
+    const systems = new Map([["sys1", { uri: { authority: "sys1" } }]]);
+    (connectedRoots as Mock).mockReturnValue(systems);
+    (getOrCreateClient as Mock).mockResolvedValue({
+      feeds: vi
+        .fn()
+        .mockResolvedValue([
+          { href: "/sap/bc/adt/runtime/dumps/feeds", title: "Dumps", queryVariants: [] },
+        ]),
+    });
     setupWorkspaceConfig({
       sys1: {
-        Dumps: { enabled: true, pollingInterval: 5, notifications: false, useDefaultQuery: true }
-      }
-    })
+        Dumps: { enabled: true, pollingInterval: 5, notifications: false, useDefaultQuery: true },
+      },
+    });
 
-    const ctx = makeContext()
-    const sm = makeStateManager(ctx)
-    const service = new FeedPollingService(ctx as any, sm)
+    const ctx = makeContext();
+    const sm = makeStateManager(ctx);
+    const service = new FeedPollingService(ctx as any, sm);
     // Just test it starts without error
-    await expect(service.start()).resolves.toBeUndefined()
-    service.stop()
-  })
+    await expect(service.start()).resolves.toBeUndefined();
+    service.stop();
+  });
 
   test("clamps too-long interval to MAX (86400s)", async () => {
-    const systems = new Map([["sys1", {}]])
-    ;(connectedRoots as Mock).mockReturnValue(systems)
-    ;(getOrCreateClient as Mock).mockResolvedValue({
-      feeds: vi.fn().mockResolvedValue([{ href: "/sap/bc/adt/runtime/dumps/feeds", title: "Dumps", queryVariants: [] }])
-    })
+    const systems = new Map([["sys1", {}]]);
+    (connectedRoots as Mock).mockReturnValue(systems);
+    (getOrCreateClient as Mock).mockResolvedValue({
+      feeds: vi
+        .fn()
+        .mockResolvedValue([
+          { href: "/sap/bc/adt/runtime/dumps/feeds", title: "Dumps", queryVariants: [] },
+        ]),
+    });
     setupWorkspaceConfig({
       sys1: {
-        Dumps: { enabled: true, pollingInterval: 999999, notifications: false, useDefaultQuery: true }
-      }
-    })
+        Dumps: {
+          enabled: true,
+          pollingInterval: 999999,
+          notifications: false,
+          useDefaultQuery: true,
+        },
+      },
+    });
 
-    const ctx = makeContext()
-    const sm = makeStateManager(ctx)
-    const service = new FeedPollingService(ctx as any, sm)
-    await expect(service.start()).resolves.toBeUndefined()
-    service.stop()
-  })
-})
+    const ctx = makeContext();
+    const sm = makeStateManager(ctx);
+    const service = new FeedPollingService(ctx as any, sm);
+    await expect(service.start()).resolves.toBeUndefined();
+    service.stop();
+  });
+});
 
 // ---- handleUnavailableFeed --------------------------------------------------
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("handleUnavailableFeed warning notification", () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-    ;(fs.existsSync as Mock).mockReturnValue(false)
-    ;(fs.mkdirSync as Mock).mockReturnValue(undefined)
-    ;(workspace.onDidChangeConfiguration as Mock).mockReturnValue({ dispose: vi.fn() })
-  })
+    vi.clearAllMocks();
+    (fs.existsSync as Mock).mockReturnValue(false);
+    (fs.mkdirSync as Mock).mockReturnValue(undefined);
+    (workspace.onDidChangeConfiguration as Mock).mockReturnValue({ dispose: vi.fn() });
+  });
 
   test("shows warning when feed is unavailable for the first time", async () => {
-    const { funWindow: w } = require("../funMessenger")
-    ;(w.showWarningMessage as Mock).mockResolvedValue(undefined)
+    const { funWindow: w } = require("../funMessenger");
+    (w.showWarningMessage as Mock).mockResolvedValue(undefined);
 
-    const systems = new Map([["sys1", {}]])
-    ;(connectedRoots as Mock).mockReturnValue(systems)
+    const systems = new Map([["sys1", {}]]);
+    (connectedRoots as Mock).mockReturnValue(systems);
     // Return empty feeds so the configured feed is unavailable
-    ;(getOrCreateClient as Mock).mockResolvedValue({
-      feeds: vi.fn().mockResolvedValue([])
-    })
+    (getOrCreateClient as Mock).mockResolvedValue({
+      feeds: vi.fn().mockResolvedValue([]),
+    });
     setupWorkspaceConfig({
       sys1: {
-        "Missing Feed": { enabled: true, pollingInterval: 300, notifications: true, useDefaultQuery: true }
-      }
-    })
+        "Missing Feed": {
+          enabled: true,
+          pollingInterval: 300,
+          notifications: true,
+          useDefaultQuery: true,
+        },
+      },
+    });
 
-    const ctx = makeContext()
-    const sm = makeStateManager(ctx)
-    const service = new FeedPollingService(ctx as any, sm)
-    await service.start()
-    service.stop()
+    const ctx = makeContext();
+    const sm = makeStateManager(ctx);
+    const service = new FeedPollingService(ctx as any, sm);
+    await service.start();
+    service.stop();
 
     expect(w.showWarningMessage).toHaveBeenCalledWith(
       expect.stringContaining("Missing Feed"),
-      "Configure Feeds"
-    )
-  })
+      "Configure Feeds",
+    );
+  });
 
   test("does not repeat warning once feed marked unavailable", async () => {
-    const { funWindow: w } = require("../funMessenger")
-    ;(w.showWarningMessage as Mock).mockResolvedValue(undefined)
+    const { funWindow: w } = require("../funMessenger");
+    (w.showWarningMessage as Mock).mockResolvedValue(undefined);
 
-    const systems = new Map([["sys1", {}]])
-    ;(connectedRoots as Mock).mockReturnValue(systems)
-    ;(getOrCreateClient as Mock).mockResolvedValue({
-      feeds: vi.fn().mockResolvedValue([])
-    })
+    const systems = new Map([["sys1", {}]]);
+    (connectedRoots as Mock).mockReturnValue(systems);
+    (getOrCreateClient as Mock).mockResolvedValue({
+      feeds: vi.fn().mockResolvedValue([]),
+    });
     setupWorkspaceConfig({
       sys1: {
-        "Missing Feed": { enabled: true, pollingInterval: 300, notifications: true, useDefaultQuery: true }
-      }
-    })
+        "Missing Feed": {
+          enabled: true,
+          pollingInterval: 300,
+          notifications: true,
+          useDefaultQuery: true,
+        },
+      },
+    });
 
-    const ctx = makeContext()
-    const sm = makeStateManager(ctx)
+    const ctx = makeContext();
+    const sm = makeStateManager(ctx);
     // Pre-set state as already unavailable
-    await sm.updateFeedState({ systemId: "sys1", feedTitle: "Missing Feed", isAvailable: false })
+    await sm.updateFeedState({ systemId: "sys1", feedTitle: "Missing Feed", isAvailable: false });
 
-    const service = new FeedPollingService(ctx as any, sm)
-    await service.start()
-    service.stop()
+    const service = new FeedPollingService(ctx as any, sm);
+    await service.start();
+    service.stop();
 
-    expect(w.showWarningMessage).not.toHaveBeenCalled()
-  })
-})
+    expect(w.showWarningMessage).not.toHaveBeenCalled();
+  });
+});
 
 // ---- disabled feeds are skipped ---------------------------------------------
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("disabled feed subscriptions", () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-    ;(fs.existsSync as Mock).mockReturnValue(false)
-    ;(fs.mkdirSync as Mock).mockReturnValue(undefined)
-    ;(workspace.onDidChangeConfiguration as Mock).mockReturnValue({ dispose: vi.fn() })
-  })
+    vi.clearAllMocks();
+    (fs.existsSync as Mock).mockReturnValue(false);
+    (fs.mkdirSync as Mock).mockReturnValue(undefined);
+    (workspace.onDidChangeConfiguration as Mock).mockReturnValue({ dispose: vi.fn() });
+  });
 
   test("does not schedule polls for disabled feeds", async () => {
-    const systems = new Map([["sys1", {}]])
-    ;(connectedRoots as Mock).mockReturnValue(systems)
-    ;(getOrCreateClient as Mock).mockResolvedValue({
-      feeds: vi.fn().mockResolvedValue([{ href: "/sap/bc/adt/runtime/dumps/feeds", title: "Dumps", queryVariants: [] }])
-    })
+    const systems = new Map([["sys1", {}]]);
+    (connectedRoots as Mock).mockReturnValue(systems);
+    (getOrCreateClient as Mock).mockResolvedValue({
+      feeds: vi
+        .fn()
+        .mockResolvedValue([
+          { href: "/sap/bc/adt/runtime/dumps/feeds", title: "Dumps", queryVariants: [] },
+        ]),
+    });
     setupWorkspaceConfig({
       sys1: {
-        Dumps: { enabled: false, pollingInterval: 300, notifications: false, useDefaultQuery: true }
-      }
-    })
+        Dumps: {
+          enabled: false,
+          pollingInterval: 300,
+          notifications: false,
+          useDefaultQuery: true,
+        },
+      },
+    });
 
-    const ctx = makeContext()
-    const sm = makeStateManager(ctx)
-    const service = new FeedPollingService(ctx as any, sm)
-    await service.start()
-    service.stop()
+    const ctx = makeContext();
+    const sm = makeStateManager(ctx);
+    const service = new FeedPollingService(ctx as any, sm);
+    await service.start();
+    service.stop();
     // No error = success; disabled feeds shouldn't schedule anything
-  })
-})
+  });
+});

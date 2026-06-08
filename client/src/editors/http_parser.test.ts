@@ -1,4 +1,4 @@
-import { parseHTTP } from "./httpparser"
+import { parseHTTP } from "./httpparser";
 
 const SAMPLE_OBJECT = `<?xml version="1.0" encoding="utf-8"?><http:abap http:handler_id="YMU_HELLO_WORLD"
  http:handler_version="I" http:handler_serviceorder="01" http:handler_servicehandler="YCL_YMU_HELLO_WORLD"
@@ -10,21 +10,21 @@ const SAMPLE_OBJECT = `<?xml version="1.0" encoding="utf-8"?><http:abap http:han
  http:header_canonicalurl="/sap/bc/http/sap/ymu_hello_world/" http:header_icf_name="YMU_HELLO_WORLD"
  http:header_icfparguid="DI6X3AACS0LZQ3AYA7NG65CGL" http:text_id="YMU_HELLO_WORLD" http:text_version="I"
  http:text_lang="E" http:text_shorttext="Hello" xmlns:http="http://www.sap.com/uc_object_type_group/http/abapxml"
- xmlns:adtcore="http://www.sap.com/adt/core"/>`
+ xmlns:adtcore="http://www.sap.com/adt/core"/>`;
 
 interface HttpService {
-  handlerClass: string
-  author: string
-  name: string
-  text: string
-  url: string
+  handlerClass: string;
+  author: string;
+  name: string;
+  text: string;
+  url: string;
 }
 
 test("Parse http definition", () => {
-  const service = parseHTTP(SAMPLE_OBJECT)
-  expect(service.author).toBe("CB0000000083")
-  expect(service.handlerClass).toBe("YCL_YMU_HELLO_WORLD")
-  expect(service.url).toBe("/sap/bc/http/sap/ymu_hello_world/")
-  expect(service.name).toBe("YMU_HELLO_WORLD")
-  expect(service.text).toBe("Hello")
-})
+  const service = parseHTTP(SAMPLE_OBJECT);
+  expect(service.author).toBe("CB0000000083");
+  expect(service.handlerClass).toBe("YCL_YMU_HELLO_WORLD");
+  expect(service.url).toBe("/sap/bc/http/sap/ymu_hello_world/");
+  expect(service.name).toBe("YMU_HELLO_WORLD");
+  expect(service.text).toBe("Hello");
+});

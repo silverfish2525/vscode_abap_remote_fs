@@ -3,226 +3,283 @@
  * Covers TtlCache, helper functions, and ObjectPropertyProvider.
  */
 
-vi.mock("vscode", () => {
-  const mockDisposable = { dispose: vi.fn() }
-  return {
-    TreeItem: class TreeItem {
-      public description: any
-      public tooltip: any
-      public iconPath: any
-      public contextValue: string = ""
-      public command: any
-      public checkboxState: any
-      public collapsibleState: number
-      constructor(public label: string, collapsibleState?: number) {
-        this.collapsibleState = collapsibleState ?? 0
-      }
-    },
-    TreeItemCollapsibleState: { None: 0, Collapsed: 1, Expanded: 2 },
-    TreeItemCheckboxState: { Checked: 1, Unchecked: 0 },
-    ThemeIcon: vi.fn((id: string) => ({ id })),
-    EventEmitter: vi.fn().mockImplementation(() => ({
-      event: {},
-      fire: vi.fn(),
-    })),
-    commands: {
-      registerCommand: vi.fn(() => mockDisposable),
-    },
-    workspace: {
-      onDidSaveTextDocument: vi.fn(() => mockDisposable),
-      onDidCloseTextDocument: vi.fn(() => mockDisposable),
-    },
-    Uri: {
-      parse: vi.fn((s: string) => ({
-        toString: () => s,
-        authority: s.replace(/.*?:\/\//, "").split("/")[0] ?? "",
-        path: "/" + (s.split("/").slice(3).join("/") || ""),
-        scheme: s.split(":")[0],
+vi.mock(
+  "vscode",
+  () => {
+    const mockDisposable = { dispose: vi.fn() };
+    return {
+      TreeItem: class TreeItem {
+        public description: any;
+        public tooltip: any;
+        public iconPath: any;
+        public contextValue: string = "";
+        public command: any;
+        public checkboxState: any;
+        public collapsibleState: number;
+        constructor(
+          public label: string,
+          collapsibleState?: number,
+        ) {
+          this.collapsibleState = collapsibleState ?? 0;
+        }
+      },
+      TreeItemCollapsibleState: { None: 0, Collapsed: 1, Expanded: 2 },
+      TreeItemCheckboxState: { Checked: 1, Unchecked: 0 },
+      ThemeIcon: vi.fn((id: string) => ({ id })),
+      EventEmitter: vi.fn().mockImplementation(() => ({
+        event: {},
+        fire: vi.fn(),
       })),
+      commands: {
+        registerCommand: vi.fn(() => mockDisposable),
+      },
+      workspace: {
+        onDidSaveTextDocument: vi.fn(() => mockDisposable),
+        onDidCloseTextDocument: vi.fn(() => mockDisposable),
+      },
+      Uri: {
+        parse: vi.fn((s: string) => ({
+          toString: () => s,
+          authority: s.replace(/.*?:\/\//, "").split("/")[0] ?? "",
+          path: "/" + (s.split("/").slice(3).join("/") || ""),
+          scheme: s.split(":")[0],
+        })),
+      },
+      Disposable: { from: vi.fn() },
+    };
+  },
+  { virtual: true },
+);
+
+vi.mock(
+  "abap-adt-api",
+  () => ({
+    TransportInfo: {},
+    MainInclude: {},
+    Revision: {},
+  }),
+  { virtual: true },
+);
+
+vi.mock(
+  "abapfs",
+  () => ({
+    isAbapStat: vi.fn(),
+  }),
+  { virtual: true },
+);
+
+vi.mock(
+  "abapfs/out/lockObject",
+  () => ({
+    LockStatus: {},
+  }),
+  { virtual: true },
+);
+
+vi.mock(
+  "abapobject",
+  () => ({
+    AbapObject: {},
+  }),
+  { virtual: true },
+);
+
+vi.mock(
+  "../commands",
+  () => ({
+    AbapFsCommands: {
+      transportOpenGui: "abapfs.transportOpenGui",
     },
-    Disposable: { from: vi.fn() },
-  }
-}, { virtual: true })
+  }),
+  { virtual: true },
+);
 
-vi.mock("abap-adt-api", () => ({
-  TransportInfo: {},
-  MainInclude: {},
-  Revision: {},
-}), { virtual: true })
+vi.mock(
+  "../adt/conections",
+  () => ({
+    getClient: vi.fn(),
+    uriRoot: vi.fn(),
+    abapUri: vi.fn((uri: any) => uri?.scheme === "adt"),
+  }),
+  { virtual: true },
+);
 
-vi.mock("abapfs", () => ({
-  isAbapStat: vi.fn(),
-}), { virtual: true })
+vi.mock(
+  "../lib",
+  () => ({
+    caughtToString: vi.fn((e: any) => String(e)),
+    log: vi.fn(),
+  }),
+  { virtual: true },
+);
 
-vi.mock("abapfs/out/lockObject", () => ({
-  LockStatus: {},
-}), { virtual: true })
+vi.mock(
+  "../scm/abaprevisions/abaprevisionservice",
+  () => ({
+    AbapRevisionService: { get: vi.fn() },
+    revLabel: vi.fn((rev: any, fallback: string) => rev.versionTitle || fallback),
+  }),
+  { virtual: true },
+);
 
-vi.mock("abapobject", () => ({
-  AbapObject: {},
-}), { virtual: true })
+vi.mock(
+  "../scm/abaprevisions/documentprovider",
+  () => ({
+    revisionUri: vi.fn((uri: any, rev: any) => uri),
+  }),
+  { virtual: true },
+);
 
-vi.mock("../commands", () => ({
-  AbapFsCommands: {
-    transportOpenGui: "abapfs.transportOpenGui",
-  },
-}), { virtual: true })
+vi.mock(
+  "./transports",
+  () => ({
+    readTransports: vi.fn(),
+  }),
+  { virtual: true },
+);
 
-vi.mock("../adt/conections", () => ({
-  getClient: vi.fn(),
-  uriRoot: vi.fn(),
-  abapUri: vi.fn((uri: any) => uri?.scheme === "adt"),
-}), { virtual: true })
-
-vi.mock("../lib", () => ({
-  caughtToString: vi.fn((e: any) => String(e)),
-  log: vi.fn(),
-}), { virtual: true })
-
-vi.mock("../scm/abaprevisions/abaprevisionservice", () => ({
-  AbapRevisionService: { get: vi.fn() },
-  revLabel: vi.fn((rev: any, fallback: string) => rev.versionTitle || fallback),
-}), { virtual: true })
-
-vi.mock("../scm/abaprevisions/documentprovider", () => ({
-  revisionUri: vi.fn((uri: any, rev: any) => uri),
-}), { virtual: true })
-
-vi.mock("./transports", () => ({
-  readTransports: vi.fn(),
-}), { virtual: true })
-
-vi.mock("../services/funMessenger", () => ({
-  funWindow: {
-    activeTextEditor: undefined,
-    showInformationMessage: vi.fn(),
-    showErrorMessage: vi.fn(),
-    onDidChangeActiveTextEditor: vi.fn(() => ({ dispose: vi.fn() })),
-  },
-}), { virtual: true })
+vi.mock(
+  "../services/funMessenger",
+  () => ({
+    funWindow: {
+      activeTextEditor: undefined,
+      showInformationMessage: vi.fn(),
+      showErrorMessage: vi.fn(),
+      onDidChangeActiveTextEditor: vi.fn(() => ({ dispose: vi.fn() })),
+    },
+  }),
+  { virtual: true },
+);
 
 // Import after mocks
-import { ObjectPropertyProvider } from "./objectProperties"
-import { funWindow as window } from "../services/funMessenger"
-import { abapUri } from "../adt/conections"
+import { ObjectPropertyProvider } from "./objectProperties";
+import { funWindow as window } from "../services/funMessenger";
+import { abapUri } from "../adt/conections";
 
-const mockedWindow = window as Mocked<typeof window>
-const mockedAbapUri = abapUri as Mock
+const mockedWindow = window as Mocked<typeof window>;
+const mockedAbapUri = abapUri as Mock;
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("ObjectPropertyProvider", () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    vi.clearAllMocks();
     // Reset singleton
-    ;(ObjectPropertyProvider as any).instance = undefined
-  })
+    (ObjectPropertyProvider as any).instance = undefined;
+  });
 
   it("returns singleton instance", () => {
-    const a = ObjectPropertyProvider.get()
-    const b = ObjectPropertyProvider.get()
-    expect(a).toBe(b)
-  })
+    const a = ObjectPropertyProvider.get();
+    const b = ObjectPropertyProvider.get();
+    expect(a).toBe(b);
+  });
 
   it("exposes onDidChangeTreeData event", () => {
-    const provider = ObjectPropertyProvider.get()
-    expect(provider.onDidChangeTreeData).toBeDefined()
-  })
+    const provider = ObjectPropertyProvider.get();
+    expect(provider.onDidChangeTreeData).toBeDefined();
+  });
 
   it("getTreeItem returns the element", () => {
-    const provider = ObjectPropertyProvider.get()
-    const item = { label: "test", collapsibleState: 0 } as any
-    expect(provider.getTreeItem(item)).toBe(item)
-  })
+    const provider = ObjectPropertyProvider.get();
+    const item = { label: "test", collapsibleState: 0 } as any;
+    expect(provider.getTreeItem(item)).toBe(item);
+  });
 
   it("getChildren with no element returns items array", () => {
-    const provider = ObjectPropertyProvider.get()
-    const result = provider.getChildren()
-    expect(Array.isArray(result)).toBe(true)
-    expect(result).toHaveLength(0)
-  })
+    const provider = ObjectPropertyProvider.get();
+    const result = provider.getChildren();
+    expect(Array.isArray(result)).toBe(true);
+    expect(result).toHaveLength(0);
+  });
 
   it("dispose clears timeout and disposables", () => {
-    const provider = ObjectPropertyProvider.get()
-    expect(() => provider.dispose()).not.toThrow()
-  })
+    const provider = ObjectPropertyProvider.get();
+    expect(() => provider.dispose()).not.toThrow();
+  });
 
   it("isRevisionSelected returns false for unknown revision", () => {
-    const provider = ObjectPropertyProvider.get()
-    const rev = { version: "TR001", date: "2024-01-01", uri: "adt://x/y", author: "USER1", versionTitle: "Fix" }
-    expect(provider.isRevisionSelected(rev, 0)).toBe(false)
-  })
+    const provider = ObjectPropertyProvider.get();
+    const rev = {
+      version: "TR001",
+      date: "2024-01-01",
+      uri: "adt://x/y",
+      author: "USER1",
+      versionTitle: "Fix",
+    };
+    expect(provider.isRevisionSelected(rev, 0)).toBe(false);
+  });
 
   it("bindView registers view callbacks", () => {
-    const provider = ObjectPropertyProvider.get()
+    const provider = ObjectPropertyProvider.get();
     const mockView = {
       description: undefined,
       message: undefined,
       visible: true,
       onDidChangeVisibility: vi.fn(() => ({ dispose: vi.fn() })),
       onDidChangeCheckboxState: vi.fn(() => ({ dispose: vi.fn() })),
-    } as any
-    expect(() => provider.bindView(mockView)).not.toThrow()
-    expect(mockView.onDidChangeVisibility).toHaveBeenCalled()
-  })
+    } as any;
+    expect(() => provider.bindView(mockView)).not.toThrow();
+    expect(mockView.onDidChangeVisibility).toHaveBeenCalled();
+  });
 
   it("createCompareItem returns undefined when no historyUri", () => {
-    const provider = ObjectPropertyProvider.get()
-    const { Uri } = require("vscode")
-    const uri = Uri.parse("adt://dev100/foo.abap")
-    const result = provider.createCompareItem(uri)
-    expect(result).toBeUndefined()
-  })
+    const provider = ObjectPropertyProvider.get();
+    const { Uri } = require("vscode");
+    const uri = Uri.parse("adt://dev100/foo.abap");
+    const result = provider.createCompareItem(uri);
+    expect(result).toBeUndefined();
+  });
 
   it("compareSelectedHistory shows info message when no uri set", async () => {
-    const provider = ObjectPropertyProvider.get()
-    await provider.compareSelectedHistory(undefined)
+    const provider = ObjectPropertyProvider.get();
+    await provider.compareSelectedHistory(undefined);
     expect(mockedWindow.showInformationMessage).toHaveBeenCalledWith(
-      "Open an object history first"
-    )
-  })
+      "Open an object history first",
+    );
+  });
 
   it("refresh with no active editor sets empty items with message", async () => {
-    ;(mockedWindow as any).activeTextEditor = undefined
-    const provider = ObjectPropertyProvider.get()
-    await provider.refresh(true)
-    const children = provider.getChildren()
-    expect(Array.isArray(children)).toBe(true)
-    expect(children).toHaveLength(0)
-  })
+    (mockedWindow as any).activeTextEditor = undefined;
+    const provider = ObjectPropertyProvider.get();
+    await provider.refresh(true);
+    const children = provider.getChildren();
+    expect(Array.isArray(children)).toBe(true);
+    expect(children).toHaveLength(0);
+  });
 
   it("refresh with non-adt uri clears items", async () => {
-    ;(mockedWindow as any).activeTextEditor = {
+    (mockedWindow as any).activeTextEditor = {
       document: { uri: { scheme: "file", toString: () => "file:///foo.ts", authority: "" } },
-    }
-    mockedAbapUri.mockReturnValue(false)
-    const provider = ObjectPropertyProvider.get()
-    await provider.refresh(true)
-    const children = provider.getChildren()
-    expect(children).toHaveLength(0)
-  })
+    };
+    mockedAbapUri.mockReturnValue(false);
+    const provider = ObjectPropertyProvider.get();
+    await provider.refresh(true);
+    const children = provider.getChildren();
+    expect(children).toHaveLength(0);
+  });
 
   it("scheduleRefresh does nothing if no view bound", () => {
-    const provider = ObjectPropertyProvider.get()
-    expect(() => provider.scheduleRefresh()).not.toThrow()
-    expect(() => provider.scheduleRefresh(true)).not.toThrow()
-  })
+    const provider = ObjectPropertyProvider.get();
+    expect(() => provider.scheduleRefresh()).not.toThrow();
+    expect(() => provider.scheduleRefresh(true)).not.toThrow();
+  });
 
-  it("scheduleRefresh with visible view triggers refresh", done => {
-    const provider = ObjectPropertyProvider.get()
+  it("scheduleRefresh with visible view triggers refresh", (done) => {
+    const provider = ObjectPropertyProvider.get();
     const mockView = {
       visible: true,
       onDidChangeVisibility: vi.fn(() => ({ dispose: vi.fn() })),
       onDidChangeCheckboxState: vi.fn(() => ({ dispose: vi.fn() })),
-    } as any
-    provider.bindView(mockView)
-    ;(mockedWindow as any).activeTextEditor = undefined
-    provider.scheduleRefresh(true)
+    } as any;
+    provider.bindView(mockView);
+    (mockedWindow as any).activeTextEditor = undefined;
+    provider.scheduleRefresh(true);
     setTimeout(() => {
       // No throw is success
-      done()
-    }, 50)
-  })
-})
+      done();
+    }, 50);
+  });
+});
 
 // --------------------------------------------------------------------------
 // Internal helper tests via module-level re-exports (not exported, so we
@@ -232,10 +289,10 @@ describe.skip("ObjectPropertyProvider", () => {
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("TtlCache (internal) - observed via TransportPropertyItem caching", () => {
   it("reads ObjectPropertyProvider children without error", async () => {
-    ;(ObjectPropertyProvider as any).instance = undefined
-    const provider = ObjectPropertyProvider.get()
+    (ObjectPropertyProvider as any).instance = undefined;
+    const provider = ObjectPropertyProvider.get();
     // No element → returns items
-    const result = provider.getChildren(undefined)
-    expect(Array.isArray(result)).toBe(true)
-  })
-})
+    const result = provider.getChildren(undefined);
+    expect(Array.isArray(result)).toBe(true);
+  });
+});

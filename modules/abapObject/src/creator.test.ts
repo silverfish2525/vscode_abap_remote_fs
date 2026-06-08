@@ -1,11 +1,11 @@
-import { create } from "."
-import { mock } from "vitest-mock-extended"
-import { AbapObjectService } from "./AOService"
+import { create } from ".";
+import { mock } from "vitest-mock-extended";
+import { AbapObjectService } from "./AOService";
 
-import { isAbapClass, isAbapCds, isAbapInclude, isAbapClassInclude } from "./objectTypes"
+import { isAbapClass, isAbapCds, isAbapInclude, isAbapClassInclude } from "./objectTypes";
 
 test("Creates classes", () => {
-  const client = mock<AbapObjectService>()
+  const client = mock<AbapObjectService>();
   const cut = create(
     "CLAS/OC",
     "ZCL_ABAPGIT_USER_EXIT",
@@ -14,13 +14,13 @@ test("Creates classes", () => {
     "==============================CP",
     undefined,
     "",
-    client
-  )
-  expect(isAbapClass(cut)).toBeTruthy()
-})
+    client,
+  );
+  expect(isAbapClass(cut)).toBeTruthy();
+});
 
 test("Creates cds", () => {
-  const client = mock<AbapObjectService>()
+  const client = mock<AbapObjectService>();
   let cut = create(
     "DDLS/DF",
     "ZAPIDUMMY_DATADEF",
@@ -29,10 +29,10 @@ test("Creates cds", () => {
     "ZAPIDUMMY_DATADEF",
     undefined,
     "",
-    client
-  )
-  expect(isAbapCds(cut)).toBeTruthy()
-  expect(cut.fsName).toBe("ZAPIDUMMY_DATADEF.ddls.asddls")
+    client,
+  );
+  expect(isAbapCds(cut)).toBeTruthy();
+  expect(cut.fsName).toBe("ZAPIDUMMY_DATADEF.ddls.asddls");
 
   cut = create(
     "DDLX/EX",
@@ -42,14 +42,14 @@ test("Creates cds", () => {
     "ZAPIDUMMY_METADATA",
     undefined,
     "",
-    client
-  )
-  expect(isAbapCds(cut)).toBeTruthy()
-  expect(cut.fsName).toBe("ZAPIDUMMY_METADATA.ddlx.asddlxs")
-})
+    client,
+  );
+  expect(isAbapCds(cut)).toBeTruthy();
+  expect(cut.fsName).toBe("ZAPIDUMMY_METADATA.ddlx.asddlxs");
+});
 
 test("create Class include", () => {
-  const client = mock<AbapObjectService>()
+  const client = mock<AbapObjectService>();
   const clas = create(
     "CLAS/OC",
     "ZCL_ABAPGIT_USER_EXIT",
@@ -58,8 +58,8 @@ test("create Class include", () => {
     "main",
     undefined,
     "",
-    client
-  )
+    client,
+  );
   const cut = create(
     "CLAS/I",
     "ZCL_ABAPGIT_USER_EXIT.main",
@@ -68,12 +68,12 @@ test("create Class include", () => {
     "main",
     clas,
     "",
-    client
-  )
-  expect(isAbapClassInclude(cut)).toBeTruthy()
-})
+    client,
+  );
+  expect(isAbapClassInclude(cut)).toBeTruthy();
+});
 test("create include", () => {
-  const client = mock<AbapObjectService>()
+  const client = mock<AbapObjectService>();
   const cut = create(
     "PROG/I",
     "ZADTTESTINCLUDEINC",
@@ -82,7 +82,7 @@ test("create include", () => {
     "ZADTTESTINCLUDEINC",
     undefined,
     "",
-    client
-  )
-  expect(isAbapInclude(cut)).toBeTruthy()
-})
+    client,
+  );
+  expect(isAbapInclude(cut)).toBeTruthy();
+});

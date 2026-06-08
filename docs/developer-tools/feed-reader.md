@@ -11,11 +11,11 @@ Monitor SAP system events in real-time directly within VS Code — without openi
 
 ## Supported Feeds
 
-| Feed | Description |
-|------|-------------|
-| ABAP Runtime Errors | Dumps (equivalent to ST22) |
-| ATC Findings | Code quality check results |
-| System Messages | Broadcasts sent via SM02 |
+| Feed                | Description                    |
+| ------------------- | ------------------------------ |
+| ABAP Runtime Errors | Dumps (equivalent to ST22)     |
+| ATC Findings        | Code quality check results     |
+| System Messages     | Broadcasts sent via SM02       |
 | URI Creation Errors | ADT object resolution failures |
 
 > **Note:** Available feeds depend on the SAP system version. Older systems may not support all types.

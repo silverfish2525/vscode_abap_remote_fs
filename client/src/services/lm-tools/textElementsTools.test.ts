@@ -1,57 +1,61 @@
-vi.mock("vscode", () => ({
-  LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
-  LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
-  MarkdownString: vi.fn().mockImplementation((value: string) => ({ value })),
-  lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) }
-}), { virtual: true })
+vi.mock(
+  "vscode",
+  () => ({
+    LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
+    LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
+    MarkdownString: vi.fn().mockImplementation((value: string) => ({ value })),
+    lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) },
+  }),
+  { virtual: true },
+);
 
 vi.mock("../../adt/conections", () => ({
   getClient: vi.fn(),
-  abapUri: vi.fn()
-}))
-vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
-vi.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }))
+  abapUri: vi.fn(),
+}));
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }));
+vi.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }));
 vi.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() }))
-}))
+  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() })),
+}));
 vi.mock("../abapCopilotLogger", () => ({
-  logCommands: { info: vi.fn(), error: vi.fn(), warn: vi.fn() }
-}))
+  logCommands: { info: vi.fn(), error: vi.fn(), warn: vi.fn() },
+}));
 vi.mock("abap-adt-api", () => ({
-  session_types: { stateful: "stateful", stateless: "stateless" }
-}))
+  session_types: { stateful: "stateful", stateless: "stateless" },
+}));
 vi.mock("../../adt/textElements", () => ({
   getTextElementsSafe: vi.fn(),
-  updateTextElementsWithTransport: vi.fn()
-}))
+  updateTextElementsWithTransport: vi.fn(),
+}));
 vi.mock("../../commands/textElementsCommands", () => ({
-  openTextElementsInSapGui: vi.fn()
-}))
+  openTextElementsInSapGui: vi.fn(),
+}));
 
-import { ManageTextElementsTool } from "./textElementsTools"
-import { getClient, abapUri } from "../../adt/conections"
-import { getTextElementsSafe, updateTextElementsWithTransport } from "../../adt/textElements"
-import { funWindow as window } from "../funMessenger"
-import { logTelemetry } from "../telemetry"
+import { ManageTextElementsTool } from "./textElementsTools";
+import { getClient, abapUri } from "../../adt/conections";
+import { getTextElementsSafe, updateTextElementsWithTransport } from "../../adt/textElements";
+import { funWindow as window } from "../funMessenger";
+import { logTelemetry } from "../telemetry";
 
-const mockToken = {} as any
+const mockToken = {} as any;
 function makeOptions(input: any = {}) {
-  return { input } as any
+  return { input } as any;
 }
 
-const mockClient = { stateful: undefined as any }
+const mockClient = { stateful: undefined as any };
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("ManageTextElementsTool", () => {
-  let tool: ManageTextElementsTool
+  let tool: ManageTextElementsTool;
 
   beforeEach(() => {
-    tool = new ManageTextElementsTool()
-    vi.clearAllMocks()
-    ;(getClient as Mock).mockReturnValue(mockClient)
-    ;(window as any).activeTextEditor = undefined
-    mockClient.stateful = undefined
-  })
+    tool = new ManageTextElementsTool();
+    vi.clearAllMocks();
+    (getClient as Mock).mockReturnValue(mockClient);
+    (window as any).activeTextEditor = undefined;
+    mockClient.stateful = undefined;
+  });
 
   // =========================================================================
   // prepareInvocation
@@ -59,13 +63,18 @@ describe.skip("ManageTextElementsTool", () => {
   describe("prepareInvocation", () => {
     it("builds correct message for read action", async () => {
       const result = await tool.prepareInvocation(
-        makeOptions({ objectName: "ZREPORT", objectType: "PROGRAM", action: "read", connectionId: "dev100" }),
-        mockToken
-      )
-      expect(result.invocationMessage).toContain("Reading")
-      expect(result.invocationMessage).toContain("ZREPORT")
-      expect(result.confirmationMessages.title).toBe("Read Text Elements")
-    })
+        makeOptions({
+          objectName: "ZREPORT",
+          objectType: "PROGRAM",
+          action: "read",
+          connectionId: "dev100",
+        }),
+        mockToken,
+      );
+      expect(result.invocationMessage).toContain("Reading");
+      expect(result.invocationMessage).toContain("ZREPORT");
+      expect(result.confirmationMessages.title).toBe("Read Text Elements");
+    });
 
     it("builds correct message for create action with element count", async () => {
       const result = await tool.prepareInvocation(
@@ -73,19 +82,22 @@ describe.skip("ManageTextElementsTool", () => {
           objectName: "ZCL_TEST",
           objectType: "CLASS",
           action: "create",
-          textElements: [{ id: "001", text: "Hello" }, { id: "002", text: "World" }],
-          connectionId: "dev100"
+          textElements: [
+            { id: "001", text: "Hello" },
+            { id: "002", text: "World" },
+          ],
+          connectionId: "dev100",
         }),
-        mockToken
-      )
-      expect(result.invocationMessage).toContain("Creating")
-      expect(result.invocationMessage).toContain("ZCL_TEST")
-      expect(result.confirmationMessages.title).toBe("Create Text Elements")
+        mockToken,
+      );
+      expect(result.invocationMessage).toContain("Creating");
+      expect(result.invocationMessage).toContain("ZCL_TEST");
+      expect(result.confirmationMessages.title).toBe("Create Text Elements");
       // The message should include element count
-      expect(result.confirmationMessages.message.value).toContain("2")
+      expect(result.confirmationMessages.message.value).toContain("2");
       // Should include best practice tip
-      expect(result.confirmationMessages.message.value).toContain("Best Practice")
-    })
+      expect(result.confirmationMessages.message.value).toContain("Best Practice");
+    });
 
     it("builds correct message for update action with warning", async () => {
       const result = await tool.prepareInvocation(
@@ -94,154 +106,191 @@ describe.skip("ManageTextElementsTool", () => {
           objectType: "PROGRAM",
           action: "update",
           textElements: [{ id: "001", text: "Updated" }],
-          connectionId: "dev100"
+          connectionId: "dev100",
         }),
-        mockToken
-      )
-      expect(result.invocationMessage).toContain("Updating")
-      expect(result.confirmationMessages.title).toBe("Update Text Elements")
+        mockToken,
+      );
+      expect(result.invocationMessage).toContain("Updating");
+      expect(result.confirmationMessages.title).toBe("Update Text Elements");
       // Update should have a warning about modifying
-      expect(result.confirmationMessages.message.value).toContain("modify existing")
-    })
+      expect(result.confirmationMessages.message.value).toContain("modify existing");
+    });
 
     it("shows auto-detect when no connectionId", async () => {
       const result = await tool.prepareInvocation(
         makeOptions({ objectName: "ZREPORT", objectType: "PROGRAM", action: "read" }),
-        mockToken
-      )
-      expect(result.confirmationMessages.message.value).toContain("auto-detect")
-    })
+        mockToken,
+      );
+      expect(result.confirmationMessages.message.value).toContain("auto-detect");
+    });
 
     it("shows objectType in message when provided", async () => {
       const result = await tool.prepareInvocation(
-        makeOptions({ objectName: "ZFG_TEST", objectType: "FUNCTION_GROUP", action: "read", connectionId: "dev100" }),
-        mockToken
-      )
-      expect(result.confirmationMessages.message.value).toContain("FUNCTION_GROUP")
-      expect(result.invocationMessage).toContain("FUNCTION_GROUP")
-    })
+        makeOptions({
+          objectName: "ZFG_TEST",
+          objectType: "FUNCTION_GROUP",
+          action: "read",
+          connectionId: "dev100",
+        }),
+        mockToken,
+      );
+      expect(result.confirmationMessages.message.value).toContain("FUNCTION_GROUP");
+      expect(result.invocationMessage).toContain("FUNCTION_GROUP");
+    });
 
     it("shows 0 elements when textElements is undefined for create", async () => {
       const result = await tool.prepareInvocation(
-        makeOptions({ objectName: "ZREPORT", objectType: "PROGRAM", action: "create", connectionId: "dev100" }),
-        mockToken
-      )
-      expect(result.confirmationMessages.message.value).toContain("0")
-    })
-  })
+        makeOptions({
+          objectName: "ZREPORT",
+          objectType: "PROGRAM",
+          action: "create",
+          connectionId: "dev100",
+        }),
+        mockToken,
+      );
+      expect(result.confirmationMessages.message.value).toContain("0");
+    });
+  });
 
   // =========================================================================
   // invoke — read action
   // =========================================================================
   describe("invoke read action", () => {
     it("calls getTextElementsSafe with correct params", async () => {
-      ;(getTextElementsSafe as Mock).mockResolvedValue({
+      (getTextElementsSafe as Mock).mockResolvedValue({
         programName: "ZREPORT",
-        textElements: [{ id: "001", text: "Hello", maxLength: 20 }]
-      })
+        textElements: [{ id: "001", text: "Hello", maxLength: 20 }],
+      });
 
       const result: any = await tool.invoke(
-        makeOptions({ objectName: "ZREPORT", objectType: "PROGRAM", action: "read", connectionId: "dev100" }),
-        mockToken
-      )
+        makeOptions({
+          objectName: "ZREPORT",
+          objectType: "PROGRAM",
+          action: "read",
+          connectionId: "dev100",
+        }),
+        mockToken,
+      );
 
-      expect(getTextElementsSafe).toHaveBeenCalledWith(mockClient, "ZREPORT", "PROGRAM")
-      expect(result.parts[0].text).toContain("ZREPORT")
-      expect(result.parts[0].text).toContain("001")
-      expect(result.parts[0].text).toContain("Hello")
-      expect(result.parts[0].text).toContain("max: 20")
-    })
+      expect(getTextElementsSafe).toHaveBeenCalledWith(mockClient, "ZREPORT", "PROGRAM");
+      expect(result.parts[0].text).toContain("ZREPORT");
+      expect(result.parts[0].text).toContain("001");
+      expect(result.parts[0].text).toContain("Hello");
+      expect(result.parts[0].text).toContain("max: 20");
+    });
 
     it("reports empty text elements", async () => {
-      ;(getTextElementsSafe as Mock).mockResolvedValue({
+      (getTextElementsSafe as Mock).mockResolvedValue({
         programName: "ZREPORT",
-        textElements: []
-      })
+        textElements: [],
+      });
 
       const result: any = await tool.invoke(
-        makeOptions({ objectName: "ZREPORT", objectType: "PROGRAM", action: "read", connectionId: "dev100" }),
-        mockToken
-      )
+        makeOptions({
+          objectName: "ZREPORT",
+          objectType: "PROGRAM",
+          action: "read",
+          connectionId: "dev100",
+        }),
+        mockToken,
+      );
 
-      expect(result.parts[0].text).toContain("No text elements found")
-    })
+      expect(result.parts[0].text).toContain("No text elements found");
+    });
 
     it("logs telemetry on invocation", async () => {
-      ;(getTextElementsSafe as Mock).mockResolvedValue({ programName: "ZTEST", textElements: [] })
+      (getTextElementsSafe as Mock).mockResolvedValue({ programName: "ZTEST", textElements: [] });
 
       await tool.invoke(
-        makeOptions({ objectName: "ZTEST", objectType: "PROGRAM", action: "read", connectionId: "dev100" }),
-        mockToken
-      )
+        makeOptions({
+          objectName: "ZTEST",
+          objectType: "PROGRAM",
+          action: "read",
+          connectionId: "dev100",
+        }),
+        mockToken,
+      );
 
-      expect(logTelemetry).toHaveBeenCalledWith("tool_manage_text_elements_called", { connectionId: "dev100" })
-    })
-  })
+      expect(logTelemetry).toHaveBeenCalledWith("tool_manage_text_elements_called", {
+        connectionId: "dev100",
+      });
+    });
+  });
 
   // =========================================================================
   // invoke — connectionId resolution
   // =========================================================================
   describe("invoke connectionId resolution", () => {
     it("lowercases connectionId", async () => {
-      ;(getTextElementsSafe as Mock).mockResolvedValue({ programName: "ZTEST", textElements: [] })
+      (getTextElementsSafe as Mock).mockResolvedValue({ programName: "ZTEST", textElements: [] });
 
       await tool.invoke(
-        makeOptions({ objectName: "ZTEST", objectType: "PROGRAM", action: "read", connectionId: "DEV100" }),
-        mockToken
-      )
+        makeOptions({
+          objectName: "ZTEST",
+          objectType: "PROGRAM",
+          action: "read",
+          connectionId: "DEV100",
+        }),
+        mockToken,
+      );
 
-      expect(getClient).toHaveBeenCalledWith("dev100")
-    })
+      expect(getClient).toHaveBeenCalledWith("dev100");
+    });
 
     it("throws when no connectionId and no active editor", async () => {
       await expect(
         tool.invoke(
           makeOptions({ objectName: "ZTEST", objectType: "PROGRAM", action: "read" }),
-          mockToken
-        )
-      ).rejects.toThrow("No active ABAP document")
-    })
+          mockToken,
+        ),
+      ).rejects.toThrow("No active ABAP document");
+    });
 
     it("throws when active editor has non-ABAP uri", async () => {
-      ;(window as any).activeTextEditor = {
-        document: { uri: { authority: "local", scheme: "file" } }
-      }
-      ;(abapUri as Mock).mockReturnValue(false)
+      (window as any).activeTextEditor = {
+        document: { uri: { authority: "local", scheme: "file" } },
+      };
+      (abapUri as Mock).mockReturnValue(false);
 
       await expect(
         tool.invoke(
           makeOptions({ objectName: "ZTEST", objectType: "PROGRAM", action: "read" }),
-          mockToken
-        )
-      ).rejects.toThrow("No active ABAP document")
-    })
+          mockToken,
+        ),
+      ).rejects.toThrow("No active ABAP document");
+    });
 
     it("resolves connectionId from active ABAP editor", async () => {
-      ;(window as any).activeTextEditor = {
-        document: { uri: { authority: "dev100", scheme: "adt" } }
-      }
-      ;(abapUri as Mock).mockReturnValue(true)
-      ;(getTextElementsSafe as Mock).mockResolvedValue({ programName: "ZTEST", textElements: [] })
+      (window as any).activeTextEditor = {
+        document: { uri: { authority: "dev100", scheme: "adt" } },
+      };
+      (abapUri as Mock).mockReturnValue(true);
+      (getTextElementsSafe as Mock).mockResolvedValue({ programName: "ZTEST", textElements: [] });
 
       await tool.invoke(
         makeOptions({ objectName: "ZTEST", objectType: "PROGRAM", action: "read" }),
-        mockToken
-      )
+        mockToken,
+      );
 
-      expect(getClient).toHaveBeenCalledWith("dev100")
-    })
+      expect(getClient).toHaveBeenCalledWith("dev100");
+    });
 
     it("throws when getClient returns null", async () => {
-      ;(getClient as Mock).mockReturnValue(null)
+      (getClient as Mock).mockReturnValue(null);
 
       await expect(
         tool.invoke(
-          makeOptions({ objectName: "ZTEST", objectType: "PROGRAM", action: "read", connectionId: "dev100" }),
-          mockToken
-        )
-      ).rejects.toThrow("No ADT connection available")
-    })
-  })
+          makeOptions({
+            objectName: "ZTEST",
+            objectType: "PROGRAM",
+            action: "read",
+            connectionId: "dev100",
+          }),
+          mockToken,
+        ),
+      ).rejects.toThrow("No ADT connection available");
+    });
+  });
 
   // =========================================================================
   // invoke — create/update actions
@@ -251,41 +300,48 @@ describe.skip("ManageTextElementsTool", () => {
       await expect(
         tool.invoke(
           makeOptions({
-            objectName: "ZREPORT", objectType: "PROGRAM", action: "create",
-            textElements: [], connectionId: "dev100"
+            objectName: "ZREPORT",
+            objectType: "PROGRAM",
+            action: "create",
+            textElements: [],
+            connectionId: "dev100",
           }),
-          mockToken
-        )
-      ).rejects.toThrow("Text elements array is required")
-    })
+          mockToken,
+        ),
+      ).rejects.toThrow("Text elements array is required");
+    });
 
     it("throws when textElements is undefined for update", async () => {
       await expect(
         tool.invoke(
           makeOptions({
-            objectName: "ZREPORT", objectType: "PROGRAM", action: "update",
-            connectionId: "dev100"
+            objectName: "ZREPORT",
+            objectType: "PROGRAM",
+            action: "update",
+            connectionId: "dev100",
           }),
-          mockToken
-        )
-      ).rejects.toThrow("Text elements array is required")
-    })
+          mockToken,
+        ),
+      ).rejects.toThrow("Text elements array is required");
+    });
 
     it("calls updateTextElementsWithTransport for create with merged elements", async () => {
-      ;(getTextElementsSafe as Mock).mockResolvedValue({
+      (getTextElementsSafe as Mock).mockResolvedValue({
         programName: "ZREPORT",
-        textElements: [{ id: "001", text: "Existing" }]
-      })
-      ;(updateTextElementsWithTransport as Mock).mockResolvedValue(undefined)
+        textElements: [{ id: "001", text: "Existing" }],
+      });
+      (updateTextElementsWithTransport as Mock).mockResolvedValue(undefined);
 
       const result: any = await tool.invoke(
         makeOptions({
-          objectName: "ZREPORT", objectType: "PROGRAM", action: "create",
+          objectName: "ZREPORT",
+          objectType: "PROGRAM",
+          action: "create",
           textElements: [{ id: "002", text: "New Element" }],
-          connectionId: "dev100"
+          connectionId: "dev100",
         }),
-        mockToken
-      )
+        mockToken,
+      );
 
       // Should merge: existing 001 + new 002
       expect(updateTextElementsWithTransport).toHaveBeenCalledWith(
@@ -293,258 +349,314 @@ describe.skip("ManageTextElementsTool", () => {
         "ZREPORT",
         expect.arrayContaining([
           expect.objectContaining({ id: "001", text: "Existing" }),
-          expect.objectContaining({ id: "002", text: "New Element" })
+          expect.objectContaining({ id: "002", text: "New Element" }),
         ]),
-        "PROGRAM"
-      )
-      expect(result.parts[0].text).toContain("Created")
-    })
+        "PROGRAM",
+      );
+      expect(result.parts[0].text).toContain("Created");
+    });
 
     it("update action overwrites existing elements by ID", async () => {
-      ;(getTextElementsSafe as Mock).mockResolvedValue({
+      (getTextElementsSafe as Mock).mockResolvedValue({
         programName: "ZREPORT",
-        textElements: [{ id: "001", text: "Old Text" }, { id: "002", text: "Keep This" }]
-      })
-      ;(updateTextElementsWithTransport as Mock).mockResolvedValue(undefined)
+        textElements: [
+          { id: "001", text: "Old Text" },
+          { id: "002", text: "Keep This" },
+        ],
+      });
+      (updateTextElementsWithTransport as Mock).mockResolvedValue(undefined);
 
       await tool.invoke(
         makeOptions({
-          objectName: "ZREPORT", objectType: "PROGRAM", action: "update",
+          objectName: "ZREPORT",
+          objectType: "PROGRAM",
+          action: "update",
           textElements: [{ id: "001", text: "New Text" }],
-          connectionId: "dev100"
+          connectionId: "dev100",
         }),
-        mockToken
-      )
+        mockToken,
+      );
 
       // Should merge: updated 001 + existing 002
-      const calledElements = (updateTextElementsWithTransport as Mock).mock.calls[0][2]
+      const calledElements = (updateTextElementsWithTransport as Mock).mock.calls[0][2];
       expect(calledElements).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ id: "001", text: "New Text" }),
-          expect.objectContaining({ id: "002", text: "Keep This" })
-        ])
-      )
-    })
+          expect.objectContaining({ id: "002", text: "Keep This" }),
+        ]),
+      );
+    });
 
     it("proceeds with provided elements when reading existing fails", async () => {
-      ;(getTextElementsSafe as Mock).mockRejectedValue(new Error("Read failed"))
-      ;(updateTextElementsWithTransport as Mock).mockResolvedValue(undefined)
+      (getTextElementsSafe as Mock).mockRejectedValue(new Error("Read failed"));
+      (updateTextElementsWithTransport as Mock).mockResolvedValue(undefined);
 
       const result: any = await tool.invoke(
         makeOptions({
-          objectName: "ZREPORT", objectType: "PROGRAM", action: "create",
+          objectName: "ZREPORT",
+          objectType: "PROGRAM",
+          action: "create",
           textElements: [{ id: "001", text: "Only New" }],
-          connectionId: "dev100"
+          connectionId: "dev100",
         }),
-        mockToken
-      )
+        mockToken,
+      );
 
       // Should proceed with just the provided elements
       expect(updateTextElementsWithTransport).toHaveBeenCalledWith(
         mockClient,
         "ZREPORT",
         [{ id: "001", text: "Only New" }],
-        "PROGRAM"
-      )
-      expect(result.parts[0].text).toContain("Created")
-    })
+        "PROGRAM",
+      );
+      expect(result.parts[0].text).toContain("Created");
+    });
 
     it("sets client to stateful mode for create/update", async () => {
-      ;(getTextElementsSafe as Mock).mockResolvedValue({ programName: "ZREPORT", textElements: [] })
-      ;(updateTextElementsWithTransport as Mock).mockResolvedValue(undefined)
+      (getTextElementsSafe as Mock).mockResolvedValue({ programName: "ZREPORT", textElements: [] });
+      (updateTextElementsWithTransport as Mock).mockResolvedValue(undefined);
 
       await tool.invoke(
         makeOptions({
-          objectName: "ZREPORT", objectType: "PROGRAM", action: "create",
+          objectName: "ZREPORT",
+          objectType: "PROGRAM",
+          action: "create",
           textElements: [{ id: "001", text: "test" }],
-          connectionId: "dev100"
+          connectionId: "dev100",
         }),
-        mockToken
-      )
+        mockToken,
+      );
 
       // session_types.stateful is imported; the code sets client.stateful to that value
-      expect(mockClient.stateful).toBeDefined()
-    })
+      expect(mockClient.stateful).toBeDefined();
+    });
 
     it("includes TEXT-xxx usage hints in create response", async () => {
-      ;(getTextElementsSafe as Mock).mockResolvedValue({ programName: "ZREPORT", textElements: [] })
-      ;(updateTextElementsWithTransport as Mock).mockResolvedValue(undefined)
+      (getTextElementsSafe as Mock).mockResolvedValue({ programName: "ZREPORT", textElements: [] });
+      (updateTextElementsWithTransport as Mock).mockResolvedValue(undefined);
 
       const result: any = await tool.invoke(
         makeOptions({
-          objectName: "ZREPORT", objectType: "PROGRAM", action: "create",
+          objectName: "ZREPORT",
+          objectType: "PROGRAM",
+          action: "create",
           textElements: [{ id: "T01", text: "Title" }],
-          connectionId: "dev100"
+          connectionId: "dev100",
         }),
-        mockToken
-      )
+        mockToken,
+      );
 
-      expect(result.parts[0].text).toContain("TEXT-T01")
-    })
-  })
+      expect(result.parts[0].text).toContain("TEXT-T01");
+    });
+  });
 
   // =========================================================================
   // invoke — error handling
   // =========================================================================
   describe("invoke error handling", () => {
     it("wraps SAP API errors with action context", async () => {
-      ;(getTextElementsSafe as Mock).mockRejectedValue(new Error("SAP connection timeout"))
-
-      await expect(
-        tool.invoke(
-          makeOptions({ objectName: "ZREPORT", objectType: "PROGRAM", action: "read", connectionId: "dev100" }),
-          mockToken
-        )
-      ).rejects.toThrow("Failed to read text elements")
-    })
-
-    it("wraps updateTextElements errors with action context", async () => {
-      ;(getTextElementsSafe as Mock).mockResolvedValue({ programName: "ZREPORT", textElements: [] })
-      ;(updateTextElementsWithTransport as Mock).mockRejectedValue(new Error("Lock failed"))
+      (getTextElementsSafe as Mock).mockRejectedValue(new Error("SAP connection timeout"));
 
       await expect(
         tool.invoke(
           makeOptions({
-            objectName: "ZREPORT", objectType: "PROGRAM", action: "create",
-            textElements: [{ id: "001", text: "test" }], connectionId: "dev100"
+            objectName: "ZREPORT",
+            objectType: "PROGRAM",
+            action: "read",
+            connectionId: "dev100",
           }),
-          mockToken
-        )
-      ).rejects.toThrow("Failed to create text elements")
-    })
+          mockToken,
+        ),
+      ).rejects.toThrow("Failed to read text elements");
+    });
+
+    it("wraps updateTextElements errors with action context", async () => {
+      (getTextElementsSafe as Mock).mockResolvedValue({ programName: "ZREPORT", textElements: [] });
+      (updateTextElementsWithTransport as Mock).mockRejectedValue(new Error("Lock failed"));
+
+      await expect(
+        tool.invoke(
+          makeOptions({
+            objectName: "ZREPORT",
+            objectType: "PROGRAM",
+            action: "create",
+            textElements: [{ id: "001", text: "test" }],
+            connectionId: "dev100",
+          }),
+          mockToken,
+        ),
+      ).rejects.toThrow("Failed to create text elements");
+    });
 
     it("throws on invalid action", async () => {
       await expect(
         tool.invoke(
-          makeOptions({ objectName: "ZREPORT", objectType: "PROGRAM", action: "delete", connectionId: "dev100" }),
-          mockToken
-        )
-      ).rejects.toThrow("Invalid action")
-    })
+          makeOptions({
+            objectName: "ZREPORT",
+            objectType: "PROGRAM",
+            action: "delete",
+            connectionId: "dev100",
+          }),
+          mockToken,
+        ),
+      ).rejects.toThrow("Invalid action");
+    });
 
     it("handles Resource does not exist error with SAP GUI fallback", async () => {
-      ;(getTextElementsSafe as Mock).mockRejectedValue(new Error("Resource /foo does not exist"))
-      const { openTextElementsInSapGui } = require("../../commands/textElementsCommands")
+      (getTextElementsSafe as Mock).mockRejectedValue(new Error("Resource /foo does not exist"));
+      const { openTextElementsInSapGui } = require("../../commands/textElementsCommands");
 
       const result: any = await tool.invoke(
-        makeOptions({ objectName: "ZREPORT", objectType: "PROGRAM", action: "read", connectionId: "dev100" }),
-        mockToken
-      )
+        makeOptions({
+          objectName: "ZREPORT",
+          objectType: "PROGRAM",
+          action: "read",
+          connectionId: "dev100",
+        }),
+        mockToken,
+      );
 
-      expect(openTextElementsInSapGui).toHaveBeenCalledWith("ZREPORT.prog.abap", "dev100")
-      expect(result.parts[0].text).toContain("SAP GUI")
-    })
+      expect(openTextElementsInSapGui).toHaveBeenCalledWith("ZREPORT.prog.abap", "dev100");
+      expect(result.parts[0].text).toContain("SAP GUI");
+    });
 
     it("uses correct file extension for CLASS in SAP GUI fallback", async () => {
-      ;(getTextElementsSafe as Mock).mockRejectedValue(new Error("Resource /bar does not exist"))
-      const { openTextElementsInSapGui } = require("../../commands/textElementsCommands")
+      (getTextElementsSafe as Mock).mockRejectedValue(new Error("Resource /bar does not exist"));
+      const { openTextElementsInSapGui } = require("../../commands/textElementsCommands");
 
       await tool.invoke(
-        makeOptions({ objectName: "ZCL_TEST", objectType: "CLASS", action: "read", connectionId: "dev100" }),
-        mockToken
-      )
+        makeOptions({
+          objectName: "ZCL_TEST",
+          objectType: "CLASS",
+          action: "read",
+          connectionId: "dev100",
+        }),
+        mockToken,
+      );
 
-      expect(openTextElementsInSapGui).toHaveBeenCalledWith("ZCL_TEST.clas.abap", "dev100")
-    })
+      expect(openTextElementsInSapGui).toHaveBeenCalledWith("ZCL_TEST.clas.abap", "dev100");
+    });
 
     it("uses correct file extension for FUNCTION_GROUP in SAP GUI fallback", async () => {
-      ;(getTextElementsSafe as Mock).mockRejectedValue(new Error("Resource /baz does not exist"))
-      const { openTextElementsInSapGui } = require("../../commands/textElementsCommands")
+      (getTextElementsSafe as Mock).mockRejectedValue(new Error("Resource /baz does not exist"));
+      const { openTextElementsInSapGui } = require("../../commands/textElementsCommands");
 
       await tool.invoke(
-        makeOptions({ objectName: "ZFG_TEST", objectType: "FUNCTION_GROUP", action: "read", connectionId: "dev100" }),
-        mockToken
-      )
+        makeOptions({
+          objectName: "ZFG_TEST",
+          objectType: "FUNCTION_GROUP",
+          action: "read",
+          connectionId: "dev100",
+        }),
+        mockToken,
+      );
 
-      expect(openTextElementsInSapGui).toHaveBeenCalledWith("ZFG_TEST.fugr.abap", "dev100")
-    })
-  })
+      expect(openTextElementsInSapGui).toHaveBeenCalledWith("ZFG_TEST.fugr.abap", "dev100");
+    });
+  });
 
   // =========================================================================
   // Edge cases
   // =========================================================================
   describe("edge cases", () => {
     it("handles maxLength in text elements display", async () => {
-      ;(getTextElementsSafe as Mock).mockResolvedValue({
+      (getTextElementsSafe as Mock).mockResolvedValue({
         programName: "ZREPORT",
-        textElements: [{ id: "001", text: "Long Text", maxLength: 132 }]
-      })
+        textElements: [{ id: "001", text: "Long Text", maxLength: 132 }],
+      });
 
       const result: any = await tool.invoke(
-        makeOptions({ objectName: "ZREPORT", objectType: "PROGRAM", action: "read", connectionId: "dev100" }),
-        mockToken
-      )
+        makeOptions({
+          objectName: "ZREPORT",
+          objectType: "PROGRAM",
+          action: "read",
+          connectionId: "dev100",
+        }),
+        mockToken,
+      );
 
-      expect(result.parts[0].text).toContain("max: 132")
-    })
+      expect(result.parts[0].text).toContain("max: 132");
+    });
 
     it("handles text element without maxLength", async () => {
-      ;(getTextElementsSafe as Mock).mockResolvedValue({
+      (getTextElementsSafe as Mock).mockResolvedValue({
         programName: "ZREPORT",
-        textElements: [{ id: "001", text: "Short" }]
-      })
+        textElements: [{ id: "001", text: "Short" }],
+      });
 
       const result: any = await tool.invoke(
-        makeOptions({ objectName: "ZREPORT", objectType: "PROGRAM", action: "read", connectionId: "dev100" }),
-        mockToken
-      )
+        makeOptions({
+          objectName: "ZREPORT",
+          objectType: "PROGRAM",
+          action: "read",
+          connectionId: "dev100",
+        }),
+        mockToken,
+      );
 
-      expect(result.parts[0].text).not.toContain("max:")
-    })
+      expect(result.parts[0].text).not.toContain("max:");
+    });
 
     it("create merges new elements with existing without duplicates", async () => {
-      ;(getTextElementsSafe as Mock).mockResolvedValue({
+      (getTextElementsSafe as Mock).mockResolvedValue({
         programName: "ZREPORT",
         textElements: [
           { id: "001", text: "First" },
-          { id: "002", text: "Second" }
-        ]
-      })
-      ;(updateTextElementsWithTransport as Mock).mockResolvedValue(undefined)
+          { id: "002", text: "Second" },
+        ],
+      });
+      (updateTextElementsWithTransport as Mock).mockResolvedValue(undefined);
 
       await tool.invoke(
         makeOptions({
-          objectName: "ZREPORT", objectType: "PROGRAM", action: "create",
+          objectName: "ZREPORT",
+          objectType: "PROGRAM",
+          action: "create",
           textElements: [
             { id: "002", text: "Updated Second" }, // overwrite
-            { id: "003", text: "Brand New" }        // new
+            { id: "003", text: "Brand New" }, // new
           ],
-          connectionId: "dev100"
+          connectionId: "dev100",
         }),
-        mockToken
-      )
+        mockToken,
+      );
 
-      const calledElements = (updateTextElementsWithTransport as Mock).mock.calls[0][2]
+      const calledElements = (updateTextElementsWithTransport as Mock).mock.calls[0][2];
       // Should have 3 unique elements: 001 (kept), 002 (updated), 003 (new)
-      expect(calledElements).toHaveLength(3)
-      const ids = calledElements.map((e: any) => e.id)
-      expect(ids).toContain("001")
-      expect(ids).toContain("002")
-      expect(ids).toContain("003")
+      expect(calledElements).toHaveLength(3);
+      const ids = calledElements.map((e: any) => e.id);
+      expect(ids).toContain("001");
+      expect(ids).toContain("002");
+      expect(ids).toContain("003");
       // 002 should have updated text
-      const el002 = calledElements.find((e: any) => e.id === "002")
-      expect(el002.text).toBe("Updated Second")
-    })
+      const el002 = calledElements.find((e: any) => e.id === "002");
+      expect(el002.text).toBe("Updated Second");
+    });
 
     it("handles multiple text elements in result display", async () => {
-      ;(getTextElementsSafe as Mock).mockResolvedValue({
+      (getTextElementsSafe as Mock).mockResolvedValue({
         programName: "ZREPORT",
         textElements: [
           { id: "001", text: "Alpha" },
           { id: "002", text: "Beta" },
-          { id: "003", text: "Gamma" }
-        ]
-      })
+          { id: "003", text: "Gamma" },
+        ],
+      });
 
       const result: any = await tool.invoke(
-        makeOptions({ objectName: "ZREPORT", objectType: "PROGRAM", action: "read", connectionId: "dev100" }),
-        mockToken
-      )
+        makeOptions({
+          objectName: "ZREPORT",
+          objectType: "PROGRAM",
+          action: "read",
+          connectionId: "dev100",
+        }),
+        mockToken,
+      );
 
-      expect(result.parts[0].text).toContain("Total Text Elements:** 3")
-      expect(result.parts[0].text).toContain("Alpha")
-      expect(result.parts[0].text).toContain("Beta")
-      expect(result.parts[0].text).toContain("Gamma")
-    })
-  })
-})
+      expect(result.parts[0].text).toContain("Total Text Elements:** 3");
+      expect(result.parts[0].text).toContain("Alpha");
+      expect(result.parts[0].text).toContain("Beta");
+      expect(result.parts[0].text).toContain("Gamma");
+    });
+  });
+});

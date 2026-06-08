@@ -9,15 +9,15 @@ vi.mock(
     workspace: {
       getConfiguration: vi.fn().mockReturnValue({
         get: vi.fn((key: string, def: any) => def),
-        update: vi.fn()
+        update: vi.fn(),
       }),
       onDidChangeConfiguration: vi.fn().mockReturnValue({ dispose: vi.fn() }),
       applyEdit: vi.fn().mockResolvedValue(true),
-      fs: { writeFile: vi.fn().mockResolvedValue(undefined) }
+      fs: { writeFile: vi.fn().mockResolvedValue(undefined) },
     },
     commands: {
       executeCommand: vi.fn().mockResolvedValue(undefined),
-      registerCommand: vi.fn()
+      registerCommand: vi.fn(),
     },
     window: {
       showInformationMessage: vi.fn(),
@@ -27,19 +27,22 @@ vi.mock(
       showOpenDialog: vi.fn(),
       withProgress: vi.fn(),
       activeTextEditor: undefined,
-      visibleTextEditors: []
+      visibleTextEditors: [],
     },
     ProgressLocation: { Notification: 15 },
     WorkspaceEdit: vi.fn().mockImplementation(() => ({
-      replace: vi.fn()
+      replace: vi.fn(),
     })),
     Range: vi.fn().mockImplementation((s: any, e: any) => ({ start: s, end: e })),
     Position: vi.fn().mockImplementation((l: number, c: number) => ({ line: l, character: c })),
-    Uri: { file: vi.fn((p: string) => ({ fsPath: p })), parse: vi.fn((s: string) => ({ toString: () => s })) },
-    env: { openExternal: vi.fn() }
+    Uri: {
+      file: vi.fn((p: string) => ({ fsPath: p })),
+      parse: vi.fn((s: string) => ({ toString: () => s })),
+    },
+    env: { openExternal: vi.fn() },
   }),
-  { virtual: true }
-)
+  { virtual: true },
+);
 
 vi.mock("./funMessenger", () => ({
   funWindow: {
@@ -50,12 +53,12 @@ vi.mock("./funMessenger", () => ({
     showOpenDialog: vi.fn(),
     withProgress: vi.fn(),
     activeTextEditor: undefined,
-    visibleTextEditors: []
-  }
-}))
+    visibleTextEditors: [],
+  },
+}));
 
-vi.mock("../lib", () => ({ log: vi.fn() }))
-vi.mock("./telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("../lib", () => ({ log: vi.fn() }));
+vi.mock("./telemetry", () => ({ logTelemetry: vi.fn() }));
 
 // Mock filesystem
 vi.mock("fs", () => ({
@@ -63,181 +66,181 @@ vi.mock("fs", () => ({
   mkdtempSync: vi.fn().mockReturnValue("/tmp/abap-cleaner-test"),
   writeFileSync: vi.fn(),
   readFileSync: vi.fn().mockReturnValue("cleaned code"),
-  unlinkSync: vi.fn()
-}))
+  unlinkSync: vi.fn(),
+}));
 
 vi.mock("util", () => ({
-  promisify: vi.fn((fn: any) => fn)
-}))
+  promisify: vi.fn((fn: any) => fn),
+}));
 
 vi.mock("child_process", () => ({
-  exec: vi.fn()
-}))
+  exec: vi.fn(),
+}));
 
-import * as vscode from "vscode"
-import * as fs from "fs"
-import { ABAPCleanerService } from "./abapCleanerService"
+import * as vscode from "vscode";
+import * as fs from "fs";
+import { ABAPCleanerService } from "./abapCleanerService";
 
 // Reset singleton between tests
 function resetSingleton() {
-  (ABAPCleanerService as any).instance = undefined
+  (ABAPCleanerService as any).instance = undefined;
 }
 
 function setupConfig(overrides: Record<string, any> = {}) {
-  ;(vscode.workspace.getConfiguration as Mock).mockReturnValue({
+  (vscode.workspace.getConfiguration as Mock).mockReturnValue({
     get: vi.fn((key: string, def: any) => {
-      if (key in overrides) return overrides[key]
-      return def
+      if (key in overrides) return overrides[key];
+      return def;
     }),
-    update: vi.fn()
-  })
-  ;(vscode.workspace.onDidChangeConfiguration as Mock).mockReturnValue({ dispose: vi.fn() })
+    update: vi.fn(),
+  });
+  (vscode.workspace.onDidChangeConfiguration as Mock).mockReturnValue({ dispose: vi.fn() });
 }
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("ABAPCleanerService", () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-    resetSingleton()
-    setupConfig()
-  })
+    vi.clearAllMocks();
+    resetSingleton();
+    setupConfig();
+  });
 
   describe("getInstance", () => {
     it("returns singleton instance", () => {
-      const a = ABAPCleanerService.getInstance()
-      const b = ABAPCleanerService.getInstance()
-      expect(a).toBe(b)
-    })
-  })
+      const a = ABAPCleanerService.getInstance();
+      const b = ABAPCleanerService.getInstance();
+      expect(a).toBe(b);
+    });
+  });
 
   describe("isAvailable", () => {
     it("returns false when disabled in config", () => {
-      setupConfig({ enabled: false })
-      const svc = ABAPCleanerService.getInstance()
-      expect(svc.isAvailable()).toBe(false)
-    })
+      setupConfig({ enabled: false });
+      const svc = ABAPCleanerService.getInstance();
+      expect(svc.isAvailable()).toBe(false);
+    });
 
     it("returns false when enabled but no executable path", () => {
-      setupConfig({ enabled: true, executablePath: "" })
-      const svc = ABAPCleanerService.getInstance()
-      expect(svc.isAvailable()).toBe(false)
-    })
+      setupConfig({ enabled: true, executablePath: "" });
+      const svc = ABAPCleanerService.getInstance();
+      expect(svc.isAvailable()).toBe(false);
+    });
 
     it("returns false when enabled but executable does not exist", () => {
-      ;(fs.existsSync as Mock).mockReturnValue(false)
-      setupConfig({ enabled: true, executablePath: "/path/to/abap-cleanerc.exe" })
-      const svc = ABAPCleanerService.getInstance()
-      expect(svc.isAvailable()).toBe(false)
-    })
+      (fs.existsSync as Mock).mockReturnValue(false);
+      setupConfig({ enabled: true, executablePath: "/path/to/abap-cleanerc.exe" });
+      const svc = ABAPCleanerService.getInstance();
+      expect(svc.isAvailable()).toBe(false);
+    });
 
     it("returns true when enabled and executable exists", () => {
-      ;(fs.existsSync as Mock).mockReturnValue(true)
-      setupConfig({ enabled: true, executablePath: "/path/to/abap-cleanerc.exe" })
-      const svc = ABAPCleanerService.getInstance()
-      expect(svc.isAvailable()).toBe(true)
-    })
-  })
+      (fs.existsSync as Mock).mockReturnValue(true);
+      setupConfig({ enabled: true, executablePath: "/path/to/abap-cleanerc.exe" });
+      const svc = ABAPCleanerService.getInstance();
+      expect(svc.isAvailable()).toBe(true);
+    });
+  });
 
   describe("isExecutableValid", () => {
     it("returns false when executablePath is empty", () => {
-      setupConfig({ executablePath: "" })
-      const svc = ABAPCleanerService.getInstance()
-      expect(svc.isExecutableValid()).toBe(false)
-    })
+      setupConfig({ executablePath: "" });
+      const svc = ABAPCleanerService.getInstance();
+      expect(svc.isExecutableValid()).toBe(false);
+    });
 
     it("returns false when file does not exist on filesystem", () => {
-      ;(fs.existsSync as Mock).mockReturnValue(false)
-      setupConfig({ executablePath: "/nonexistent/path.exe" })
-      const svc = ABAPCleanerService.getInstance()
-      expect(svc.isExecutableValid()).toBe(false)
-    })
+      (fs.existsSync as Mock).mockReturnValue(false);
+      setupConfig({ executablePath: "/nonexistent/path.exe" });
+      const svc = ABAPCleanerService.getInstance();
+      expect(svc.isExecutableValid()).toBe(false);
+    });
 
     it("returns true when file exists", () => {
-      ;(fs.existsSync as Mock).mockReturnValue(true)
-      setupConfig({ executablePath: "/valid/path.exe" })
-      const svc = ABAPCleanerService.getInstance()
-      expect(svc.isExecutableValid()).toBe(true)
-    })
-  })
+      (fs.existsSync as Mock).mockReturnValue(true);
+      setupConfig({ executablePath: "/valid/path.exe" });
+      const svc = ABAPCleanerService.getInstance();
+      expect(svc.isExecutableValid()).toBe(true);
+    });
+  });
 
   describe("cleanCode - path validation", () => {
     beforeEach(() => {
-      ;(fs.existsSync as Mock).mockReturnValue(true)
-      setupConfig({ enabled: true, executablePath: "/valid/abap-cleanerc.exe" })
-    })
+      (fs.existsSync as Mock).mockReturnValue(true);
+      setupConfig({ enabled: true, executablePath: "/valid/abap-cleanerc.exe" });
+    });
 
     it("returns error when not available", async () => {
-      setupConfig({ enabled: false })
-      const svc = ABAPCleanerService.getInstance()
-      const result = await svc.cleanCode("DATA: lv_test TYPE string.")
-      expect(result.success).toBe(false)
-      expect(result.error).toContain("not available")
-    })
+      setupConfig({ enabled: false });
+      const svc = ABAPCleanerService.getInstance();
+      const result = await svc.cleanCode("DATA: lv_test TYPE string.");
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("not available");
+    });
 
     it("rejects executable path with path traversal (..) ", async () => {
-      setupConfig({ enabled: true, executablePath: "/valid/../etc/malicious.exe" })
-      const svc = ABAPCleanerService.getInstance()
-      const result = await svc.cleanCode("DATA lv_x.")
-      expect(result.success).toBe(false)
-      expect(result.error).toContain("Security validation failed")
-    })
+      setupConfig({ enabled: true, executablePath: "/valid/../etc/malicious.exe" });
+      const svc = ABAPCleanerService.getInstance();
+      const result = await svc.cleanCode("DATA lv_x.");
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Security validation failed");
+    });
 
     it("rejects executable path with semicolon injection", async () => {
-      setupConfig({ enabled: true, executablePath: "/valid/path.exe; rm -rf /" })
-      const svc = ABAPCleanerService.getInstance()
-      const result = await svc.cleanCode("DATA lv_x.")
-      expect(result.success).toBe(false)
-      expect(result.error).toContain("Security validation failed")
-    })
+      setupConfig({ enabled: true, executablePath: "/valid/path.exe; rm -rf /" });
+      const svc = ABAPCleanerService.getInstance();
+      const result = await svc.cleanCode("DATA lv_x.");
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Security validation failed");
+    });
 
     it("rejects executable path with pipe character", async () => {
-      setupConfig({ enabled: true, executablePath: "/valid/path.exe | cat /etc/passwd" })
-      const svc = ABAPCleanerService.getInstance()
-      const result = await svc.cleanCode("DATA lv_x.")
-      expect(result.success).toBe(false)
-      expect(result.error).toContain("Security validation failed")
-    })
+      setupConfig({ enabled: true, executablePath: "/valid/path.exe | cat /etc/passwd" });
+      const svc = ABAPCleanerService.getInstance();
+      const result = await svc.cleanCode("DATA lv_x.");
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Security validation failed");
+    });
 
     it("rejects executable path with backtick injection", async () => {
-      setupConfig({ enabled: true, executablePath: "/valid/path.exe`id`" })
-      const svc = ABAPCleanerService.getInstance()
-      const result = await svc.cleanCode("DATA lv_x.")
-      expect(result.success).toBe(false)
-      expect(result.error).toContain("Security validation failed")
-    })
+      setupConfig({ enabled: true, executablePath: "/valid/path.exe`id`" });
+      const svc = ABAPCleanerService.getInstance();
+      const result = await svc.cleanCode("DATA lv_x.");
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Security validation failed");
+    });
 
     it("rejects relative executable paths", async () => {
-      setupConfig({ enabled: true, executablePath: "relative/path/cleaner.exe" })
-      const svc = ABAPCleanerService.getInstance()
-      const result = await svc.cleanCode("DATA lv_x.")
-      expect(result.success).toBe(false)
-      expect(result.error).toContain("Security validation failed")
-    })
-  })
+      setupConfig({ enabled: true, executablePath: "relative/path/cleaner.exe" });
+      const svc = ABAPCleanerService.getInstance();
+      const result = await svc.cleanCode("DATA lv_x.");
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Security validation failed");
+    });
+  });
 
   describe("cleanActiveEditor", () => {
     it("returns false when no active editor", async () => {
-      const { funWindow } = require("./funMessenger")
-      funWindow.activeTextEditor = undefined
-      setupConfig({ enabled: true, executablePath: "/valid/path.exe" })
-      ;(fs.existsSync as Mock).mockReturnValue(true)
-      const svc = ABAPCleanerService.getInstance()
-      const result = await svc.cleanActiveEditor()
-      expect(result).toBe(false)
-    })
+      const { funWindow } = require("./funMessenger");
+      funWindow.activeTextEditor = undefined;
+      setupConfig({ enabled: true, executablePath: "/valid/path.exe" });
+      (fs.existsSync as Mock).mockReturnValue(true);
+      const svc = ABAPCleanerService.getInstance();
+      const result = await svc.cleanActiveEditor();
+      expect(result).toBe(false);
+    });
 
     it("returns false when active editor is not ABAP", async () => {
-      const { funWindow } = require("./funMessenger")
+      const { funWindow } = require("./funMessenger");
       funWindow.activeTextEditor = {
         document: { languageId: "javascript", getText: () => "", fileName: "test.js" },
-        selection: { isEmpty: true }
-      }
-      funWindow.showWarningMessage = vi.fn()
-      setupConfig({ enabled: true, executablePath: "/valid/path.exe" })
-      ;(fs.existsSync as Mock).mockReturnValue(true)
-      const svc = ABAPCleanerService.getInstance()
-      const result = await svc.cleanActiveEditor()
-      expect(result).toBe(false)
-    })
-  })
-})
+        selection: { isEmpty: true },
+      };
+      funWindow.showWarningMessage = vi.fn();
+      setupConfig({ enabled: true, executablePath: "/valid/path.exe" });
+      (fs.existsSync as Mock).mockReturnValue(true);
+      const svc = ABAPCleanerService.getInstance();
+      const result = await svc.cleanActiveEditor();
+      expect(result).toBe(false);
+    });
+  });
+});

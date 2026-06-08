@@ -10,14 +10,14 @@ Move your mouse over any ABAP keyword, variable, system field, or object name an
 
 Depending on what you hover over, you may see:
 
-| Symbol type | Information shown |
-|---|---|
+| Symbol type                                  | Information shown                                 |
+| -------------------------------------------- | ------------------------------------------------- |
 | System fields (`sy-subrc`, `sy-tabix`, etc.) | Plain-language explanation of the field's purpose |
-| Built-in types | Type description and length |
-| Variables and data objects | Type, length, and declaration context |
-| Function modules | Parameter list (importing, exporting, exceptions) |
-| Classes and methods | Signature and visibility |
-| Other objects | Metadata from the SAP system |
+| Built-in types                               | Type description and length                       |
+| Variables and data objects                   | Type, length, and declaration context             |
+| Function modules                             | Parameter list (importing, exporting, exceptions) |
+| Classes and methods                          | Signature and visibility                          |
+| Other objects                                | Metadata from the SAP system                      |
 
 ## Configuration
 

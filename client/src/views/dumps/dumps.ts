@@ -1,16 +1,16 @@
-import { Dump, Feed } from "abap-adt-api"
+import { Dump, Feed } from "abap-adt-api";
 import {
   EventEmitter,
   TreeDataProvider,
   TreeItem,
   TreeItemCollapsibleState,
-  ViewColumn
-} from "vscode"
-import { funWindow as window } from "../../services/funMessenger"
-import { getOrCreateClient } from "../../adt/conections"
-import { AdtObjectFinder } from "../../adt/operations/AdtObjectFinder"
-import { AbapFsCommands, command } from "../../commands"
-import { connectedRoots } from "../../config"
+  ViewColumn,
+} from "vscode";
+import { funWindow as window } from "../../services/funMessenger";
+import { getOrCreateClient } from "../../adt/conections";
+import { AdtObjectFinder } from "../../adt/operations/AdtObjectFinder";
+import { AbapFsCommands, command } from "../../commands";
+import { connectedRoots } from "../../config";
 
 const jsFooter = `<script type="text/javascript">
 const vscode = acquireVsCodeApi();
@@ -27,25 +27,25 @@ as.forEach(
             });
         }
     })
-)</script>`
+)</script>`;
 
-const inject = (x: string) => `${x}${jsFooter}`
+const inject = (x: string) => `${x}${jsFooter}`;
 
 class DumpItem extends TreeItem {
-  readonly tag: "dump"
-  private dump: Dump
-  private connId: string
+  readonly tag: "dump";
+  private dump: Dump;
+  private connId: string;
   constructor(dump: Dump, connId: string) {
-    const label = dump.categories.find(c => c.label === "ABAP runtime error")?.term || "dump"
-    super(label, TreeItemCollapsibleState.None)
-    this.connId = connId
-    this.tag = "dump"
-    this.dump = dump
+    const label = dump.categories.find((c) => c.label === "ABAP runtime error")?.term || "dump";
+    super(label, TreeItemCollapsibleState.None);
+    this.connId = connId;
+    this.tag = "dump";
+    this.dump = dump;
     this.command = {
       title: "show dump",
       command: AbapFsCommands.showDump,
-      arguments: [this]
-    }
+      arguments: [this],
+    };
   }
   @command(AbapFsCommands.showDump)
   private static show(i: DumpItem) {
@@ -53,69 +53,69 @@ class DumpItem extends TreeItem {
       enableScripts: true,
       enableCommandUris: true,
       enableFindWidget: true,
-      retainContextWhenHidden: true
-    })
-    panel.webview.onDidReceiveMessage(async m => {
-      return new AdtObjectFinder(i.connId).displayAdtUri(m.uri)
-    })
-    panel.webview.html = inject(i.dump.text)
+      retainContextWhenHidden: true,
+    });
+    panel.webview.onDidReceiveMessage(async (m) => {
+      return new AdtObjectFinder(i.connId).displayAdtUri(m.uri);
+    });
+    panel.webview.html = inject(i.dump.text);
   }
 }
 
 class SystemItem extends TreeItem {
-  readonly tag = "system"
-  private dumpFeed?: Feed | "none"
-  contextValue = "system"
+  readonly tag = "system";
+  private dumpFeed?: Feed | "none";
+  contextValue = "system";
   constructor(
     label: string,
-    private connId: string
+    private connId: string,
   ) {
-    super(label, TreeItemCollapsibleState.Expanded)
+    super(label, TreeItemCollapsibleState.Expanded);
   }
   @command(AbapFsCommands.refreshDumps)
   async refresh(node: any) {
-    dumpProvider.emitter.fire(node)
+    dumpProvider.emitter.fire(node);
   }
   async children() {
-    const client = await getOrCreateClient(this.connId)
+    const client = await getOrCreateClient(this.connId);
     if (!this.dumpFeed) {
-      const feeds = await client.feeds()
-      this.dumpFeed = feeds.find(f => f.href === "/sap/bc/adt/runtime/dumps") || "none"
+      const feeds = await client.feeds();
+      this.dumpFeed = feeds.find((f) => f.href === "/sap/bc/adt/runtime/dumps") || "none";
     }
-    if (this.dumpFeed === "none") return []
-    const dumpfeed = await client.dumps()
-    return dumpfeed.dumps.map(d => new DumpItem(d, this.connId))
+    if (this.dumpFeed === "none") return [];
+    const dumpfeed = await client.dumps();
+    return dumpfeed.dumps.map((d) => new DumpItem(d, this.connId));
   }
 }
 
-type Item = SystemItem | DumpItem
+type Item = SystemItem | DumpItem;
 class DumpProvider implements TreeDataProvider<Item> {
-  private systems = new Map<string, SystemItem>()
-  emitter = new EventEmitter<Item>()
+  private systems = new Map<string, SystemItem>();
+  emitter = new EventEmitter<Item>();
   get onDidChangeTreeData() {
-    return this.emitter.event
+    return this.emitter.event;
   }
   getTreeItem(e: Item) {
-    return e
+    return e;
   }
   getChildren(e?: Item) {
     switch (e?.tag) {
       case undefined:
-        return this.roots()
+        return this.roots();
       case "system":
-        return e.children()
+        return e.children();
     }
-    return []
+    return [];
   }
   private roots() {
-    const roots = connectedRoots().keys()
+    const roots = connectedRoots().keys();
     for (const root of roots) {
       if (!this.systems.has(root)) {
-        this.systems.set(root, new SystemItem(root, root))
+        this.systems.set(root, new SystemItem(root, root));
       }
     }
-    return [...this.systems.values()]
+    return [...this.systems.values()];
   }
 }
 
-export const dumpProvider = new DumpProvider()
+export const dumpProvider = new DumpProvider();

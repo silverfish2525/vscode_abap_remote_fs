@@ -10,10 +10,10 @@ Opens the currently active ABAP object in SAP GUI running inside your default we
 
 With an ABAP file open in the editor, use any of the following:
 
-| Method | Action |
-|---|---|
-| Keyboard shortcut | `Ctrl+Shift+F6` |
-| Editor toolbar | Click the **Open in Browser GUI** icon |
-| Command Palette | `Ctrl+Shift+P` → `ABAP FS: Open SAP GUI in external web browser` |
+| Method            | Action                                                           |
+| ----------------- | ---------------------------------------------------------------- |
+| Keyboard shortcut | `Ctrl+Shift+F6`                                                  |
+| Editor toolbar    | Click the **Open in Browser GUI** icon                           |
+| Command Palette   | `Ctrl+Shift+P` → `ABAP FS: Open SAP GUI in external web browser` |
 
 The object opens in your default browser. The URL can be copied and shared with other users who have access to the same system.

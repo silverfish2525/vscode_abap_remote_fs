@@ -14,33 +14,33 @@ Search for ABAP objects by name — like the SE80 object search, but directly in
 
 ## Wildcard Patterns
 
-| Pattern | Matches |
-|---------|---------|
-| `ZCL_*` | All custom classes starting with ZCL_ |
-| `*USER*` | Anything containing USER |
-| `BAPI_MATERIAL_*` | All BAPIs starting with BAPI_MATERIAL_ |
+| Pattern           | Matches                                |
+| ----------------- | -------------------------------------- |
+| `ZCL_*`           | All custom classes starting with ZCL\_ |
+| `*USER*`          | Anything containing USER               |
+| `BAPI_MATERIAL_*` | All BAPIs starting with BAPI*MATERIAL* |
 
 ## Supported Object Types
 
-| Type | Description |
-|------|-------------|
-| `CLAS` | Classes |
-| `INTF` | Interfaces |
-| `PROG` | Programs / Reports |
-| `FUNC` | Function Modules |
-| `FUGR` | Function Groups |
-| `TABL` | Database Tables |
-| `VIEW` | Views |
-| `DTEL` | Data Elements |
-| `DOMA` | Domains |
-| `TTYP` | Table Types |
-| `DDLS` | CDS Views |
-| `ENQU` | Lock Objects |
-| `MSAG` | Message Classes |
-| `DEVC` | Packages |
-| `TRAN` | Transactions |
+| Type            | Description                         |
+| --------------- | ----------------------------------- |
+| `CLAS`          | Classes                             |
+| `INTF`          | Interfaces                          |
+| `PROG`          | Programs / Reports                  |
+| `FUNC`          | Function Modules                    |
+| `FUGR`          | Function Groups                     |
+| `TABL`          | Database Tables                     |
+| `VIEW`          | Views                               |
+| `DTEL`          | Data Elements                       |
+| `DOMA`          | Domains                             |
+| `TTYP`          | Table Types                         |
+| `DDLS`          | CDS Views                           |
+| `ENQU`          | Lock Objects                        |
+| `MSAG`          | Message Classes                     |
+| `DEVC`          | Packages                            |
+| `TRAN`          | Transactions                        |
 | `ENHC` / `ENHS` | Enhancement Implementations / Spots |
-| `BADI` | BAdI Definitions |
-| + 30 more | — |
+| `BADI`          | BAdI Definitions                    |
+| + 30 more       | —                                   |
 
 > **Note:** Object types not natively supported by the extension open automatically in SAP GUI.

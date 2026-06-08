@@ -1,4 +1,4 @@
-import { FileStat, ProgressLocation, Uri, ViewColumn, WebviewPanel, commands } from "vscode"
+import { FileStat, ProgressLocation, Uri, ViewColumn, WebviewPanel, commands } from "vscode";
 import {
   BindinTypes,
   CreatableType,
@@ -8,88 +8,88 @@ import {
   PackageTypes,
   isPackageType,
   parentTypeId,
-  ParentTypeIds
-} from "abap-adt-api"
-import { isAbapStat, isFolder } from "abapfs"
-import { fromNode } from "abapobject"
-import { transportValidators } from "../adt/AdtTransports"
-import { PACKAGE, AdtObjectCreator } from "../adt/operations/AdtObjectCreator"
-import { AdtObjectFinder, MySearchResult, pathSequence } from "../adt/operations/AdtObjectFinder"
-import { getClient, getRoot } from "../adt/conections"
-import { pickAdtRoot } from "../config"
-import { caughtToString, fieldOrder, log } from "../lib"
-import { funWindow as window } from "../services/funMessenger"
+  ParentTypeIds,
+} from "abap-adt-api";
+import { isAbapStat, isFolder } from "abapfs";
+import { fromNode } from "abapobject";
+import { transportValidators } from "../adt/AdtTransports";
+import { PACKAGE, AdtObjectCreator } from "../adt/operations/AdtObjectCreator";
+import { AdtObjectFinder, MySearchResult, pathSequence } from "../adt/operations/AdtObjectFinder";
+import { getClient, getRoot } from "../adt/conections";
+import { pickAdtRoot } from "../config";
+import { caughtToString, fieldOrder, log } from "../lib";
+import { funWindow as window } from "../services/funMessenger";
 
-let currentPanel: WebviewPanel | undefined
+let currentPanel: WebviewPanel | undefined;
 
 interface CreateObjectTypeOption {
-  typeId: CreatableTypeIds
-  label: string
-  maxLen: number
-  parentType: string
-  isPackage: boolean
-  isServiceBinding: boolean
-  usesSuffix: boolean
+  typeId: CreatableTypeIds;
+  label: string;
+  maxLen: number;
+  parentType: string;
+  isPackage: boolean;
+  isServiceBinding: boolean;
+  usesSuffix: boolean;
 }
 
 interface CreateObjectBindingTypeOption {
-  label: string
-  bindingtype: string
-  category: string
+  label: string;
+  bindingtype: string;
+  category: string;
 }
 
 interface CreateObjectTransportLayerOption {
-  label: string
-  description: string
-  detail: string
+  label: string;
+  description: string;
+  detail: string;
 }
 
 interface CreateObjectFormContext {
-  types: CreateObjectTypeOption[]
-  bindingTypes: CreateObjectBindingTypeOption[]
-  transportLayers: CreateObjectTransportLayerOption[]
-  initialTypeId?: CreatableTypeIds
-  initialPackageName: string
-  initialParents: Record<string, string>
+  types: CreateObjectTypeOption[];
+  bindingTypes: CreateObjectBindingTypeOption[];
+  transportLayers: CreateObjectTransportLayerOption[];
+  initialTypeId?: CreatableTypeIds;
+  initialPackageName: string;
+  initialParents: Record<string, string>;
 }
 
 interface CreateObjectFormInput {
-  typeId: CreatableTypeIds
-  name: string
-  description: string
-  packageName: string
-  parentName?: string
-  softwareComponent?: string
-  packageType?: PackageTypes
-  transportLayer?: string
-  serviceDefinition?: string
-  bindingType?: string
-  bindingCategory?: string
-  transportMode?: "existing" | "new" | "locked" | "local"
-  selectedTransport?: string
-  newTransportText?: string
+  typeId: CreatableTypeIds;
+  name: string;
+  description: string;
+  packageName: string;
+  parentName?: string;
+  softwareComponent?: string;
+  packageType?: PackageTypes;
+  transportLayer?: string;
+  serviceDefinition?: string;
+  bindingType?: string;
+  bindingCategory?: string;
+  transportMode?: "existing" | "new" | "locked" | "local";
+  selectedTransport?: string;
+  newTransportText?: string;
 }
 
 interface TransportOption {
-  transport: string
-  description: string
+  transport: string;
+  description: string;
 }
 
 interface TransportPreview {
-  applicable: boolean
-  local: boolean
-  lockedTransport?: string
-  transports: TransportOption[]
-  requiresSelection: boolean
-  message: string
+  applicable: boolean;
+  local: boolean;
+  lockedTransport?: string;
+  transports: TransportOption[];
+  requiresSelection: boolean;
+  message: string;
 }
 
 interface PackageSuggestion {
-  name: string
-  description?: string
+  name: string;
+  description?: string;
 }
 
-type CreationDetails = Awaited<ReturnType<typeof buildCreationDetails>>
+type CreationDetails = Awaited<ReturnType<typeof buildCreationDetails>>;
 
 const toTypeOption = (type: CreatableType): CreateObjectTypeOption => ({
   typeId: type.typeId,
@@ -98,27 +98,28 @@ const toTypeOption = (type: CreatableType): CreateObjectTypeOption => ({
   parentType: parentTypeId(type.typeId),
   isPackage: isPackageType(type.typeId),
   isServiceBinding: type.typeId === "SRVB/SVB",
-  usesSuffix: type.typeId === "FUGR/I"
-})
+  usesSuffix: type.typeId === "FUGR/I",
+});
 
-const getSortedTypeOptions = () => [...CreatableTypes.values()].sort(fieldOrder("label")).map(toTypeOption)
+const getSortedTypeOptions = () =>
+  [...CreatableTypes.values()].sort(fieldOrder("label")).map(toTypeOption);
 
 const getBindingTypeOptions = (): CreateObjectBindingTypeOption[] =>
-  BindinTypes.map(type => ({
+  BindinTypes.map((type) => ({
     label: type.description,
     bindingtype: type.bindingtype,
-    category: type.category
-  }))
+    category: type.category,
+  }));
 
 export async function createObjectInEditorCommand(uri: Uri | undefined) {
-  const fsRoot = await pickAdtRoot(uri)
-  const connId = fsRoot?.uri.authority
-  if (!connId) return
+  const fsRoot = await pickAdtRoot(uri);
+  const connId = fsRoot?.uri.authority;
+  if (!connId) return;
 
-  const formContext = await getCreateObjectFormContext(connId, uri)
+  const formContext = await getCreateObjectFormContext(connId, uri);
 
   if (currentPanel) {
-    currentPanel.dispose()
+    currentPanel.dispose();
   }
 
   currentPanel = window.createWebviewPanel(
@@ -127,25 +128,25 @@ export async function createObjectInEditorCommand(uri: Uri | undefined) {
     ViewColumn.Active,
     {
       enableScripts: true,
-      retainContextWhenHidden: true
-    }
-  )
+      retainContextWhenHidden: true,
+    },
+  );
 
-  currentPanel.webview.html = getWebviewHtml(connId, formContext)
+  currentPanel.webview.html = getWebviewHtml(connId, formContext);
 
   currentPanel.webview.onDidReceiveMessage(
-    message => handleWebviewMessage(connId, message),
+    (message) => handleWebviewMessage(connId, message),
     undefined,
-    []
-  )
+    [],
+  );
 
   currentPanel.onDidDispose(
     () => {
-      currentPanel = undefined
+      currentPanel = undefined;
     },
     null,
-    []
-  )
+    [],
+  );
 }
 
 async function handleWebviewMessage(connId: string, message: any) {
@@ -153,117 +154,122 @@ async function handleWebviewMessage(connId: string, message: any) {
     switch (message.command) {
       case "searchPackages":
         postPanelMessage("packageSuggestions", {
-          suggestions: await searchPackages(connId, message.query)
-        })
-        return
+          suggestions: await searchPackages(connId, message.query),
+        });
+        return;
       case "browseParent": {
-        const [parentName, packageName] = await browseParent(connId, message.parentType)
-        postPanelMessage("parentSelected", { parentName, packageName })
-        return
+        const [parentName, packageName] = await browseParent(connId, message.parentType);
+        postPanelMessage("parentSelected", { parentName, packageName });
+        return;
       }
       case "browseServiceDefinition":
         postPanelMessage("serviceSelected", {
-          serviceDefinition: await browseServiceDefinition(connId)
-        })
-        return
+          serviceDefinition: await browseServiceDefinition(connId),
+        });
+        return;
       case "submit":
-        await handleSubmit(connId, message.input)
-        return
+        await handleSubmit(connId, message.input);
+        return;
       case "refreshTransport":
         postPanelMessage("transportInfo", {
-          transportInfo: await resolveTransportPreview(connId, message.input)
-        })
-        return
+          transportInfo: await resolveTransportPreview(connId, message.input),
+        });
+        return;
     }
   } catch (error) {
-    postPanelMessage("error", { message: caughtToString(error) })
+    postPanelMessage("error", { message: caughtToString(error) });
   }
 }
 
 function postPanelMessage(command: string, payload: Record<string, unknown> = {}) {
-  currentPanel?.webview.postMessage({ command, ...payload })
+  currentPanel?.webview.postMessage({ command, ...payload });
 }
 
 async function handleSubmit(connId: string, input: CreateObjectFormInput) {
   const obj = await window.withProgress(
     { location: ProgressLocation.Notification, title: "Creating ABAP object..." },
-    async () => createObjectFromForm(connId, input)
-  )
+    async () => createObjectFromForm(connId, input),
+  );
 
   if (!obj) {
-    postPanelMessage("info", { message: "Object creation was cancelled." })
-    return
+    postPanelMessage("info", { message: "Object creation was cancelled." });
+    return;
   }
 
-  log(`Created object ${obj.type} ${obj.name}`)
+  log(`Created object ${obj.type} ${obj.name}`);
 
   if (obj.type === PACKAGE) {
-    await commands.executeCommand("workbench.files.action.refreshFilesExplorer")
-    postPanelMessage("created", { message: `Created ${obj.type} ${obj.name}` })
-    return
+    await commands.executeCommand("workbench.files.action.refreshFilesExplorer");
+    postPanelMessage("created", { message: `Created ${obj.type} ${obj.name}` });
+    return;
   }
 
   try {
-    await commands.executeCommand("abapfs.showObject", { connId, uri: obj.path })
-    await commands.executeCommand("workbench.files.action.refreshFilesExplorer")
+    await commands.executeCommand("abapfs.showObject", { connId, uri: obj.path });
+    await commands.executeCommand("workbench.files.action.refreshFilesExplorer");
   } catch {
-    log("error opening created object")
+    log("error opening created object");
   }
 
-  postPanelMessage("created", { message: `Created ${obj.type} ${obj.name}` })
+  postPanelMessage("created", { message: `Created ${obj.type} ${obj.name}` });
 }
 
 function getTypeOption(typeId: CreatableTypeIds): CreateObjectTypeOption | undefined {
-  const type = CreatableTypes.get(typeId)
-  return type ? toTypeOption(type) : undefined
+  const type = CreatableTypes.get(typeId);
+  return type ? toTypeOption(type) : undefined;
 }
 
 function buildObjectName(input: CreateObjectFormInput, parentName: string): string {
-  if (input.typeId !== "FUGR/I") return input.name
-  const parts = parentName.split("/")
-  return parts.length < 3 ? `L${parentName}${input.name}` : `/${parts[1]}/L${parts[2]}${input.name}`
+  if (input.typeId !== "FUGR/I") return input.name;
+  const parts = parentName.split("/");
+  return parts.length < 3
+    ? `L${parentName}${input.name}`
+    : `/${parts[1]}/L${parts[2]}${input.name}`;
 }
 
-function hasEnoughTransportData(input: CreateObjectFormInput, type: CreateObjectTypeOption): boolean {
-  if (!input.typeId || !input.name || !input.packageName) return false
-  if (type.parentType !== PACKAGE && type.typeId !== PACKAGE && !input.parentName) return false
-  return true
+function hasEnoughTransportData(
+  input: CreateObjectFormInput,
+  type: CreateObjectTypeOption,
+): boolean {
+  if (!input.typeId || !input.name || !input.packageName) return false;
+  if (type.parentType !== PACKAGE && type.typeId !== PACKAGE && !input.parentName) return false;
+  return true;
 }
 
 async function buildCreationDetails(connId: string, input: CreateObjectFormInput) {
-  const creator = new AdtObjectCreator(connId) as any
-  const typeInfo = getTypeOption(input.typeId)
-  if (!typeInfo) throw new Error(`Unknown object type: ${input.typeId}`)
-  validateFormInput(input, typeInfo)
+  const creator = new AdtObjectCreator(connId) as any;
+  const typeInfo = getTypeOption(input.typeId);
+  if (!typeInfo) throw new Error(`Unknown object type: ${input.typeId}`);
+  validateFormInput(input, typeInfo);
 
-  const parentName = typeInfo.parentType === PACKAGE ? input.packageName : input.parentName || ""
-  const responsible = getClient(connId).username.toUpperCase()
+  const parentName = typeInfo.parentType === PACKAGE ? input.packageName : input.parentName || "";
+  const responsible = getClient(connId).username.toUpperCase();
   let options: any = {
     description: input.description,
     name: buildObjectName(input, parentName),
     objtype: input.typeId,
     parentName,
     parentPath: objectPath(typeInfo.parentType as CreatableTypeIds, parentName, ""),
-    responsible
-  }
+    responsible,
+  };
 
   if (typeInfo.isServiceBinding) {
     options = {
       ...options,
       bindingtype: input.bindingType,
       category: input.bindingCategory,
-      service: input.serviceDefinition
-    }
+      service: input.serviceDefinition,
+    };
   }
 
   if (typeInfo.isPackage) {
-    const swcomp = input.softwareComponent || (input.name.match(/^\$/) ? "LOCAL" : "HOME")
+    const swcomp = input.softwareComponent || (input.name.match(/^\$/) ? "LOCAL" : "HOME");
     options = {
       ...options,
       swcomp,
       packagetype: input.packageType,
-      transportLayer: input.transportLayer || ""
-    }
+      transportLayer: input.transportLayer || "",
+    };
   }
 
   return {
@@ -272,20 +278,26 @@ async function buildCreationDetails(connId: string, input: CreateObjectFormInput
     devclass: input.packageName,
     options,
     objectContentPath: objectPath(options.objtype, options.name, options.parentName),
-    transportLayer: options.transportLayer || ""
-  }
+    transportLayer: options.transportLayer || "",
+  };
 }
 
-async function resolveTransportPreview(connId: string, rawInput: CreateObjectFormInput): Promise<TransportPreview> {
-  const input = normalizeInput(rawInput)
-  const typeInfo = getTypeOption(input.typeId)
+async function resolveTransportPreview(
+  connId: string,
+  rawInput: CreateObjectFormInput,
+): Promise<TransportPreview> {
+  const input = normalizeInput(rawInput);
+  const typeInfo = getTypeOption(input.typeId);
   if (!typeInfo || !hasEnoughTransportData(input, typeInfo)) {
-    return transportPreviewMessage("Complete object details to load transport requests.")
+    return transportPreviewMessage("Complete object details to load transport requests.");
   }
 
-  const details = await buildCreationDetails(connId, { ...input, description: input.description || "DUMMY" })
-  const info = await fetchTransportInfo(connId, details)
-  return toTransportPreview(info)
+  const details = await buildCreationDetails(connId, {
+    ...input,
+    description: input.description || "DUMMY",
+  });
+  const info = await fetchTransportInfo(connId, details);
+  return toTransportPreview(info);
 }
 
 function transportPreviewMessage(message: string): TransportPreview {
@@ -294,8 +306,8 @@ function transportPreviewMessage(message: string): TransportPreview {
     local: false,
     transports: [],
     requiresSelection: false,
-    message
-  }
+    message,
+  };
 }
 
 function toTransportPreview(info: any): TransportPreview {
@@ -306,8 +318,8 @@ function toTransportPreview(info: any): TransportPreview {
       lockedTransport: info.LOCKS.HEADER.TRKORR,
       transports: [],
       requiresSelection: false,
-      message: `Using locked transport ${info.LOCKS.HEADER.TRKORR}.`
-    }
+      message: `Using locked transport ${info.LOCKS.HEADER.TRKORR}.`,
+    };
   }
 
   if (info.DLVUNIT === "LOCAL") {
@@ -316,14 +328,14 @@ function toTransportPreview(info: any): TransportPreview {
       local: true,
       transports: [],
       requiresSelection: false,
-      message: "This object can be created locally. No transport request is needed."
-    }
+      message: "This object can be created locally. No transport request is needed.",
+    };
   }
 
   const transports = (info.TRANSPORTS || []).map((transport: any) => ({
     transport: transport.TRKORR,
-    description: transport.AS4TEXT || ""
-  }))
+    description: transport.AS4TEXT || "",
+  }));
 
   return {
     applicable: true,
@@ -333,40 +345,40 @@ function toTransportPreview(info: any): TransportPreview {
     message:
       transports.length > 0
         ? "Select an existing transport request or create a new one before submitting."
-        : "No existing transport requests found. Enter text to create a new request."
-  }
+        : "No existing transport requests found. Enter text to create a new request.",
+  };
 }
 
 async function validateSelectedTransport(
   transport: string,
   objtype: string,
   name: string,
-  devClass: string
+  devClass: string,
 ) {
   for (const validator of transportValidators) {
-    const outcome = await validator(transport, objtype, name, devClass)
-    if (!outcome) throw new Error(`Transport validation failed for ${transport}`)
+    const outcome = await validator(transport, objtype, name, devClass);
+    if (!outcome) throw new Error(`Transport validation failed for ${transport}`);
   }
 }
 
 async function resolveTransportForCreate(
   connId: string,
   input: CreateObjectFormInput,
-  details: CreationDetails
+  details: CreationDetails,
 ): Promise<string> {
-  const info = await fetchTransportInfo(connId, details)
+  const info = await fetchTransportInfo(connId, details);
 
-  if (info.LOCKS) return info.LOCKS.HEADER.TRKORR
-  if (info.DLVUNIT === "LOCAL") return ""
+  if (info.LOCKS) return info.LOCKS.HEADER.TRKORR;
+  if (info.DLVUNIT === "LOCAL") return "";
 
   if (input.transportMode === "existing" && input.selectedTransport) {
     await validateSelectedTransport(
       input.selectedTransport,
       details.options.objtype,
       details.options.name,
-      details.devclass
-    )
-    return input.selectedTransport
+      details.devclass,
+    );
+    return input.selectedTransport;
   }
 
   if (input.transportMode === "new" && input.newTransportText) {
@@ -374,30 +386,34 @@ async function resolveTransportForCreate(
       details.objectContentPath,
       input.newTransportText,
       details.devclass,
-      details.transportLayer
-    )
+      details.transportLayer,
+    );
     await validateSelectedTransport(
       transport,
       details.options.objtype,
       details.options.name,
-      details.devclass
-    )
-    return transport
+      details.devclass,
+    );
+    return transport;
   }
 
-  throw new Error("Transport request is required. Select an existing request or enter text for a new one.")
+  throw new Error(
+    "Transport request is required. Select an existing request or enter text for a new one.",
+  );
 }
 
 async function getCreateObjectFormContext(
   connId: string,
-  uri: Uri | undefined
+  uri: Uri | undefined,
 ): Promise<CreateObjectFormContext> {
-  const creator = new AdtObjectCreator(connId) as any
-  const hierarchy = pathSequence(getRoot(connId), uri)
-  const initialParents: Record<string, string> = {}
+  const creator = new AdtObjectCreator(connId) as any;
+  const hierarchy = pathSequence(getRoot(connId), uri);
+  const initialParents: Record<string, string> = {};
 
-  for (const type of new Set([...CreatableTypes.values()].map(t => parentTypeId(t.typeId)).filter(Boolean))) {
-    initialParents[type] = creator.guessParentByType(hierarchy, type as ParentTypeIds)
+  for (const type of new Set(
+    [...CreatableTypes.values()].map((t) => parentTypeId(t.typeId)).filter(Boolean),
+  )) {
+    initialParents[type] = creator.guessParentByType(hierarchy, type as ParentTypeIds);
   }
 
   return {
@@ -406,82 +422,80 @@ async function getCreateObjectFormContext(
     transportLayers: await getTransportLayerOptions(connId),
     initialTypeId: guessObjectTypeFromHierarchy(hierarchy)?.typeId,
     initialPackageName: creator.guessParentByType(hierarchy, PACKAGE),
-    initialParents
-  }
+    initialParents,
+  };
 }
 
-async function fetchTransportInfo(
+async function fetchTransportInfo(connId: string, details: CreationDetails) {
+  return getClient(connId).transportInfo(details.objectContentPath, details.devclass, "I");
+}
+
+async function getTransportLayerOptions(
   connId: string,
-  details: CreationDetails
-) {
-  return getClient(connId).transportInfo(details.objectContentPath, details.devclass, "I")
-}
-
-async function getTransportLayerOptions(connId: string): Promise<CreateObjectTransportLayerOption[]> {
-  const layers = await getClient(connId).packageSearchHelp("transportlayers")
-  const items = layers.map(layer => ({
+): Promise<CreateObjectTransportLayerOption[]> {
+  const layers = await getClient(connId).packageSearchHelp("transportlayers");
+  const items = layers.map((layer) => ({
     label: layer.name,
     description: layer.description,
-    detail: layer.data
-  }))
-  items.push({ label: "", description: "Blank", detail: "" })
-  return items
+    detail: layer.data,
+  }));
+  items.push({ label: "", description: "Blank", detail: "" });
+  return items;
 }
 
 function guessObjectTypeFromHierarchy(hierarchy: FileStat[]): CreatableType | undefined {
   const creatable = (file: FileStat) => {
-    const type = isAbapStat(file) && file.object.type
-    return type && type !== PACKAGE && CreatableTypes.get(type as CreatableTypeIds)
-  }
+    const type = isAbapStat(file) && file.object.type;
+    return type && type !== PACKAGE && CreatableTypes.get(type as CreatableTypeIds);
+  };
 
-  const first = hierarchy[0]
-  if (isAbapStat(first) && first.object.type === "FUGR/F") return CreatableTypes.get("FUGR/FF")
+  const first = hierarchy[0];
+  if (isAbapStat(first) && first.object.type === "FUGR/F") return CreatableTypes.get("FUGR/FF");
 
   for (const file of hierarchy) {
-    const candidate = creatable(file)
-    if (candidate) return candidate
+    const candidate = creatable(file);
+    if (candidate) return candidate;
     if (isFolder(file)) {
       for (const child of file) {
-        const nested = creatable(child.file)
-        if (nested) return nested
+        const nested = creatable(child.file);
+        if (nested) return nested;
       }
     }
   }
 
-  return undefined
+  return undefined;
 }
 
 async function searchPackages(connId: string, query: string): Promise<PackageSuggestion[]> {
-  const searchText = query.trim().toUpperCase()
-  if (searchText.length < 2) return []
-  const client = getClient(connId)
-  const results = await client.searchObject(`${searchText}*`, PACKAGE)
-  const mapped = await MySearchResult.createResults(results, client)
-  return mapped.slice(0, 20).map(result => ({
+  const searchText = query.trim().toUpperCase();
+  if (searchText.length < 2) return [];
+  const client = getClient(connId);
+  const results = await client.searchObject(`${searchText}*`, PACKAGE);
+  const mapped = await MySearchResult.createResults(results, client);
+  return mapped.slice(0, 20).map((result) => ({
     name: result.name,
-    description: result.description
-  }))
+    description: result.description,
+  }));
 }
 
 async function browseParent(connId: string, parentType: ParentTypeIds): Promise<[string, string]> {
-  const creator = new AdtObjectCreator(connId) as any
-  return creator.askParent(parentType)
+  const creator = new AdtObjectCreator(connId) as any;
+  return creator.askParent(parentType);
 }
 
 async function browseServiceDefinition(connId: string): Promise<string> {
   const result = await new AdtObjectFinder(connId).findObject(
     "Select Service definition",
-    "SRVD/SRV"
-  )
-  return result?.name || ""
+    "SRVD/SRV",
+  );
+  return result?.name || "";
 }
 
 function validateName(type: CreateObjectTypeOption, name: string): string {
-  if (!name) return "Field is mandatory"
-  if (type.usesSuffix)
-    return /^[A-Za-z]\w\w$/.test(name) ? "" : "Suffix must be 3 characters long"
-  if (name.length <= type.maxLen) return ""
-  return `Name length of ${name.length} exceeds maximum (${type.maxLen})`
+  if (!name) return "Field is mandatory";
+  if (type.usesSuffix) return /^[A-Za-z]\w\w$/.test(name) ? "" : "Suffix must be 3 characters long";
+  if (name.length <= type.maxLen) return "";
+  return `Name length of ${name.length} exceeds maximum (${type.maxLen})`;
 }
 
 function normalizeInput(input: CreateObjectFormInput): CreateObjectFormInput {
@@ -493,31 +507,37 @@ function normalizeInput(input: CreateObjectFormInput): CreateObjectFormInput {
     parentName: input.parentName?.trim().toUpperCase() || "",
     softwareComponent: input.softwareComponent?.trim().toUpperCase() || "",
     transportLayer: input.transportLayer?.trim().toUpperCase() || "",
-    serviceDefinition: input.serviceDefinition?.trim().toUpperCase() || ""
-  }
+    serviceDefinition: input.serviceDefinition?.trim().toUpperCase() || "",
+  };
 }
 
 function validateFormInput(input: CreateObjectFormInput, type: CreateObjectTypeOption): void {
-  const nameError = validateName(type, input.name)
-  if (nameError) throw new Error(nameError)
-  if (!input.description) throw new Error("Description is mandatory")
-  if (!input.packageName) throw new Error("Package is mandatory")
+  const nameError = validateName(type, input.name);
+  if (nameError) throw new Error(nameError);
+  if (!input.description) throw new Error("Description is mandatory");
+  if (!input.packageName) throw new Error("Package is mandatory");
   if (type.parentType !== PACKAGE && type.typeId !== PACKAGE && !input.parentName)
-    throw new Error("Parent is mandatory")
-  if (type.isPackage && (!input.softwareComponent || !input.packageType || input.transportLayer === undefined))
-    throw new Error("Software component, package type and transport layer are mandatory")
-  if (type.isServiceBinding && (!input.bindingType || !input.bindingCategory || !input.serviceDefinition))
-    throw new Error("Service binding type and service definition are mandatory")
+    throw new Error("Parent is mandatory");
+  if (
+    type.isPackage &&
+    (!input.softwareComponent || !input.packageType || input.transportLayer === undefined)
+  )
+    throw new Error("Software component, package type and transport layer are mandatory");
+  if (
+    type.isServiceBinding &&
+    (!input.bindingType || !input.bindingCategory || !input.serviceDefinition)
+  )
+    throw new Error("Service binding type and service definition are mandatory");
 }
 
 async function createObjectFromForm(connId: string, rawInput: CreateObjectFormInput) {
-  const input = normalizeInput(rawInput)
-  const details = await buildCreationDetails(connId, input)
-  await details.creator.validateObject(details.options)
-  details.options.transport = await resolveTransportForCreate(connId, input, details)
-  await getClient(connId).createObject(details.options)
+  const input = normalizeInput(rawInput);
+  const details = await buildCreationDetails(connId, input);
+  await details.creator.validateObject(details.options);
+  details.options.transport = await resolveTransportForCreate(connId, input, details);
+  await getClient(connId).createObject(details.options);
 
-  const parent = await details.creator.getAndRefreshParent(details.options)
+  const parent = await details.creator.getAndRefreshParent(details.options);
   const obj = fromNode(
     {
       EXPANDABLE: "",
@@ -525,22 +545,19 @@ async function createObjectFromForm(connId: string, rawInput: CreateObjectFormIn
       OBJECT_TYPE: details.options.objtype,
       OBJECT_URI: objectPath(details.options),
       OBJECT_VIT_URI: "",
-      TECH_NAME: details.options.name
+      TECH_NAME: details.options.name,
     },
     parent,
-    getRoot(connId).service
-  )
+    getRoot(connId).service,
+  );
 
-  if (details.options.objtype !== PACKAGE) await obj.loadStructure()
-  return obj
+  if (details.options.objtype !== PACKAGE) await obj.loadStructure();
+  return obj;
 }
 
-function getWebviewHtml(
-  connId: string,
-  formContext: CreateObjectFormContext
-): string {
-  const nonce = getNonce()
-  const payload = JSON.stringify({ connId, formContext }).replace(/</g, "\\u003c")
+function getWebviewHtml(connId: string, formContext: CreateObjectFormContext): string {
+  const nonce = getNonce();
+  const payload = JSON.stringify({ connId, formContext }).replace(/</g, "\\u003c");
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -1216,16 +1233,16 @@ function getWebviewHtml(
       applyDefaults();
     </script>
   </body>
-</html>`
+</html>`;
 }
 
 function getNonce(): string {
-  let text = ""
-  const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+  let text = "";
+  const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   for (let index = 0; index < 32; index++) {
-    text += possible.charAt(Math.floor(Math.random() * possible.length))
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
   }
-  return text
+  return text;
 }
 
 function escapeHtml(value: string): string {
@@ -1234,5 +1251,5 @@ function escapeHtml(value: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/\"/g, "&quot;")
-    .replace(/'/g, "&#39;")
+    .replace(/'/g, "&#39;");
 }

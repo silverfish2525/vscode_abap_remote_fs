@@ -1,12 +1,12 @@
 # Important Considerations
 
-| Feature | Limitation |
-|---|---|
-| **Create Objects** | Transport request dialogs still appear — object creation is not fully automated. |
-| **Text Elements** | Create/Update actions require ADT API support (newer SAP systems only). |
-| **Transport Management** | On older systems, some actions fall back to direct table queries. |
-| **Code Search** | Searches committed code only — unsaved local changes are not visible. |
-| **Mass Activation** | You must select objects from a dialog; activation is not automatic. |
+| Feature                  | Limitation                                                                       |
+| ------------------------ | -------------------------------------------------------------------------------- |
+| **Create Objects**       | Transport request dialogs still appear — object creation is not fully automated. |
+| **Text Elements**        | Create/Update actions require ADT API support (newer SAP systems only).          |
+| **Transport Management** | On older systems, some actions fall back to direct table queries.                |
+| **Code Search**          | Searches committed code only — unsaved local changes are not visible.            |
+| **Mass Activation**      | You must select objects from a dialog; activation is not automatic.              |
 
 ## AI Agent Code Changes
 

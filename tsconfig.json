@@ -4,9 +4,7 @@
     "module": "commonjs",
     "target": "ES2021",
     "outDir": "out",
-    "lib": [
-      "es2021"
-    ],
+    "lib": ["es2021"],
     "sourceMap": true,
     "noUncheckedIndexedAccess": true,
     /* Incremental Compilation */
@@ -20,16 +18,8 @@
     // "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
     // "noUnusedParameters": true,  /* Report errors on unused parameters. */
   },
-  "include": [
-    "src"
-  ],
-  "exclude": [
-    "node_modules",
-    ".vscode-test",
-    "*.d.ts",
-    "tmp",
-    "*.test.ts",
-  ],
+  "include": ["src"],
+  "exclude": ["node_modules", ".vscode-test", "*.d.ts", "tmp", "*.test.ts"],
   "references": [
     {
       "path": "./server"

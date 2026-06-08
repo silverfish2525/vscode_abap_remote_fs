@@ -27,11 +27,11 @@ Click any entry to expand it and see:
 
 ## Filtering Entries
 
-| Filter | How |
-|--------|-----|
-| By SAP system | Dropdown — select from all logged connections |
+| Filter         | How                                                           |
+| -------------- | ------------------------------------------------------------- |
+| By SAP system  | Dropdown — select from all logged connections                 |
 | By HTTP status | Buttons: **Success** (2xx), **Errors** (4xx/5xx), **Pending** |
-| By URL | Text search field (200ms debounce) |
+| By URL         | Text search field (200ms debounce)                            |
 
 ## Other Controls
 

@@ -1,13 +1,13 @@
-import { MainInclude } from "abap-adt-api"
+import { MainInclude } from "abap-adt-api";
 
-type TypeLabel = string | ((mainProgram?: MainInclude) => string)
+type TypeLabel = string | ((mainProgram?: MainInclude) => string);
 
 const TYPE_LABELS: Record<string, TypeLabel> = {
   "CLAS/OC": "Class",
   "CLAS/OM": "Class Method",
   "INTF/OI": "Interface",
   "PROG/P": "Program",
-  "PROG/I": (mainProgram?: MainInclude) => mainProgram ? "Include" : "Program Include",
+  "PROG/I": (mainProgram?: MainInclude) => (mainProgram ? "Include" : "Program Include"),
   "FUGR/F": "Function Group",
   "FUGR/FF": "Function Module",
   "TYPE/TY": "Type Group",
@@ -38,8 +38,8 @@ const TYPE_LABELS: Record<string, TypeLabel> = {
   "SUSO/B": "Authorization Object Set",
   "SUSC/SC": "Authorization Object Class",
   "PINF/PI": "Package Interface",
-  "NROB/NR": "Number Range Object"
-}
+  "NROB/NR": "Number Range Object",
+};
 
 export const OBJECT_TYPE_FILTER_OPTIONS = [
   { type: "PROG/P", label: "Programs (Reports)" },
@@ -73,16 +73,16 @@ export const OBJECT_TYPE_FILTER_OPTIONS = [
   { type: "SUSO/B", label: "Authorization Object Sets" },
   { type: "SUSC/SC", label: "Authorization Object Classes" },
   { type: "PINF/PI", label: "Package Interfaces" },
-  { type: "NROB/NR", label: "Number Range Objects" }
-]
+  { type: "NROB/NR", label: "Number Range Objects" },
+];
 
 export function getObjectTypeLabel(type: string, mainProgram?: MainInclude): string {
-  const entry = TYPE_LABELS[type]
-  if (!entry) return type
-  return typeof entry === "function" ? entry(mainProgram) : entry
+  const entry = TYPE_LABELS[type];
+  if (!entry) return type;
+  return typeof entry === "function" ? entry(mainProgram) : entry;
 }
 
 export function getCombinedObjectTypeLabel(type: string, mainProgram?: MainInclude): string {
-  const label = getObjectTypeLabel(type, mainProgram)
-  return label === type ? type : `${label} (${type})`
+  const label = getObjectTypeLabel(type, mainProgram);
+  return label === type ? type : `${label} (${type})`;
 }

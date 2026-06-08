@@ -6,11 +6,11 @@ Activation compiles your ABAP code and makes it executable — the equivalent of
 
 ## How to Activate
 
-| Method | Action |
-|--------|--------|
-| Keyboard shortcut | **Alt+Shift+F3** |
-| Editor toolbar | Click the activation button (lightning icon) |
-| On save | Automatic, if **Auto-activate on save** is enabled in settings |
+| Method            | Action                                                         |
+| ----------------- | -------------------------------------------------------------- |
+| Keyboard shortcut | **Alt+Shift+F3**                                               |
+| Editor toolbar    | Click the activation button (lightning icon)                   |
+| On save           | Automatic, if **Auto-activate on save** is enabled in settings |
 
 ## Mass Activation
 

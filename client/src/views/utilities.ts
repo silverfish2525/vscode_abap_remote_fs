@@ -1,18 +1,18 @@
-import { SystemUser } from "abap-adt-api"
-import { funWindow as window } from "../services/funMessenger"
-import { getClient } from "../adt/conections"
+import { SystemUser } from "abap-adt-api";
+import { funWindow as window } from "../services/funMessenger";
+import { getClient } from "../adt/conections";
 
 export async function pickUser(
   connId: string,
-  placeHolder = "Select user"
+  placeHolder = "Select user",
 ): Promise<SystemUser | undefined> {
-  const users = (await getClient(connId).systemUsers()).map(u => ({
+  const users = (await getClient(connId).systemUsers()).map((u) => ({
     label: u.title,
     description: u.id,
-    payload: u
-  }))
-  const selected = await window.showQuickPick(users, { ignoreFocusOut: true, placeHolder })
-  return selected?.payload
+    payload: u,
+  }));
+  const selected = await window.showQuickPick(users, { ignoreFocusOut: true, placeHolder });
+  return selected?.payload;
 }
 
 const jsHeader = `<script type="text/javascript">
@@ -23,12 +23,12 @@ function abapClick(uri) {
         uri: uri
     });
 };
-</script>`
+</script>`;
 
 export const injectUrlHandler = (x: string) => {
   const fixed = x
     .replace(/href\s*=\s*("[^"]*")/gi, "onClick='abapClick($1)'")
-    .replace(/href\s*=\s*('[^']*')/gi, 'onClick="abapClick($1)"')
-  if (fixed.match(/<head>/i)) return fixed.replace(/<head>/i, `<head>${jsHeader}`)
-  return `<head>${jsHeader}</head>${fixed}`
-}
+    .replace(/href\s*=\s*('[^']*')/gi, 'onClick="abapClick($1)"');
+  if (fixed.match(/<head>/i)) return fixed.replace(/<head>/i, `<head>${jsHeader}`);
+  return `<head>${jsHeader}</head>${fixed}`;
+};

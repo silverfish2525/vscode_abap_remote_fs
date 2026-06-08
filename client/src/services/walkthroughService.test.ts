@@ -3,130 +3,130 @@ vi.mock(
   () => ({
     window: {
       createStatusBarItem: vi.fn(),
-      showInformationMessage: vi.fn()
+      showInformationMessage: vi.fn(),
     },
     StatusBarAlignment: { Left: 1, Right: 2 },
     commands: { executeCommand: vi.fn().mockResolvedValue(undefined) },
-    Disposable: vi.fn().mockImplementation((fn: () => void) => ({ dispose: fn }))
+    Disposable: vi.fn().mockImplementation((fn: () => void) => ({ dispose: fn })),
   }),
-  { virtual: true }
-)
+  { virtual: true },
+);
 
-vi.mock("../lib", () => ({ log: vi.fn() }))
+vi.mock("../lib", () => ({ log: vi.fn() }));
 vi.mock("../commands", () => ({
   command: vi.fn(
-    () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor
-  )
-}))
+    () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
+  ),
+}));
 
-import * as vscode from "vscode"
-import { showWelcomeWalkthrough } from "./walkthroughService"
+import * as vscode from "vscode";
+import { showWelcomeWalkthrough } from "./walkthroughService";
 
-const mockExecuteCommand = vscode.commands.executeCommand as Mock
-const mockLog = require("../lib").log as Mock
+const mockExecuteCommand = vscode.commands.executeCommand as Mock;
+const mockLog = require("../lib").log as Mock;
 
 function makeContext(walkthroughShown?: boolean) {
-  const state: Record<string, any> = {}
+  const state: Record<string, any> = {};
   if (walkthroughShown !== undefined) {
-    state["abapfs.walkthroughShown"] = walkthroughShown
+    state["abapfs.walkthroughShown"] = walkthroughShown;
   }
-  const subscriptions: any[] = []
+  const subscriptions: any[] = [];
   return {
     globalState: {
       get: vi.fn((key: string) => state[key]),
       update: vi.fn((key: string, value: any) => {
-        state[key] = value
-      })
+        state[key] = value;
+      }),
     },
-    subscriptions
-  } as any as vscode.ExtensionContext
+    subscriptions,
+  } as any as vscode.ExtensionContext;
 }
 
 beforeEach(() => {
-  vi.clearAllMocks()
-  vi.useFakeTimers()
-})
+  vi.clearAllMocks();
+  vi.useFakeTimers();
+});
 
 afterEach(() => {
-  vi.useRealTimers()
-})
+  vi.useRealTimers();
+});
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("showWelcomeWalkthrough", () => {
   test("does nothing when walkthrough already shown", () => {
-    const ctx = makeContext(true)
-    showWelcomeWalkthrough(ctx)
+    const ctx = makeContext(true);
+    showWelcomeWalkthrough(ctx);
 
-    vi.runAllTimers()
+    vi.runAllTimers();
 
-    expect(ctx.globalState.update).not.toHaveBeenCalled()
-    expect(mockExecuteCommand).not.toHaveBeenCalled()
-  })
+    expect(ctx.globalState.update).not.toHaveBeenCalled();
+    expect(mockExecuteCommand).not.toHaveBeenCalled();
+  });
 
   test("marks walkthrough as shown when first time", () => {
-    const ctx = makeContext(false)
-    showWelcomeWalkthrough(ctx)
+    const ctx = makeContext(false);
+    showWelcomeWalkthrough(ctx);
 
-    expect(ctx.globalState.update).toHaveBeenCalledWith("abapfs.walkthroughShown", true)
-  })
+    expect(ctx.globalState.update).toHaveBeenCalledWith("abapfs.walkthroughShown", true);
+  });
 
   test("marks walkthrough as shown when state key is undefined (first install)", () => {
-    const ctx = makeContext(undefined)
-    showWelcomeWalkthrough(ctx)
+    const ctx = makeContext(undefined);
+    showWelcomeWalkthrough(ctx);
 
-    expect(ctx.globalState.update).toHaveBeenCalledWith("abapfs.walkthroughShown", true)
-  })
+    expect(ctx.globalState.update).toHaveBeenCalledWith("abapfs.walkthroughShown", true);
+  });
 
   test("opens walkthrough after 5 second delay", () => {
-    const ctx = makeContext(false)
-    showWelcomeWalkthrough(ctx)
+    const ctx = makeContext(false);
+    showWelcomeWalkthrough(ctx);
 
     // Before delay
-    expect(mockExecuteCommand).not.toHaveBeenCalled()
+    expect(mockExecuteCommand).not.toHaveBeenCalled();
 
     // After 5s delay
-    vi.advanceTimersByTime(5000)
+    vi.advanceTimersByTime(5000);
 
     expect(mockExecuteCommand).toHaveBeenCalledWith(
       "workbench.action.openWalkthrough",
       "murbani.vscode-abap-remote-fs#abapfs.gettingStarted",
-      false
-    )
-  })
+      false,
+    );
+  });
 
   test("logs message after opening walkthrough", () => {
-    const ctx = makeContext(false)
-    showWelcomeWalkthrough(ctx)
+    const ctx = makeContext(false);
+    showWelcomeWalkthrough(ctx);
 
-    vi.advanceTimersByTime(5000)
+    vi.advanceTimersByTime(5000);
 
-    expect(mockLog).toHaveBeenCalledWith(expect.stringContaining("walkthrough"))
-  })
+    expect(mockLog).toHaveBeenCalledWith(expect.stringContaining("walkthrough"));
+  });
 
   test("does not open walkthrough before 5 seconds elapsed", () => {
-    const ctx = makeContext(false)
-    showWelcomeWalkthrough(ctx)
+    const ctx = makeContext(false);
+    showWelcomeWalkthrough(ctx);
 
-    vi.advanceTimersByTime(4999)
-    expect(mockExecuteCommand).not.toHaveBeenCalled()
-  })
+    vi.advanceTimersByTime(4999);
+    expect(mockExecuteCommand).not.toHaveBeenCalled();
+  });
 
   test("does not call commands when already shown even after timer fires", () => {
-    const ctx = makeContext(true)
-    showWelcomeWalkthrough(ctx)
+    const ctx = makeContext(true);
+    showWelcomeWalkthrough(ctx);
 
-    vi.advanceTimersByTime(10000)
-    expect(mockExecuteCommand).not.toHaveBeenCalled()
-  })
+    vi.advanceTimersByTime(10000);
+    expect(mockExecuteCommand).not.toHaveBeenCalled();
+  });
 
   test("uses the correct extension qualified ID", () => {
-    const ctx = makeContext(false)
-    showWelcomeWalkthrough(ctx)
+    const ctx = makeContext(false);
+    showWelcomeWalkthrough(ctx);
 
-    vi.advanceTimersByTime(5000)
+    vi.advanceTimersByTime(5000);
 
-    const callArg = mockExecuteCommand.mock.calls[0][1] as string
-    expect(callArg).toContain("murbani.vscode-abap-remote-fs")
-    expect(callArg).toContain("abapfs.gettingStarted")
-  })
-})
+    const callArg = mockExecuteCommand.mock.calls[0][1] as string;
+    expect(callArg).toContain("murbani.vscode-abap-remote-fs");
+    expect(callArg).toContain("abapfs.gettingStarted");
+  });
+});

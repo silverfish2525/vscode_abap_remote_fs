@@ -1,53 +1,53 @@
-import * as vscode from "vscode"
-import { registerNotebookSerializer } from "./abapNotebookSerializer"
-import { AbapNotebookController } from "./abapNotebookController"
-import { registerCellStatusBar } from "./cellStatusBar"
-import { NOTEBOOK_TYPE, SQL_LANGUAGE_ID } from "./types"
-import { log } from "../lib"
-import { funWindow as window } from "../services/funMessenger"
+import * as vscode from "vscode";
+import { registerNotebookSerializer } from "./abapNotebookSerializer";
+import { AbapNotebookController } from "./abapNotebookController";
+import { registerCellStatusBar } from "./cellStatusBar";
+import { NOTEBOOK_TYPE, SQL_LANGUAGE_ID } from "./types";
+import { log } from "../lib";
+import { funWindow as window } from "../services/funMessenger";
 
-let controller: AbapNotebookController | undefined
+let controller: AbapNotebookController | undefined;
 
 export function registerAbapNotebooks(context: vscode.ExtensionContext): void {
-  log.debug("📒 SAP Data Workbook initializing...")
+  log.debug("📒 SAP Data Workbook initializing...");
 
-  context.subscriptions.push(registerNotebookSerializer(context))
+  context.subscriptions.push(registerNotebookSerializer(context));
 
-  controller = new AbapNotebookController()
-  context.subscriptions.push({ dispose: () => controller?.dispose() })
+  controller = new AbapNotebookController();
+  context.subscriptions.push({ dispose: () => controller?.dispose() });
 
-  registerCellStatusBar(context)
+  registerCellStatusBar(context);
 
   context.subscriptions.push(
     vscode.commands.registerCommand("abapfs.newAbapNotebook", async () => {
-      await createNewNotebook()
-    })
-  )
+      await createNewNotebook();
+    }),
+  );
 
   context.subscriptions.push(
-    vscode.workspace.onDidOpenNotebookDocument(notebook => {
-      if (notebook.notebookType !== NOTEBOOK_TYPE) return
-      log.debug(`📒 [Index] onDidOpenNotebookDocument: ${notebook.uri.toString()}`)
-      correctSqlLanguages(notebook)
-    })
-  )
+    vscode.workspace.onDidOpenNotebookDocument((notebook) => {
+      if (notebook.notebookType !== NOTEBOOK_TYPE) return;
+      log.debug(`📒 [Index] onDidOpenNotebookDocument: ${notebook.uri.toString()}`);
+      correctSqlLanguages(notebook);
+    }),
+  );
 
   context.subscriptions.push(
-    vscode.workspace.onDidCloseNotebookDocument(notebook => {
-      if (notebook.notebookType !== NOTEBOOK_TYPE) return
-      log.debug(`📒 [Index] onDidCloseNotebookDocument: ${notebook.uri.toString()}`)
-      controller?.clearResults(notebook.uri.toString())
-    })
-  )
+    vscode.workspace.onDidCloseNotebookDocument((notebook) => {
+      if (notebook.notebookType !== NOTEBOOK_TYPE) return;
+      log.debug(`📒 [Index] onDidCloseNotebookDocument: ${notebook.uri.toString()}`);
+      controller?.clearResults(notebook.uri.toString());
+    }),
+  );
 
   context.subscriptions.push(
-    vscode.workspace.onDidChangeNotebookDocument(e => {
-      if (e.notebook.notebookType !== NOTEBOOK_TYPE) return
-      correctSqlLanguages(e.notebook)
-    })
-  )
+    vscode.workspace.onDidChangeNotebookDocument((e) => {
+      if (e.notebook.notebookType !== NOTEBOOK_TYPE) return;
+      correctSqlLanguages(e.notebook);
+    }),
+  );
 
-  log.debug("📒 SAP Data Workbook ready — .sapwb files are now executable")
+  log.debug("📒 SAP Data Workbook ready — .sapwb files are now executable");
 }
 
 async function createNewNotebook(): Promise<void> {
@@ -55,44 +55,44 @@ async function createNewNotebook(): Promise<void> {
     new vscode.NotebookCellData(
       vscode.NotebookCellKind.Markup,
       "# New SAP Data Workbook\n\nAdd SQL and JavaScript cells below.",
-      "markdown"
+      "markdown",
     ),
     new vscode.NotebookCellData(
       vscode.NotebookCellKind.Code,
       "SELECT * FROM t000",
-      SQL_LANGUAGE_ID
-    )
-  ])
-  data.metadata = { version: 1, title: "" }
+      SQL_LANGUAGE_ID,
+    ),
+  ]);
+  data.metadata = { version: 1, title: "" };
 
-  const doc = await vscode.workspace.openNotebookDocument(NOTEBOOK_TYPE, data)
-  await window.showNotebookDocument(doc)
+  const doc = await vscode.workspace.openNotebookDocument(NOTEBOOK_TYPE, data);
+  await window.showNotebookDocument(doc);
 }
 
 async function correctSqlLanguages(notebook: vscode.NotebookDocument): Promise<void> {
-  const wrongCells = notebook.getCells().filter(
-    c => c.kind === vscode.NotebookCellKind.Code && c.document.languageId === "sql"
-  )
-  if (wrongCells.length === 0) return
+  const wrongCells = notebook
+    .getCells()
+    .filter((c) => c.kind === vscode.NotebookCellKind.Code && c.document.languageId === "sql");
+  if (wrongCells.length === 0) return;
 
-  const edit = new vscode.WorkspaceEdit()
+  const edit = new vscode.WorkspaceEdit();
   for (const cell of wrongCells) {
     const nbEdit = vscode.NotebookEdit.updateCellMetadata(cell.index, {
       ...cell.metadata,
-      custom: { ...cell.metadata?.custom, languageId: SQL_LANGUAGE_ID }
-    })
-    edit.set(notebook.uri, [nbEdit])
+      custom: { ...cell.metadata?.custom, languageId: SQL_LANGUAGE_ID },
+    });
+    edit.set(notebook.uri, [nbEdit]);
   }
 
-  const langEdit = new vscode.WorkspaceEdit()
+  const langEdit = new vscode.WorkspaceEdit();
   for (const cell of wrongCells) {
     langEdit.set(cell.document.uri, [
-      vscode.NotebookEdit.updateCellMetadata(cell.index, cell.metadata)
-    ])
+      vscode.NotebookEdit.updateCellMetadata(cell.index, cell.metadata),
+    ]);
   }
 
   for (const cell of wrongCells) {
-    await vscode.languages.setTextDocumentLanguage(cell.document, SQL_LANGUAGE_ID)
+    await vscode.languages.setTextDocumentLanguage(cell.document, SQL_LANGUAGE_ID);
   }
-  log.debug(`📒 Corrected ${wrongCells.length} cell(s) from "sql" to "${SQL_LANGUAGE_ID}"`)
+  log.debug(`📒 Corrected ${wrongCells.length} cell(s) from "sql" to "${SQL_LANGUAGE_ID}"`);
 }

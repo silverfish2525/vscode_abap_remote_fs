@@ -1,59 +1,74 @@
 // Tests for views/traces/views.ts - TraceRunItem and tracesProvider
-vi.mock("vscode", () => {
-  const MarkdownString = class {
-    constructor(public value = "") {}
-  }
-  const ThemeIcon = class { constructor(public id: string) {} }
-  const TreeItem = class {
-    constructor(public label: string, public collapsibleState?: number) {}
-    tooltip: any
-    command: any
-    iconPath: any
-    id: any
-    contextValue: any
-  }
-  const TreeItemCollapsibleState = { None: 0, Collapsed: 1, Expanded: 2 }
-  const EventEmitter = class {
-    event = vi.fn()
-    fire = vi.fn()
-  }
-  const Uri = {
-    parse: vi.fn((s: string) => ({ toString: () => s, path: s }))
-  }
-  return { MarkdownString, ThemeIcon, TreeItem, TreeItemCollapsibleState, EventEmitter, Uri }
-}, { virtual: true })
+vi.mock(
+  "vscode",
+  () => {
+    const MarkdownString = class {
+      constructor(public value = "") {}
+    };
+    const ThemeIcon = class {
+      constructor(public id: string) {}
+    };
+    const TreeItem = class {
+      constructor(
+        public label: string,
+        public collapsibleState?: number,
+      ) {}
+      tooltip: any;
+      command: any;
+      iconPath: any;
+      id: any;
+      contextValue: any;
+    };
+    const TreeItemCollapsibleState = { None: 0, Collapsed: 1, Expanded: 2 };
+    const EventEmitter = class {
+      event = vi.fn();
+      fire = vi.fn();
+    };
+    const Uri = {
+      parse: vi.fn((s: string) => ({ toString: () => s, path: s })),
+    };
+    return { MarkdownString, ThemeIcon, TreeItem, TreeItemCollapsibleState, EventEmitter, Uri };
+  },
+  { virtual: true },
+);
 
 vi.mock("../../config", () => ({
-  connectedRoots: vi.fn(() => new Map([["DEV100", {}], ["QA100", {}]]))
-}))
+  connectedRoots: vi.fn(
+    () =>
+      new Map([
+        ["DEV100", {}],
+        ["QA100", {}],
+      ]),
+  ),
+}));
 
 vi.mock("../../adt/conections", () => ({
-  getOrCreateClient: vi.fn()
-}))
+  getOrCreateClient: vi.fn(),
+}));
 
 vi.mock("../../lib", () => ({
   cache: vi.fn((fn: Function) => {
-    const map = new Map()
+    const map = new Map();
     return {
       get: (k: any) => {
-        if (!map.has(k)) map.set(k, fn(k))
-        return map.get(k)
+        if (!map.has(k)) map.set(k, fn(k));
+        return map.get(k);
       },
       size: 0,
-      [Symbol.iterator]: function* () {}
-    }
-  })
-}))
+      [Symbol.iterator]: function* () {},
+    };
+  }),
+}));
 
 vi.mock("./commands", () => ({
-  openCommand: vi.fn((uri: any) => ({ command: "open", title: "open", arguments: [uri] }))
-}))
+  openCommand: vi.fn((uri: any) => ({ command: "open", title: "open", arguments: [uri] })),
+}));
 
 vi.mock("./fsProvider", () => ({
-  adtProfileUri: vi.fn((item: any) => `adt://profile/${item.id}`)
-}))
+  adtProfileUri: vi.fn((item: any) => `adt://profile/${item.id}`),
+}));
 
-import { TraceRunItem, tracesProvider, findRun } from "./views"
+import { TraceRunItem, tracesProvider, findRun } from "./views";
 
 const makeTraceRun = (overrides: Partial<any> = {}): any => ({
   id: "run-001",
@@ -70,141 +85,141 @@ const makeTraceRun = (overrides: Partial<any> = {}): any => ({
     runtimeSystem: 100,
     isAggregated: false,
     state: { text: "OK", value: "S" },
-    system: "DEV100"
+    system: "DEV100",
   },
-  ...overrides
-})
+  ...overrides,
+});
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("TraceRunItem", () => {
   describe("constructor - successful run", () => {
     it("creates an item with a label containing title and objectName", () => {
-      const run = makeTraceRun()
-      const item = new TraceRunItem("DEV100", run)
-      expect(item.label).toContain("My Trace")
-      expect(item.label).toContain("ZREPORT")
-    })
+      const run = makeTraceRun();
+      const item = new TraceRunItem("DEV100", run);
+      expect(item.label).toContain("My Trace");
+      expect(item.label).toContain("ZREPORT");
+    });
 
     it("sets contextValue to 'run'", () => {
-      const item = new TraceRunItem("DEV100", makeTraceRun())
-      expect(item.contextValue).toBe("run")
-    })
+      const item = new TraceRunItem("DEV100", makeTraceRun());
+      expect(item.contextValue).toBe("run");
+    });
 
     it("sets id from run.id", () => {
-      const item = new TraceRunItem("DEV100", makeTraceRun())
-      expect(item.id).toBe("run-001")
-    })
+      const item = new TraceRunItem("DEV100", makeTraceRun());
+      expect(item.id).toBe("run-001");
+    });
 
     it("marks error=false for successful run (state value='S')", () => {
-      const item = new TraceRunItem("DEV100", makeTraceRun())
-      expect(item.error).toBe(false)
-    })
+      const item = new TraceRunItem("DEV100", makeTraceRun());
+      expect(item.error).toBe(false);
+    });
 
     it("marks detailed=true when isAggregated=false", () => {
-      const item = new TraceRunItem("DEV100", makeTraceRun())
-      expect(item.detailed).toBe(true)
-    })
+      const item = new TraceRunItem("DEV100", makeTraceRun());
+      expect(item.detailed).toBe(true);
+    });
 
     it("sets command for non-error run", () => {
-      const item = new TraceRunItem("DEV100", makeTraceRun())
-      expect(item.command).toBeDefined()
-    })
+      const item = new TraceRunItem("DEV100", makeTraceRun());
+      expect(item.command).toBeDefined();
+    });
 
     it("sets tooltip", () => {
-      const item = new TraceRunItem("DEV100", makeTraceRun())
-      expect(item.tooltip).toBeDefined()
-    })
-  })
+      const item = new TraceRunItem("DEV100", makeTraceRun());
+      expect(item.tooltip).toBeDefined();
+    });
+  });
 
   describe("constructor - error run", () => {
     it("marks error=true when state value='E'", () => {
       const run = makeTraceRun({
-        extendedData: { ...makeTraceRun().extendedData, state: { text: "Error", value: "E" } }
-      })
-      const item = new TraceRunItem("DEV100", run)
-      expect(item.error).toBe(true)
-    })
+        extendedData: { ...makeTraceRun().extendedData, state: { text: "Error", value: "E" } },
+      });
+      const item = new TraceRunItem("DEV100", run);
+      expect(item.error).toBe(true);
+    });
 
     it("does not set command for error run", () => {
       const run = makeTraceRun({
-        extendedData: { ...makeTraceRun().extendedData, state: { text: "Error", value: "E" } }
-      })
-      const item = new TraceRunItem("DEV100", run)
-      expect(item.command).toBeUndefined()
-    })
-  })
+        extendedData: { ...makeTraceRun().extendedData, state: { text: "Error", value: "E" } },
+      });
+      const item = new TraceRunItem("DEV100", run);
+      expect(item.command).toBeUndefined();
+    });
+  });
 
   describe("constructor - aggregated run", () => {
     it("marks detailed=false when isAggregated=true", () => {
       const run = makeTraceRun({
-        extendedData: { ...makeTraceRun().extendedData, isAggregated: true }
-      })
-      const item = new TraceRunItem("DEV100", run)
-      expect(item.detailed).toBe(false)
-    })
-  })
+        extendedData: { ...makeTraceRun().extendedData, isAggregated: true },
+      });
+      const item = new TraceRunItem("DEV100", run);
+      expect(item.detailed).toBe(false);
+    });
+  });
 
   describe("children", () => {
     it("returns empty array", () => {
-      const item = new TraceRunItem("DEV100", makeTraceRun())
-      expect(item.children()).toEqual([])
-    })
-  })
-})
+      const item = new TraceRunItem("DEV100", makeTraceRun());
+      expect(item.children()).toEqual([]);
+    });
+  });
+});
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("tracesProvider", () => {
   describe("getTreeItem", () => {
     it("returns the element as-is", () => {
-      const run = makeTraceRun()
-      const item = new TraceRunItem("DEV100", run)
-      expect(tracesProvider.getTreeItem(item)).toBe(item)
-    })
-  })
+      const run = makeTraceRun();
+      const item = new TraceRunItem("DEV100", run);
+      expect(tracesProvider.getTreeItem(item)).toBe(item);
+    });
+  });
 
   describe("onDidChangeTreeData", () => {
     it("exposes an event", () => {
-      expect(tracesProvider.onDidChangeTreeData).toBeDefined()
-    })
-  })
+      expect(tracesProvider.onDidChangeTreeData).toBeDefined();
+    });
+  });
 
   describe("getChildren", () => {
     it("returns children of element when provided", async () => {
-      const run = makeTraceRun()
-      const item = new TraceRunItem("DEV100", run)
-      const children = await tracesProvider.getChildren(item)
-      expect(Array.isArray(children)).toBe(true)
-    })
+      const run = makeTraceRun();
+      const item = new TraceRunItem("DEV100", run);
+      const children = await tracesProvider.getChildren(item);
+      expect(Array.isArray(children)).toBe(true);
+    });
 
     it("returns root items when no element provided", async () => {
-      const roots = await tracesProvider.getChildren()
-      expect(Array.isArray(roots)).toBe(true)
-      expect(roots.length).toBeGreaterThan(0)
-    })
-  })
+      const roots = await tracesProvider.getChildren();
+      expect(Array.isArray(roots)).toBe(true);
+      expect(roots.length).toBeGreaterThan(0);
+    });
+  });
 
   describe("root", () => {
     it("finds a root by connId", () => {
-      const root = tracesProvider.root("DEV100")
-      expect(root).toBeDefined()
-      expect(root?.connId).toBe("DEV100")
-    })
+      const root = tracesProvider.root("DEV100");
+      expect(root).toBeDefined();
+      expect(root?.connId).toBe("DEV100");
+    });
 
     it("returns undefined for unknown connId", () => {
-      expect(tracesProvider.root("UNKNOWN")).toBeUndefined()
-    })
-  })
-})
+      expect(tracesProvider.root("UNKNOWN")).toBeUndefined();
+    });
+  });
+});
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("findRun", () => {
   it("returns undefined when client is not connected and no runs cached", async () => {
-    const { getOrCreateClient } = require("../../adt/conections")
-    ;(getOrCreateClient as Mock).mockResolvedValue({
-      tracesList: vi.fn().mockResolvedValue({ runs: [] })
-    })
+    const { getOrCreateClient } = require("../../adt/conections");
+    (getOrCreateClient as Mock).mockResolvedValue({
+      tracesList: vi.fn().mockResolvedValue({ runs: [] }),
+    });
 
-    const result = await findRun("DEV100", "nonexistent")
-    expect(result).toBeUndefined()
-  })
-})
+    const result = await findRun("DEV100", "nonexistent");
+    expect(result).toBeUndefined();
+  });
+});

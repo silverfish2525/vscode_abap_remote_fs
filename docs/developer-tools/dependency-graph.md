@@ -5,18 +5,18 @@ Visualize where any ABAP object is used across the system as an interactive, exp
 ## Opening the Graph
 
 1. Open an ABAP file in the editor
-2. *(Optional)* Place your cursor on a specific method or variable for symbol-level analysis
+2. _(Optional)_ Place your cursor on a specific method or variable for symbol-level analysis
 3. Right-click → **Visualize Dependency Graph**
 
 For graphs with fewer than 100 nodes, the graph renders immediately. For larger graphs, adjust the filters first, then click **Build Graph**.
 
 ## Reading the Graph
 
-| Color | Meaning |
-|---|---|
-| Red | Root object (your starting point) |
-| Purple | Nodes you have expanded |
-| Other colors | Auto-assigned per object type |
+| Color        | Meaning                           |
+| ------------ | --------------------------------- |
+| Red          | Root object (your starting point) |
+| Purple       | Nodes you have expanded           |
+| Other colors | Auto-assigned per object type     |
 
 A **double border** on a node means it has more dependencies available to explore.
 
@@ -42,13 +42,13 @@ Real-time counts show how many objects match each filter. Click **Reset Filters*
 
 ## Layout Options
 
-| Layout | Best for |
-|---|---|
-| **Cose** *(default)* | General use — physics-based clustering |
-| **Concentric** | Seeing distance from root object |
-| **Breadthfirst** | Tree-shaped dependency chains |
-| **Circle** | Compact overview |
-| **Grid** | Ordered comparison |
+| Layout               | Best for                               |
+| -------------------- | -------------------------------------- |
+| **Cose** _(default)_ | General use — physics-based clustering |
+| **Concentric**       | Seeing distance from root object       |
+| **Breadthfirst**     | Tree-shaped dependency chains          |
+| **Circle**           | Compact overview                       |
+| **Grid**             | Ordered comparison                     |
 
 ## Exporting
 

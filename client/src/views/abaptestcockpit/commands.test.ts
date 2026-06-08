@@ -1,28 +1,32 @@
-vi.mock("vscode", () => ({
-  commands: { executeCommand: vi.fn() },
-  ProgressLocation: { Notification: 15 },
-  Uri: { parse: vi.fn((s: string) => ({ toString: () => s })) },
-  workspace: { openTextDocument: vi.fn() },
-  Selection: vi.fn((start: any, end: any) => ({ start, end })),
-  WorkspaceEdit: vi.fn().mockImplementation(() => ({ insert: vi.fn() })),
-  Position: vi.fn((line: number, character: number) => ({ line, character }))
-}), { virtual: true })
+vi.mock(
+  "vscode",
+  () => ({
+    commands: { executeCommand: vi.fn() },
+    ProgressLocation: { Notification: 15 },
+    Uri: { parse: vi.fn((s: string) => ({ toString: () => s })) },
+    workspace: { openTextDocument: vi.fn() },
+    Selection: vi.fn((start: any, end: any) => ({ start, end })),
+    WorkspaceEdit: vi.fn().mockImplementation(() => ({ insert: vi.fn() })),
+    Position: vi.fn((line: number, character: number) => ({ line, character })),
+  }),
+  { virtual: true },
+);
 
 vi.mock("../../services/funMessenger", () => ({
   funWindow: {
     showTextDocument: vi.fn(),
     showInformationMessage: vi.fn(),
-    withProgress: vi.fn((_opts: any, cb: any) => cb())
-  }
-}))
+    withProgress: vi.fn((_opts: any, cb: any) => cb()),
+  },
+}));
 
 vi.mock("../../adt/conections", () => ({
-  getClient: vi.fn()
-}))
+  getClient: vi.fn(),
+}));
 
 vi.mock("../../config", () => ({
-  RemoteManager: { get: vi.fn().mockReturnValue({ byId: vi.fn() }) }
-}))
+  RemoteManager: { get: vi.fn().mockReturnValue({ byId: vi.fn() }) },
+}));
 
 vi.mock("../../lib", () => ({
   chainTaskTransformers: vi.fn(),
@@ -31,41 +35,47 @@ vi.mock("../../lib", () => ({
   quickPick: vi.fn(),
   rfsExtract: vi.fn(),
   rfsTryCatch: vi.fn(),
-  showErrorMessage: vi.fn()
-}))
+  showErrorMessage: vi.fn(),
+}));
 
 vi.mock("./documentation", () => ({
   ATCDocumentation: {
-    get: vi.fn().mockReturnValue({ showDocumentation: vi.fn() })
-  }
-}))
+    get: vi.fn().mockReturnValue({ showDocumentation: vi.fn() }),
+  },
+}));
 
 vi.mock("./view", () => ({
-  AtcFind: vi.fn().mockImplementation(function (this: any, finding: any, parent: any, uri: string, start: any) {
-    this.finding = finding
-    this.parent = parent
-    this.uri = uri
-    this.start = start
+  AtcFind: vi.fn().mockImplementation(function (
+    this: any,
+    finding: any,
+    parent: any,
+    uri: string,
+    start: any,
+  ) {
+    this.finding = finding;
+    this.parent = parent;
+    this.uri = uri;
+    this.start = start;
   }),
   AtcSystem: vi.fn().mockImplementation(function (this: any) {
-    this.refresh = vi.fn()
+    this.refresh = vi.fn();
   }),
   AtcObject: vi.fn().mockImplementation(function (this: any) {
-    this.parent = { refresh: vi.fn() }
+    this.parent = { refresh: vi.fn() };
   }),
   AtcRoot: vi.fn().mockImplementation(function (this: any) {
-    this.children = []
+    this.children = [];
   }),
   atcProvider: {
     root: { children: [] },
     setAutoRefresh: vi.fn(),
-    setExemptFilter: vi.fn()
-  }
-}))
+    setExemptFilter: vi.fn(),
+  },
+}));
 
 vi.mock("./codeinspector", () => ({
-  findingPragmas: vi.fn()
-}))
+  findingPragmas: vi.fn(),
+}));
 
 vi.mock("../../commands", () => ({
   AbapFsCommands: {
@@ -78,53 +88,53 @@ vi.mock("../../commands", () => ({
     atcRequestExemption: "atcRequestExemption",
     atcRefresh: "atcRefresh",
     atcRequestExemptionAll: "atcRequestExemptionAll",
-    atcShowDocumentation: "atcShowDocumentation"
+    atcShowDocumentation: "atcShowDocumentation",
   },
-  command: () => (_target: any, _key: string, descriptor: PropertyDescriptor) => descriptor
-}))
+  command: () => (_target: any, _key: string, descriptor: PropertyDescriptor) => descriptor,
+}));
 
 vi.mock("./functions", () => ({
-  insertPosition: vi.fn().mockReturnValue(10)
-}))
+  insertPosition: vi.fn().mockReturnValue(10),
+}));
 
-import { atcRefresh } from "./commands"
-import { AtcSystem, AtcObject, AtcFind, AtcRoot, atcProvider } from "./view"
-import { showErrorMessage } from "../../lib"
-import { funWindow as window } from "../../services/funMessenger"
+import { atcRefresh } from "./commands";
+import { AtcSystem, AtcObject, AtcFind, AtcRoot, atcProvider } from "./view";
+import { showErrorMessage } from "../../lib";
+import { funWindow as window } from "../../services/funMessenger";
 
-const mockShowError = showErrorMessage as MockedFunction<typeof showErrorMessage>
+const mockShowError = showErrorMessage as MockedFunction<typeof showErrorMessage>;
 
 describe("atcRefresh", () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => vi.clearAllMocks());
 
   it("refreshes all root children when called with no arguments", async () => {
-    const mockRefresh = vi.fn().mockResolvedValue(undefined)
-    ;(atcProvider.root as any).children = [{ refresh: mockRefresh }, { refresh: mockRefresh }]
+    const mockRefresh = vi.fn().mockResolvedValue(undefined);
+    (atcProvider.root as any).children = [{ refresh: mockRefresh }, { refresh: mockRefresh }];
 
-    await atcRefresh()
+    await atcRefresh();
 
-    expect(window.withProgress).toHaveBeenCalled()
-    expect(mockRefresh).toHaveBeenCalledTimes(2)
-  })
+    expect(window.withProgress).toHaveBeenCalled();
+    expect(mockRefresh).toHaveBeenCalledTimes(2);
+  });
 
   it("refreshes a single AtcSystem when passed one", async () => {
-    const system = new (AtcSystem as any)()
-    system.refresh = vi.fn().mockResolvedValue(undefined)
-    system.constructor = AtcSystem
-    Object.setPrototypeOf(system, (AtcSystem as any).prototype)
+    const system = new (AtcSystem as any)();
+    system.refresh = vi.fn().mockResolvedValue(undefined);
+    system.constructor = AtcSystem;
+    Object.setPrototypeOf(system, (AtcSystem as any).prototype);
 
-    await atcRefresh(system)
-    expect(system.refresh).toHaveBeenCalled()
-  })
+    await atcRefresh(system);
+    expect(system.refresh).toHaveBeenCalled();
+  });
 
   it("does not throw on empty root children", async () => {
-    ;(atcProvider.root as any).children = []
-    await expect(atcRefresh()).resolves.toBeUndefined()
-  })
+    (atcProvider.root as any).children = [];
+    await expect(atcRefresh()).resolves.toBeUndefined();
+  });
 
   it("calls showErrorMessage on exception", async () => {
-    ;(window.withProgress as Mock).mockRejectedValueOnce(new Error("boom"))
-    await atcRefresh()
-    expect(mockShowError).toHaveBeenCalled()
-  })
-})
+    (window.withProgress as Mock).mockRejectedValueOnce(new Error("boom"));
+    await atcRefresh();
+    expect(mockShowError).toHaveBeenCalled();
+  });
+});

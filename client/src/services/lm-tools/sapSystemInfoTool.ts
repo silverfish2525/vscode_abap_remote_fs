@@ -3,19 +3,19 @@
  * LM tool to retrieve comprehensive SAP system information
  */
 
-import * as vscode from "vscode"
-import { registerToolWithRegistry } from "./toolRegistry"
-import { logTelemetry } from "../telemetry"
-import { getSAPSystemInfo, formatSAPSystemInfoAsText } from "../sapSystemInfo"
-import { assertToolInvocationAuthorized } from "./toolGuard"
+import * as vscode from "vscode";
+import { registerToolWithRegistry } from "./toolRegistry";
+import { logTelemetry } from "../telemetry";
+import { getSAPSystemInfo, formatSAPSystemInfoAsText } from "../sapSystemInfo";
+import { assertToolInvocationAuthorized } from "./toolGuard";
 
 // ============================================================================
 // INTERFACE
 // ============================================================================
 
 export interface ISAPSystemInfoParameters {
-  connectionId: string
-  includeComponents?: boolean
+  connectionId: string;
+  includeComponents?: boolean;
 }
 
 // ============================================================================
@@ -32,12 +32,12 @@ export interface ISAPSystemInfoParameters {
 export class SAPSystemInfoTool implements vscode.LanguageModelTool<ISAPSystemInfoParameters> {
   async prepareInvocation(
     options: vscode.LanguageModelToolInvocationPrepareOptions<ISAPSystemInfoParameters>,
-    _token: vscode.CancellationToken
+    _token: vscode.CancellationToken,
   ) {
-    const { connectionId } = options.input
+    const { connectionId } = options.input;
 
     if (!connectionId) {
-      throw new Error("connectionId is required")
+      throw new Error("connectionId is required");
     }
 
     const confirmationMessages = {
@@ -47,66 +47,66 @@ export class SAPSystemInfoTool implements vscode.LanguageModelTool<ISAPSystemInf
           `This will query system tables (T000, CVERS, SVERS) to gather:\n` +
           `- Client configuration\n` +
           `- Software component versions\n` +
-          `- SAP release information`
-      )
-    }
+          `- SAP release information`,
+      ),
+    };
 
     return {
       invocationMessage: `Getting SAP system info for: ${connectionId}...`,
-      confirmationMessages
-    }
+      confirmationMessages,
+    };
   }
 
   async invoke(
     options: vscode.LanguageModelToolInvocationOptions<ISAPSystemInfoParameters>,
-    _token: vscode.CancellationToken
+    _token: vscode.CancellationToken,
   ): Promise<vscode.LanguageModelToolResult> {
-    assertToolInvocationAuthorized(options)
-    logTelemetry("tool_get_sap_system_info_called", { connectionId: options.input.connectionId })
-    let { connectionId, includeComponents } = options.input
+    assertToolInvocationAuthorized(options);
+    logTelemetry("tool_get_sap_system_info_called", { connectionId: options.input.connectionId });
+    let { connectionId, includeComponents } = options.input;
 
     if (!connectionId) {
-      throw new Error("connectionId is required")
+      throw new Error("connectionId is required");
     }
 
     // Normalize connection ID to lowercase
-    connectionId = connectionId.toLowerCase()
+    connectionId = connectionId.toLowerCase();
 
     // Default includeComponents to false
-    includeComponents = includeComponents ?? false
+    includeComponents = includeComponents ?? false;
 
     try {
       // Get system information (with caching) - connectionId lookup is done internally
-      const systemInfo = await getSAPSystemInfo(connectionId, includeComponents)
+      const systemInfo = await getSAPSystemInfo(connectionId, includeComponents);
 
       // Create concise summary
-      let summary = `SAP System: ${connectionId.toUpperCase()}\n`
-      summary += `- Type: ${systemInfo.systemType}\n`
-      summary += `- Release: ${systemInfo.sapRelease || "N/A"}\n`
+      let summary = `SAP System: ${connectionId.toUpperCase()}\n`;
+      summary += `- Type: ${systemInfo.systemType}\n`;
+      summary += `- Release: ${systemInfo.sapRelease || "N/A"}\n`;
 
       if (systemInfo.currentClient) {
-        summary += `- Client: ${systemInfo.currentClient.clientNumber} (${systemInfo.currentClient.clientName})\n`
+        summary += `- Client: ${systemInfo.currentClient.clientNumber} (${systemInfo.currentClient.clientName})\n`;
       }
 
       if (systemInfo.timezone) {
-        summary += `- Timezone: ${systemInfo.timezone.timezone} (${systemInfo.timezone.description}), ${systemInfo.timezone.utcOffset}`
+        summary += `- Timezone: ${systemInfo.timezone.timezone} (${systemInfo.timezone.description}), ${systemInfo.timezone.utcOffset}`;
         if (systemInfo.timezone.dstRule !== "NONE") {
-          summary += `, DST: ${systemInfo.timezone.dstRule}`
+          summary += `, DST: ${systemInfo.timezone.dstRule}`;
         }
-        summary += "\n"
+        summary += "\n";
       }
 
       if (includeComponents && systemInfo.softwareComponents.length > 0) {
-        summary += `- Components: ${systemInfo.softwareComponents.length} installed\n`
+        summary += `- Components: ${systemInfo.softwareComponents.length} installed\n`;
       }
 
       return new vscode.LanguageModelToolResult([
         new vscode.LanguageModelTextPart(summary),
-        new vscode.LanguageModelTextPart(JSON.stringify(systemInfo, null, 2))
-      ])
+        new vscode.LanguageModelTextPart(JSON.stringify(systemInfo, null, 2)),
+      ]);
     } catch (error: any) {
-      const errorMsg = error?.localizedMessage || error?.message || String(error)
-      throw new Error(`Failed to get SAP system info: ${errorMsg}`)
+      const errorMsg = error?.localizedMessage || error?.message || String(error);
+      throw new Error(`Failed to get SAP system info: ${errorMsg}`);
     }
   }
 }
@@ -117,6 +117,6 @@ export class SAPSystemInfoTool implements vscode.LanguageModelTool<ISAPSystemInf
 
 export function registerSAPSystemInfoTool(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
-    registerToolWithRegistry("get_sap_system_info", new SAPSystemInfoTool())
-  )
+    registerToolWithRegistry("get_sap_system_info", new SAPSystemInfoTool()),
+  );
 }

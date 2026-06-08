@@ -1,150 +1,166 @@
-vi.mock("vscode", () => ({
-  LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
-  LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
-  MarkdownString: vi.fn().mockImplementation((text: string) => ({ text })),
-  lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) }
-}), { virtual: true })
+vi.mock(
+  "vscode",
+  () => ({
+    LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
+    LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
+    MarkdownString: vi.fn().mockImplementation((text: string) => ({ text })),
+    lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) },
+  }),
+  { virtual: true },
+);
 
-vi.mock("../../adt/conections", () => ({}))
-vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("../../adt/conections", () => ({}));
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }));
 vi.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() }))
-}))
-vi.mock("../abapSearchService", () => ({ getSearchService: vi.fn() }))
-vi.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }))
-vi.mock("../../commands/commands", () => ({ openObject: vi.fn() }))
+  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() })),
+}));
+vi.mock("../abapSearchService", () => ({ getSearchService: vi.fn() }));
+vi.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }));
+vi.mock("../../commands/commands", () => ({ openObject: vi.fn() }));
 
-import { OpenObjectTool } from "./openObjectTool"
-import { getSearchService } from "../abapSearchService"
-import { openObject } from "../../commands/commands"
-import { logTelemetry } from "../telemetry"
-import { funWindow as window } from "../funMessenger"
+import { OpenObjectTool } from "./openObjectTool";
+import { getSearchService } from "../abapSearchService";
+import { openObject } from "../../commands/commands";
+import { logTelemetry } from "../telemetry";
+import { funWindow as window } from "../funMessenger";
 
-const mockToken = {} as any
+const mockToken = {} as any;
 
 function makeOptions(input: any = {}) {
-  return { input } as any
+  return { input } as any;
 }
 
 const mockSearcher = {
-  searchObjects: vi.fn()
-}
+  searchObjects: vi.fn(),
+};
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("OpenObjectTool", () => {
-  let tool: OpenObjectTool
+  let tool: OpenObjectTool;
 
   beforeEach(() => {
-    tool = new OpenObjectTool()
-    vi.clearAllMocks()
-    ;(getSearchService as Mock).mockReturnValue(mockSearcher)
-    ;(window as any).activeTextEditor = undefined
-  })
+    tool = new OpenObjectTool();
+    vi.clearAllMocks();
+    (getSearchService as Mock).mockReturnValue(mockSearcher);
+    (window as any).activeTextEditor = undefined;
+  });
 
   describe("prepareInvocation", () => {
     it("returns invocation message with object name", async () => {
       const result = await tool.prepareInvocation(
         makeOptions({ objectName: "ZCLASS", connectionId: "dev100" }),
-        mockToken
-      )
-      expect(result.invocationMessage).toContain("ZCLASS")
-    })
+        mockToken,
+      );
+      expect(result.invocationMessage).toContain("ZCLASS");
+    });
 
     it("includes objectType in invocation message", async () => {
       const result = await tool.prepareInvocation(
         makeOptions({ objectName: "ZCLASS", objectType: "CLAS/OC", connectionId: "dev100" }),
-        mockToken
-      )
-      expect(result.invocationMessage).toContain("CLAS/OC")
-    })
+        mockToken,
+      );
+      expect(result.invocationMessage).toContain("CLAS/OC");
+    });
 
     it("returns confirmation messages", async () => {
       const result = await tool.prepareInvocation(
         makeOptions({ objectName: "ZPROG", connectionId: "dev100" }),
-        mockToken
-      )
-      expect(result.confirmationMessages).toBeDefined()
-      expect((result.confirmationMessages as any).title).toBe("Open ABAP Object")
-    })
-  })
+        mockToken,
+      );
+      expect(result.confirmationMessages).toBeDefined();
+      expect((result.confirmationMessages as any).title).toBe("Open ABAP Object");
+    });
+  });
 
   describe("invoke", () => {
     it("logs telemetry", async () => {
-      mockSearcher.searchObjects.mockResolvedValue([{ uri: "/sap/bc/adt/programs/programs/zprog" }])
-      ;(openObject as Mock).mockResolvedValue(undefined)
-      await tool.invoke(makeOptions({ objectName: "ZPROG", connectionId: "DEV100" }), mockToken)
-      expect(logTelemetry).toHaveBeenCalledWith("tool_open_object_called", { connectionId: "DEV100" })
-    })
+      mockSearcher.searchObjects.mockResolvedValue([
+        { uri: "/sap/bc/adt/programs/programs/zprog" },
+      ]);
+      (openObject as Mock).mockResolvedValue(undefined);
+      await tool.invoke(makeOptions({ objectName: "ZPROG", connectionId: "DEV100" }), mockToken);
+      expect(logTelemetry).toHaveBeenCalledWith("tool_open_object_called", {
+        connectionId: "DEV100",
+      });
+    });
 
     it("uses lowercase connectionId for service", async () => {
-      mockSearcher.searchObjects.mockResolvedValue([{ uri: "/sap/bc/adt/programs/programs/zprog" }])
-      ;(openObject as Mock).mockResolvedValue(undefined)
-      await tool.invoke(makeOptions({ objectName: "ZPROG", connectionId: "DEV100" }), mockToken)
-      expect(getSearchService).toHaveBeenCalledWith("dev100")
-    })
+      mockSearcher.searchObjects.mockResolvedValue([
+        { uri: "/sap/bc/adt/programs/programs/zprog" },
+      ]);
+      (openObject as Mock).mockResolvedValue(undefined);
+      await tool.invoke(makeOptions({ objectName: "ZPROG", connectionId: "DEV100" }), mockToken);
+      expect(getSearchService).toHaveBeenCalledWith("dev100");
+    });
 
     it("returns success message on successful open", async () => {
-      mockSearcher.searchObjects.mockResolvedValue([{ uri: "/sap/bc/adt/programs/programs/zprog" }])
-      ;(openObject as Mock).mockResolvedValue(undefined)
+      mockSearcher.searchObjects.mockResolvedValue([
+        { uri: "/sap/bc/adt/programs/programs/zprog" },
+      ]);
+      (openObject as Mock).mockResolvedValue(undefined);
       const result: any = await tool.invoke(
         makeOptions({ objectName: "ZPROG", connectionId: "dev100" }),
-        mockToken
-      )
-      expect(result.parts[0].text).toContain("ZPROG")
-      expect(result.parts[0].text).toContain("opened successfully")
-    })
+        mockToken,
+      );
+      expect(result.parts[0].text).toContain("ZPROG");
+      expect(result.parts[0].text).toContain("opened successfully");
+    });
 
     it("returns failure message when object not found", async () => {
-      mockSearcher.searchObjects.mockResolvedValue([])
+      mockSearcher.searchObjects.mockResolvedValue([]);
       const result: any = await tool.invoke(
         makeOptions({ objectName: "NOTEXIST", connectionId: "dev100" }),
-        mockToken
-      )
-      expect(result.parts[0].text).toContain("Failed to open object")
-    })
+        mockToken,
+      );
+      expect(result.parts[0].text).toContain("Failed to open object");
+    });
 
     it("returns failure message when no URI on found object", async () => {
-      mockSearcher.searchObjects.mockResolvedValue([{ uri: undefined }])
+      mockSearcher.searchObjects.mockResolvedValue([{ uri: undefined }]);
       const result: any = await tool.invoke(
         makeOptions({ objectName: "ZPROG", connectionId: "dev100" }),
-        mockToken
-      )
-      expect(result.parts[0].text).toContain("Failed to open object")
-    })
+        mockToken,
+      );
+      expect(result.parts[0].text).toContain("Failed to open object");
+    });
 
     it("returns failure message when openObject throws", async () => {
-      mockSearcher.searchObjects.mockResolvedValue([{ uri: "/sap/bc/adt/programs/programs/zprog" }])
-      ;(openObject as Mock).mockRejectedValue(new Error("editor error"))
+      mockSearcher.searchObjects.mockResolvedValue([
+        { uri: "/sap/bc/adt/programs/programs/zprog" },
+      ]);
+      (openObject as Mock).mockRejectedValue(new Error("editor error"));
       const result: any = await tool.invoke(
         makeOptions({ objectName: "ZPROG", connectionId: "dev100" }),
-        mockToken
-      )
-      expect(result.parts[0].text).toContain("editor error")
-    })
+        mockToken,
+      );
+      expect(result.parts[0].text).toContain("editor error");
+    });
 
     it("searches with objectType when provided", async () => {
-      mockSearcher.searchObjects.mockResolvedValue([{ uri: "/sap/bc/adt/oo/classes/zclass" }])
-      ;(openObject as Mock).mockResolvedValue(undefined)
+      mockSearcher.searchObjects.mockResolvedValue([{ uri: "/sap/bc/adt/oo/classes/zclass" }]);
+      (openObject as Mock).mockResolvedValue(undefined);
       await tool.invoke(
         makeOptions({ objectName: "ZCLASS", objectType: "CLAS/OC", connectionId: "dev100" }),
-        mockToken
-      )
-      expect(mockSearcher.searchObjects).toHaveBeenCalledWith("ZCLASS", ["CLAS/OC"], 1)
-    })
+        mockToken,
+      );
+      expect(mockSearcher.searchObjects).toHaveBeenCalledWith("ZCLASS", ["CLAS/OC"], 1);
+    });
 
     it("searches without objectType filter when not provided", async () => {
-      mockSearcher.searchObjects.mockResolvedValue([{ uri: "/sap/bc/adt/programs/programs/zprog" }])
-      ;(openObject as Mock).mockResolvedValue(undefined)
-      await tool.invoke(makeOptions({ objectName: "ZPROG", connectionId: "dev100" }), mockToken)
-      expect(mockSearcher.searchObjects).toHaveBeenCalledWith("ZPROG", undefined, 1)
-    })
+      mockSearcher.searchObjects.mockResolvedValue([
+        { uri: "/sap/bc/adt/programs/programs/zprog" },
+      ]);
+      (openObject as Mock).mockResolvedValue(undefined);
+      await tool.invoke(makeOptions({ objectName: "ZPROG", connectionId: "dev100" }), mockToken);
+      expect(mockSearcher.searchObjects).toHaveBeenCalledWith("ZPROG", undefined, 1);
+    });
 
     it("calls openObject with lowercase connectionId and URI", async () => {
-      const uri = "/sap/bc/adt/programs/programs/zprog"
-      mockSearcher.searchObjects.mockResolvedValue([{ uri }])
-      ;(openObject as Mock).mockResolvedValue(undefined)
-      await tool.invoke(makeOptions({ objectName: "ZPROG", connectionId: "DEV100" }), mockToken)
-      expect(openObject).toHaveBeenCalledWith("dev100", uri)
-    })
-  })
-})
+      const uri = "/sap/bc/adt/programs/programs/zprog";
+      mockSearcher.searchObjects.mockResolvedValue([{ uri }]);
+      (openObject as Mock).mockResolvedValue(undefined);
+      await tool.invoke(makeOptions({ objectName: "ZPROG", connectionId: "DEV100" }), mockToken);
+      expect(openObject).toHaveBeenCalledWith("dev100", uri);
+    });
+  });
+});

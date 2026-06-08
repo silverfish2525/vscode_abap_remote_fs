@@ -28,15 +28,15 @@ After generation, the service binding opens automatically in the editor.
 
 ## Generated Artifacts
 
-| Artifact | Purpose |
-|----------|---------|
-| CDS Interface View | Data model layer |
-| CDS Projection View | Service projection / field selection |
-| Behavior Definition | CRUD operations and validations |
-| Behavior Implementation Class | ABAP class implementing the behavior |
-| Service Definition | Exposes the CDS view as a service |
-| Service Binding | Binds to OData V2 or V4 protocol |
-| Draft Table | Created for managed scenarios with draft enabled |
+| Artifact                      | Purpose                                          |
+| ----------------------------- | ------------------------------------------------ |
+| CDS Interface View            | Data model layer                                 |
+| CDS Projection View           | Service projection / field selection             |
+| Behavior Definition           | CRUD operations and validations                  |
+| Behavior Implementation Class | ABAP class implementing the behavior             |
+| Service Definition            | Exposes the CDS view as a service                |
+| Service Binding               | Binds to OData V2 or V4 protocol                 |
+| Draft Table                   | Created for managed scenarios with draft enabled |
 
 ## Publish and Test
 

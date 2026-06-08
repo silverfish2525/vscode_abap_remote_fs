@@ -8,11 +8,11 @@ Right-click any object listed under a transport request to see available actions
 
 ## Available Actions
 
-| Action | What it does |
-|---|---|
-| **Open** | Opens the object in the editor |
+| Action                        | What it does                                                                             |
+| ----------------------------- | ---------------------------------------------------------------------------------------- |
+| **Open**                      | Opens the object in the editor                                                           |
 | **Diff with current version** | Shows a side-by-side diff between the transported version and the current active version |
-| **Reveal in Explorer** | Navigates to the object in the ABAP file explorer |
+| **Reveal in Explorer**        | Navigates to the object in the ABAP file explorer                                        |
 
 ## Adding Objects to a Transport
 

@@ -1,6 +1,6 @@
-import { CreatableTypes, CreatableType, CreatableTypeIds } from "abap-adt-api"
+import { CreatableTypes, CreatableType, CreatableTypeIds } from "abap-adt-api";
 
-export const BDEF_TYPE_ID = "BDEF/BDO" as CreatableTypeIds
+export const BDEF_TYPE_ID = "BDEF/BDO" as CreatableTypeIds;
 
 const bdefType: CreatableType = {
   creationPath: "bo/behaviordefinitions",
@@ -9,11 +9,11 @@ const bdefType: CreatableType = {
   nameSpace: 'xmlns:blue="http://www.sap.com/wbobj/blue"',
   label: "Behavior Definition",
   typeId: BDEF_TYPE_ID,
-  maxLen: 30
-}
+  maxLen: 30,
+};
 
 export function registerBdefType() {
   if (!CreatableTypes.has(BDEF_TYPE_ID)) {
-    CreatableTypes.set(BDEF_TYPE_ID, bdefType)
+    CreatableTypes.set(BDEF_TYPE_ID, bdefType);
   }
 }

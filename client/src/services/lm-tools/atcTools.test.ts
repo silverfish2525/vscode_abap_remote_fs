@@ -1,255 +1,250 @@
-vi.mock("vscode", () => ({
-  LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
-  LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
-  MarkdownString: vi.fn().mockImplementation((text: string) => ({ text })),
-  Uri: { parse: vi.fn((s: string) => ({ toString: () => s, authority: s.split("//")[1]?.split("/")[0] })) },
-  lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) }
-}), { virtual: true })
+vi.mock(
+  "vscode",
+  () => ({
+    LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
+    LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
+    MarkdownString: vi.fn().mockImplementation((text: string) => ({ text })),
+    Uri: {
+      parse: vi.fn((s: string) => ({
+        toString: () => s,
+        authority: s.split("//")[1]?.split("/")[0],
+      })),
+    },
+    lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) },
+  }),
+  { virtual: true },
+);
 
 vi.mock("../../adt/conections", () => ({
   getOrCreateRoot: vi.fn(),
-  abapUri: vi.fn()
-}))
-vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+  abapUri: vi.fn(),
+}));
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }));
 vi.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() }))
-}))
-vi.mock("../abapSearchService", () => ({ getSearchService: vi.fn() }))
-vi.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }))
-vi.mock("../../views/abaptestcockpit", () => ({ atcProvider: { runAnalysis: vi.fn() } }))
-vi.mock("../../views/abaptestcockpit/decorations", () => ({ getATCDecorations: vi.fn() }))
+  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() })),
+}));
+vi.mock("../abapSearchService", () => ({ getSearchService: vi.fn() }));
+vi.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }));
+vi.mock("../../views/abaptestcockpit", () => ({ atcProvider: { runAnalysis: vi.fn() } }));
+vi.mock("../../views/abaptestcockpit/decorations", () => ({ getATCDecorations: vi.fn() }));
 
-import { RunATCAnalysisTool, GetATCDecorationsTool } from "./atcTools"
-import { getSearchService } from "../abapSearchService"
-import { getOrCreateRoot, abapUri } from "../../adt/conections"
-import { logTelemetry } from "../telemetry"
-import { funWindow as window } from "../funMessenger"
-import { getATCDecorations } from "../../views/abaptestcockpit/decorations"
+import { RunATCAnalysisTool, GetATCDecorationsTool } from "./atcTools";
+import { getSearchService } from "../abapSearchService";
+import { getOrCreateRoot, abapUri } from "../../adt/conections";
+import { logTelemetry } from "../telemetry";
+import { funWindow as window } from "../funMessenger";
+import { getATCDecorations } from "../../views/abaptestcockpit/decorations";
 
-const mockToken = {} as any
+const mockToken = {} as any;
 
 function makeOptions(input: any = {}) {
-  return { input } as any
+  return { input } as any;
 }
 
-const mockSearcher = { searchObjects: vi.fn() }
-const mockRoot = { findByAdtUri: vi.fn() }
+const mockSearcher = { searchObjects: vi.fn() };
+const mockRoot = { findByAdtUri: vi.fn() };
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("RunATCAnalysisTool - prepareInvocation validation", () => {
-  let tool: RunATCAnalysisTool
+  let tool: RunATCAnalysisTool;
 
   beforeEach(() => {
-    tool = new RunATCAnalysisTool()
-    vi.clearAllMocks()
-    ;(getSearchService as Mock).mockReturnValue(mockSearcher)
-    ;(getOrCreateRoot as Mock).mockResolvedValue(mockRoot)
-    ;(window as any).activeTextEditor = undefined
-  })
+    tool = new RunATCAnalysisTool();
+    vi.clearAllMocks();
+    (getSearchService as Mock).mockReturnValue(mockSearcher);
+    (getOrCreateRoot as Mock).mockResolvedValue(mockRoot);
+    (window as any).activeTextEditor = undefined;
+  });
 
   it("throws when objectUri is not a valid ADT URI", async () => {
     await expect(
-      tool.prepareInvocation(
-        makeOptions({ objectUri: "http://bad/uri" }),
-        mockToken
-      )
-    ).rejects.toThrow("objectUri must be a valid ADT URI")
-  })
+      tool.prepareInvocation(makeOptions({ objectUri: "http://bad/uri" }), mockToken),
+    ).rejects.toThrow("objectUri must be a valid ADT URI");
+  });
 
   it("throws when objectName given without connectionId", async () => {
     await expect(
-      tool.prepareInvocation(
-        makeOptions({ objectName: "ZPROG" }),
-        mockToken
-      )
-    ).rejects.toThrow("connectionId is required when specifying objectName")
-  })
+      tool.prepareInvocation(makeOptions({ objectName: "ZPROG" }), mockToken),
+    ).rejects.toThrow("connectionId is required when specifying objectName");
+  });
 
   it("throws when no target and useActiveFile=false", async () => {
     await expect(
-      tool.prepareInvocation(
-        makeOptions({ useActiveFile: false }),
-        mockToken
-      )
-    ).rejects.toThrow("No target specified")
-  })
+      tool.prepareInvocation(makeOptions({ useActiveFile: false }), mockToken),
+    ).rejects.toThrow("No target specified");
+  });
 
   it("accepts valid objectUri with adt:// scheme", async () => {
     await expect(
       tool.prepareInvocation(
         makeOptions({ objectUri: "adt://dev100/sap/bc/adt/programs/programs/zprog" }),
-        mockToken
-      )
-    ).resolves.toBeDefined()
-  })
+        mockToken,
+      ),
+    ).resolves.toBeDefined();
+  });
 
   it("accepts objectName with connectionId", async () => {
     await expect(
       tool.prepareInvocation(
         makeOptions({ objectName: "ZPROG", connectionId: "dev100" }),
-        mockToken
-      )
-    ).resolves.toBeDefined()
-  })
+        mockToken,
+      ),
+    ).resolves.toBeDefined();
+  });
 
   it("accepts useActiveFile=true without other params", async () => {
     await expect(
-      tool.prepareInvocation(
-        makeOptions({ useActiveFile: true }),
-        mockToken
-      )
-    ).resolves.toBeDefined()
-  })
+      tool.prepareInvocation(makeOptions({ useActiveFile: true }), mockToken),
+    ).resolves.toBeDefined();
+  });
 
   it("returns invocation message with object name", async () => {
     const result = await tool.prepareInvocation(
       makeOptions({ objectName: "ZPROG", connectionId: "dev100" }),
-      mockToken
-    )
-    expect(result.invocationMessage).toContain("ZPROG")
-  })
+      mockToken,
+    );
+    expect(result.invocationMessage).toContain("ZPROG");
+  });
 
   it("returns invocation message for active file", async () => {
-    const result = await tool.prepareInvocation(
-      makeOptions({ useActiveFile: true }),
-      mockToken
-    )
-    expect(result.invocationMessage).toContain("active file")
-  })
+    const result = await tool.prepareInvocation(makeOptions({ useActiveFile: true }), mockToken);
+    expect(result.invocationMessage).toContain("active file");
+  });
 
   it("includes scope info when provided", async () => {
     const result = await tool.prepareInvocation(
       makeOptions({ objectName: "ZPROG", connectionId: "dev100", scope: "package" }),
-      mockToken
-    )
-    expect(result.confirmationMessages).toBeDefined()
-  })
-})
+      mockToken,
+    );
+    expect(result.confirmationMessages).toBeDefined();
+  });
+});
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("RunATCAnalysisTool - invoke", () => {
-  let tool: RunATCAnalysisTool
+  let tool: RunATCAnalysisTool;
 
   beforeEach(() => {
-    tool = new RunATCAnalysisTool()
-    vi.clearAllMocks()
-    ;(getSearchService as Mock).mockReturnValue(mockSearcher)
-    ;(getOrCreateRoot as Mock).mockResolvedValue(mockRoot)
-    ;(window as any).activeTextEditor = undefined
-  })
+    tool = new RunATCAnalysisTool();
+    vi.clearAllMocks();
+    (getSearchService as Mock).mockReturnValue(mockSearcher);
+    (getOrCreateRoot as Mock).mockResolvedValue(mockRoot);
+    (window as any).activeTextEditor = undefined;
+  });
 
   it("logs telemetry", async () => {
-    await tool.invoke(
-      makeOptions({ objectUri: "adt://dev100/sap/bc/adt/programs/programs/zprog", connectionId: "dev100" }),
-      mockToken
-    ).catch(() => {})
+    await tool
+      .invoke(
+        makeOptions({
+          objectUri: "adt://dev100/sap/bc/adt/programs/programs/zprog",
+          connectionId: "dev100",
+        }),
+        mockToken,
+      )
+      .catch(() => {});
     expect(logTelemetry).toHaveBeenCalledWith("tool_run_atc_analysis_called", {
-      connectionId: "dev100"
-    })
-  })
+      connectionId: "dev100",
+    });
+  });
 
   it("throws when objectUri is not adt:// URI", async () => {
     await expect(
-      tool.invoke(
-        makeOptions({ objectUri: "http://bad/uri", connectionId: "dev100" }),
-        mockToken
-      )
-    ).rejects.toThrow("ADT URI")
-  })
+      tool.invoke(makeOptions({ objectUri: "http://bad/uri", connectionId: "dev100" }), mockToken),
+    ).rejects.toThrow("ADT URI");
+  });
 
   it("throws when no active editor and useActiveFile=true", async () => {
-    ;(window as any).activeTextEditor = undefined
-    await expect(
-      tool.invoke(
-        makeOptions({ useActiveFile: true }),
-        mockToken
-      )
-    ).rejects.toThrow("No active editor")
-  })
+    (window as any).activeTextEditor = undefined;
+    await expect(tool.invoke(makeOptions({ useActiveFile: true }), mockToken)).rejects.toThrow(
+      "No active editor",
+    );
+  });
 
   it("throws when active editor is not ABAP", async () => {
-    ;(window as any).activeTextEditor = {
-      document: { uri: { scheme: "file", authority: "" } }
-    }
-    ;(abapUri as Mock).mockReturnValue(false)
-    await expect(
-      tool.invoke(makeOptions({ useActiveFile: true }), mockToken)
-    ).rejects.toThrow("not an ABAP document")
-  })
+    (window as any).activeTextEditor = {
+      document: { uri: { scheme: "file", authority: "" } },
+    };
+    (abapUri as Mock).mockReturnValue(false);
+    await expect(tool.invoke(makeOptions({ useActiveFile: true }), mockToken)).rejects.toThrow(
+      "not an ABAP document",
+    );
+  });
 
   it("throws when objectName search returns no results", async () => {
-    mockSearcher.searchObjects.mockResolvedValue([])
+    mockSearcher.searchObjects.mockResolvedValue([]);
     await expect(
-      tool.invoke(
-        makeOptions({ objectName: "MISSING", connectionId: "dev100" }),
-        mockToken
-      )
-    ).rejects.toThrow("Could not find ABAP object")
-  })
+      tool.invoke(makeOptions({ objectName: "MISSING", connectionId: "dev100" }), mockToken),
+    ).rejects.toThrow("Could not find ABAP object");
+  });
 
   it("normalizes connectionId to lowercase", async () => {
-    await tool.invoke(
-      makeOptions({ objectUri: "adt://dev100/path", connectionId: "DEV100" }),
-      mockToken
-    ).catch(() => {})
+    await tool
+      .invoke(makeOptions({ objectUri: "adt://dev100/path", connectionId: "DEV100" }), mockToken)
+      .catch(() => {});
     expect(logTelemetry).toHaveBeenCalledWith("tool_run_atc_analysis_called", {
-      connectionId: "DEV100" // connectionId is logged before lowercasing
-    })
-  })
-})
+      connectionId: "DEV100", // connectionId is logged before lowercasing
+    });
+  });
+});
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("GetATCDecorationsTool", () => {
-  let tool: GetATCDecorationsTool
+  let tool: GetATCDecorationsTool;
 
   beforeEach(() => {
-    tool = new GetATCDecorationsTool()
-    vi.clearAllMocks()
-  })
+    tool = new GetATCDecorationsTool();
+    vi.clearAllMocks();
+  });
 
   describe("prepareInvocation", () => {
     it("returns invocation message", async () => {
-      const result = await tool.prepareInvocation(makeOptions(), mockToken)
-      expect(result.invocationMessage).toBeDefined()
-    })
-  })
+      const result = await tool.prepareInvocation(makeOptions(), mockToken);
+      expect(result.invocationMessage).toBeDefined();
+    });
+  });
 
   describe("invoke", () => {
     it("logs telemetry", async () => {
-      ;(getATCDecorations as Mock).mockReturnValue({ decorations: [] })
-      await tool.invoke(makeOptions(), mockToken)
+      (getATCDecorations as Mock).mockReturnValue({ decorations: [] });
+      await tool.invoke(makeOptions(), mockToken);
       expect(logTelemetry).toHaveBeenCalledWith("tool_get_atc_decorations_called", {
-        connectionId: undefined
-      })
-    })
+        connectionId: undefined,
+      });
+    });
 
     it("returns decorations result", async () => {
-      ;(getATCDecorations as Mock).mockReturnValue({ fileUri: "adt://dev100/path", decorations: [] })
-      const result: any = await tool.invoke(makeOptions(), mockToken)
-      expect(result.parts[0].text).toBeDefined()
-    })
+      (getATCDecorations as Mock).mockReturnValue({
+        fileUri: "adt://dev100/path",
+        decorations: [],
+      });
+      const result: any = await tool.invoke(makeOptions(), mockToken);
+      expect(result.parts[0].text).toBeDefined();
+    });
 
     it("handles empty decorations", async () => {
-      ;(getATCDecorations as Mock).mockReturnValue({ decorations: [] })
-      const result: any = await tool.invoke(makeOptions(), mockToken)
-      expect(result.parts[0].text).toBeDefined()
-    })
+      (getATCDecorations as Mock).mockReturnValue({ decorations: [] });
+      const result: any = await tool.invoke(makeOptions(), mockToken);
+      expect(result.parts[0].text).toBeDefined();
+    });
 
     it("filters by fileUri when provided", async () => {
-      ;(getATCDecorations as Mock).mockReturnValue({ fileUri: "adt://dev100/path", decorations: [] })
+      (getATCDecorations as Mock).mockReturnValue({
+        fileUri: "adt://dev100/path",
+        decorations: [],
+      });
       await tool.invoke(
         makeOptions({ fileUri: "adt://dev100/sap/bc/adt/programs/programs/zprog" }),
-        mockToken
-      )
+        mockToken,
+      );
       expect(getATCDecorations).toHaveBeenCalledWith(
-        "adt://dev100/sap/bc/adt/programs/programs/zprog"
-      )
-    })
+        "adt://dev100/sap/bc/adt/programs/programs/zprog",
+      );
+    });
 
     it("calls getATCDecorations without argument when no fileUri", async () => {
-      ;(getATCDecorations as Mock).mockReturnValue({ decorations: [] })
-      await tool.invoke(makeOptions(), mockToken)
-      expect(getATCDecorations).toHaveBeenCalledWith(undefined)
-    })
-  })
-})
+      (getATCDecorations as Mock).mockReturnValue({ decorations: [] });
+      await tool.invoke(makeOptions(), mockToken);
+      expect(getATCDecorations).toHaveBeenCalledWith(undefined);
+    });
+  });
+});

@@ -8,15 +8,15 @@ Debug ABAP programs directly inside VS Code — no SAP GUI required. You get the
 
 ## vs. SAP GUI Debugger
 
-| Feature | SAP GUI Debugger | VS Code (ABAP FS) |
-|---|---|---|
-| Breakpoints | Click in editor | Click in gutter or via Copilot |
-| Conditional breakpoints | ✅ | ✅ |
-| Variable inspection | Manual navigation | Pattern filtering, auto-expand |
-| Step controls | Toolbar buttons | Keyboard shortcuts (F5–F8) |
-| Call stack | ✅ | ✅ |
-| Multi-thread | Limited | Up to 20 concurrent threads |
-| AI assistance | ❌ | ✅ via Copilot |
+| Feature                 | SAP GUI Debugger  | VS Code (ABAP FS)              |
+| ----------------------- | ----------------- | ------------------------------ |
+| Breakpoints             | Click in editor   | Click in gutter or via Copilot |
+| Conditional breakpoints | ✅                | ✅                             |
+| Variable inspection     | Manual navigation | Pattern filtering, auto-expand |
+| Step controls           | Toolbar buttons   | Keyboard shortcuts (F5–F8)     |
+| Call stack              | ✅                | ✅                             |
+| Multi-thread            | Limited           | Up to 20 concurrent threads    |
+| AI assistance           | ❌                | ✅ via Copilot                 |
 
 ---
 
@@ -36,27 +36,27 @@ Debug ABAP programs directly inside VS Code — no SAP GUI required. You get the
 
 **Setting a breakpoint:** Click in the left gutter next to a line number — a red dot appears, identical to any VS Code language.
 
-**Conditional breakpoints:** Right-click the gutter → *Add Conditional Breakpoint* → enter an ABAP expression. Execution pauses only when the condition is true.
+**Conditional breakpoints:** Right-click the gutter → _Add Conditional Breakpoint_ → enter an ABAP expression. Execution pauses only when the condition is true.
 
-**Jump to cursor:** Press **Shift+F12** to resume execution and halt at the current cursor position (equivalent to *Breakpoint at Cursor* in SAP GUI).
+**Jump to cursor:** Press **Shift+F12** to resume execution and halt at the current cursor position (equivalent to _Breakpoint at Cursor_ in SAP GUI).
 
 ---
 
 ## Step Controls
 
-| Action | Shortcut | SAP GUI Equivalent |
-|---|---|---|
-| Continue (run to next breakpoint) | **F5** | F8 |
-| Step Over (execute line, skip into calls) | **F6** | F6 |
-| Step Into (enter method/function) | **F7** | F5 |
-| Step Return (finish current method) | **F8** | — |
-| Jump to Line | — | *Goto Line* |
+| Action                                    | Shortcut | SAP GUI Equivalent |
+| ----------------------------------------- | -------- | ------------------ |
+| Continue (run to next breakpoint)         | **F5**   | F8                 |
+| Step Over (execute line, skip into calls) | **F6**   | F6                 |
+| Step Into (enter method/function)         | **F7**   | F5                 |
+| Step Return (finish current method)       | **F8**   | —                  |
+| Jump to Line                              | —        | _Goto Line_        |
 
 ---
 
 ## Variable Inspection
 
-Open the **Variables** panel in the Debug sidebar. Variables are grouped by scope: *Local Variables*, *Global Variables*, *SY fields*, etc.
+Open the **Variables** panel in the Debug sidebar. Variables are grouped by scope: _Local Variables_, _Global Variables_, _SY fields_, etc.
 
 **Filtering by pattern** — useful in large programs:
 
@@ -66,9 +66,9 @@ Open the **Variables** panel in the Debug sidebar. Variables are grouped by scop
 
 **Auto-expand:** Structures and tables expand inline so you can see component values without navigating into each one.
 
-**Expression evaluation:** Type any ABAP variable or expression in the *Watch* panel or Debug Console to evaluate it at the current breakpoint.
+**Expression evaluation:** Type any ABAP variable or expression in the _Watch_ panel or Debug Console to evaluate it at the current breakpoint.
 
-**Via Copilot:** Ask naturally — *"Show me the value of lt_data"*, *"Expand ls_header"*, *"Show all variables starting with LT\_"*.
+**Via Copilot:** Ask naturally — _"Show me the value of lt_data"_, _"Expand ls_header"_, _"Show all variables starting with LT\_"_.
 
 ---
 

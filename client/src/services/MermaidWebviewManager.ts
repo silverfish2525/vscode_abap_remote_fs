@@ -5,57 +5,57 @@
  * rendering engines for Mermaid diagrams. No external dependencies or CDNs.
  */
 
-import * as vscode from "vscode"
-import { funWindow as window } from "./funMessenger"
-import { logCommands } from "./abapCopilotLogger"
-import { DiagramWebviewManager } from "./DiagramWebviewManager"
+import * as vscode from "vscode";
+import { funWindow as window } from "./funMessenger";
+import { logCommands } from "./abapCopilotLogger";
+import { DiagramWebviewManager } from "./DiagramWebviewManager";
 //import * as path from 'path';
 
 export interface MermaidRenderResult {
-  svg: string
-  diagramType: string
-  success: boolean
-  error?: string
+  svg: string;
+  diagramType: string;
+  success: boolean;
+  error?: string;
 }
 
 export interface MermaidValidationResult {
-  isValid: boolean
-  diagramType?: string
-  error?: string
+  isValid: boolean;
+  diagramType?: string;
+  error?: string;
 }
 
 export class MermaidWebviewManager {
-  private static instance: MermaidWebviewManager
-  private static isInitialized = false
-  private panel: vscode.WebviewPanel | null = null
-  private extensionUri: vscode.Uri
+  private static instance: MermaidWebviewManager;
+  private static isInitialized = false;
+  private panel: vscode.WebviewPanel | null = null;
+  private extensionUri: vscode.Uri;
   private pendingOperations = new Map<
     string,
     {
-      resolve: (result: any) => void
-      reject: (error: Error) => void
-      timeout: NodeJS.Timeout
+      resolve: (result: any) => void;
+      reject: (error: Error) => void;
+      timeout: NodeJS.Timeout;
     }
-  >()
+  >();
 
   private constructor(extensionUri: vscode.Uri) {
-    this.extensionUri = extensionUri
+    this.extensionUri = extensionUri;
   }
 
   public static initialize(extensionUri: vscode.Uri): void {
     if (!MermaidWebviewManager.instance) {
-      MermaidWebviewManager.instance = new MermaidWebviewManager(extensionUri)
-      MermaidWebviewManager.isInitialized = true
+      MermaidWebviewManager.instance = new MermaidWebviewManager(extensionUri);
+      MermaidWebviewManager.isInitialized = true;
     }
   }
 
   public static getInstance(): MermaidWebviewManager {
     if (!MermaidWebviewManager.isInitialized) {
       throw new Error(
-        "MermaidWebviewManager not initialized. Call initialize() first in the extension activation."
-      )
+        "MermaidWebviewManager not initialized. Call initialize() first in the extension activation.",
+      );
     }
-    return MermaidWebviewManager.instance
+    return MermaidWebviewManager.instance;
   }
 
   /**
@@ -74,31 +74,31 @@ export class MermaidWebviewManager {
         localResourceRoots: [
           vscode.Uri.joinPath(this.extensionUri, "media"),
           vscode.Uri.joinPath(this.extensionUri, "dist", "media"),
-          vscode.Uri.joinPath(this.extensionUri, "client", "dist", "media")
-        ]
+          vscode.Uri.joinPath(this.extensionUri, "client", "dist", "media"),
+        ],
         // Remove retainContextWhenHidden since we dispose immediately
-      }
-    )
+      },
+    );
 
     // Set the HTML and wait for the ready signal.
-    panel.webview.html = this.getWebviewContent(panel.webview)
+    panel.webview.html = this.getWebviewContent(panel.webview);
 
     // The waitForReady promise is now tied to this specific panel instance.
-    await this.waitForReady(panel)
+    await this.waitForReady(panel);
 
-    return panel
+    return panel;
   }
 
   private getWebviewContent(webview: vscode.Webview): string {
     // Get the local path to mermaid library
     const mermaidUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, "client", "dist", "media", "mermaid.min.js")
-    )
+      vscode.Uri.joinPath(this.extensionUri, "client", "dist", "media", "mermaid.min.js"),
+    );
 
     // Log the extension URI and mermaid URI for debugging
 
     // Nonce for Content Security Policy
-    const nonce = Date.now().toString()
+    const nonce = Date.now().toString();
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -283,188 +283,188 @@ export class MermaidWebviewManager {
         waitForMermaid();
     </script>
 </body>
-</html>`
+</html>`;
   }
 
   private handleWebviewMessage(message: any, panelId: string): void {
-    const { type, id, result, error } = message
+    const { type, id, result, error } = message;
 
     // Handle log messages from webview
     if (type === "log") {
-      return
+      return;
     }
 
     // Use a composite key to handle multiple panels if ever needed, though we dispose immediately.
-    const operationKey = `${panelId}-${id}`
-    const initKey = `ready-${panelId}`
+    const operationKey = `${panelId}-${id}`;
+    const initKey = `ready-${panelId}`;
 
     // Handle initialization-specific messages
     if (type === "ready" || (type === "error" && id === "initialization-error")) {
-      const initPromise = this.pendingOperations.get(initKey)
+      const initPromise = this.pendingOperations.get(initKey);
       if (initPromise) {
-        clearTimeout(initPromise.timeout)
+        clearTimeout(initPromise.timeout);
         if (type === "ready") {
-          initPromise.resolve(undefined)
+          initPromise.resolve(undefined);
         } else {
-          logCommands.error(`🧜‍♀️ Webview initialization failed: ${error}`)
-          initPromise.reject(new Error(`Webview initialization failed: ${error}`))
+          logCommands.error(`🧜‍♀️ Webview initialization failed: ${error}`);
+          initPromise.reject(new Error(`Webview initialization failed: ${error}`));
         }
-        this.pendingOperations.delete(initKey)
+        this.pendingOperations.delete(initKey);
       }
-      if (type === "ready") return
+      if (type === "ready") return;
     }
 
-    const operation = this.pendingOperations.get(operationKey)
+    const operation = this.pendingOperations.get(operationKey);
     if (!operation) {
-      return // Operation timed out or doesn't exist
+      return; // Operation timed out or doesn't exist
     }
 
-    clearTimeout(operation.timeout)
-    this.pendingOperations.delete(operationKey)
+    clearTimeout(operation.timeout);
+    this.pendingOperations.delete(operationKey);
 
     if (error) {
       // logCommands.error(`🧜‍♀️ Operation error: ${error}`);
-      operation.reject(new Error(error))
+      operation.reject(new Error(error));
     } else {
       //logCommands.info(`🧜‍♀️ Operation completed successfully`);
-      operation.resolve(result)
+      operation.resolve(result);
     }
   }
 
   private waitForReady(panel: vscode.WebviewPanel): Promise<void> {
-    const panelId = Date.now().toString() // Simple unique ID for this panel's lifetime
-    const readyKey = `ready-${panelId}`
+    const panelId = Date.now().toString(); // Simple unique ID for this panel's lifetime
+    const readyKey = `ready-${panelId}`;
 
     // Attach a temporary message listener
-    const listener = panel.webview.onDidReceiveMessage(message => {
+    const listener = panel.webview.onDidReceiveMessage((message) => {
       //logCommands.info(`🧜‍♀️ Received message from webview: ${JSON.stringify(message)}`);
 
       // Handle log messages
       if (message.type === "log") {
-        this.handleWebviewMessage(message, panelId)
-        return
+        this.handleWebviewMessage(message, panelId);
+        return;
       }
 
       // We only care about the ready/error signal for this specific panel
       if (message.type === "ready" && this.pendingOperations.has(readyKey)) {
-        this.handleWebviewMessage({ ...message, id: "ready" }, panelId)
-        listener.dispose() // Clean up listener
+        this.handleWebviewMessage({ ...message, id: "ready" }, panelId);
+        listener.dispose(); // Clean up listener
       } else if (
         message.type === "error" &&
         message.id === "initialization-error" &&
         this.pendingOperations.has(readyKey)
       ) {
-        this.handleWebviewMessage(message, panelId)
-        listener.dispose() // Clean up listener
+        this.handleWebviewMessage(message, panelId);
+        listener.dispose(); // Clean up listener
       }
-    })
+    });
 
     // The promise is now for this specific panel
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
-        this.pendingOperations.delete(readyKey)
-        listener.dispose()
-        reject(new Error("Webview initialization timed out after 10 seconds."))
-      }, 10000)
+        this.pendingOperations.delete(readyKey);
+        listener.dispose();
+        reject(new Error("Webview initialization timed out after 10 seconds."));
+      }, 10000);
 
       this.pendingOperations.set(readyKey, {
         resolve: () => {
-          clearTimeout(timeout)
-          resolve()
+          clearTimeout(timeout);
+          resolve();
         },
-        reject: err => {
-          clearTimeout(timeout)
-          reject(err)
+        reject: (err) => {
+          clearTimeout(timeout);
+          reject(err);
         },
-        timeout
-      })
-    })
+        timeout,
+      });
+    });
   }
 
   private async executeOperation<T>(
     type: string,
     data: any,
-    timeoutMs: number = 30000
+    timeoutMs: number = 30000,
   ): Promise<T> {
-    let panel: vscode.WebviewPanel | undefined
+    let panel: vscode.WebviewPanel | undefined;
     try {
-      panel = await this.createOneTimeWebview()
-      const panelId = Date.now().toString() // Simple unique ID
-      const operationKey = `${panelId}-${panelId}` // Use same ID for simplicity
+      panel = await this.createOneTimeWebview();
+      const panelId = Date.now().toString(); // Simple unique ID
+      const operationKey = `${panelId}-${panelId}`; // Use same ID for simplicity
 
       // Re-wire the message handler for this specific panel instance
-      const listener = panel.webview.onDidReceiveMessage(message => {
+      const listener = panel.webview.onDidReceiveMessage((message) => {
         ////logCommands.info(`🧜‍♀️ Operation message: ${JSON.stringify(message)}`);
 
         // Handle log messages
         if (message.type === "log") {
-          this.handleWebviewMessage(message, panelId)
-          return
+          this.handleWebviewMessage(message, panelId);
+          return;
         }
 
         // Handle result and error messages
         if (message.type === "result" || message.type === "error") {
-          this.handleWebviewMessage(message, panelId)
+          this.handleWebviewMessage(message, panelId);
         }
-      })
+      });
 
       const promise = new Promise<T>((resolve, reject) => {
         const timeout = setTimeout(() => {
-          this.pendingOperations.delete(operationKey)
-          reject(new Error(`Operation ${type} timed out after ${timeoutMs}ms`))
-        }, timeoutMs)
+          this.pendingOperations.delete(operationKey);
+          reject(new Error(`Operation ${type} timed out after ${timeoutMs}ms`));
+        }, timeoutMs);
 
         this.pendingOperations.set(operationKey, {
           resolve: resolve as (value: any) => void,
           reject,
-          timeout
-        })
+          timeout,
+        });
 
-        panel!.webview.postMessage({ type, id: panelId, data })
-      })
+        panel!.webview.postMessage({ type, id: panelId, data });
+      });
 
       // Cleanup listener on dispose
       panel.onDidDispose(() => {
-        listener.dispose()
-      })
+        listener.dispose();
+      });
 
-      return await promise
+      return await promise;
     } finally {
       // CRITICAL: Always dispose of the panel after the operation.
       if (panel) {
-        panel.dispose()
+        panel.dispose();
       }
     }
   }
 
   public async renderDiagram(code: string, theme: string = "dark"): Promise<MermaidRenderResult> {
-    const result = await this.executeOperation<MermaidRenderResult>("render", { code, theme })
+    const result = await this.executeOperation<MermaidRenderResult>("render", { code, theme });
 
     // If successful, display in diagram viewer instead of saving immediately
     if (result.success && result.svg) {
       try {
-        const diagramManager = DiagramWebviewManager.getInstance()
+        const diagramManager = DiagramWebviewManager.getInstance();
         await diagramManager.displayDiagram(
           result.svg,
           result.diagramType,
-          `Mermaid Diagram - ${result.diagramType}`
-        )
+          `Mermaid Diagram - ${result.diagramType}`,
+        );
         // logCommands.info('✅ Diagram displayed in webview successfully');
       } catch (error) {
-        logCommands.error("Failed to display diagram in webview:", error)
+        logCommands.error("Failed to display diagram in webview:", error);
         // Continue with the original result even if webview display fails
       }
     }
 
-    return result
+    return result;
   }
 
   public async validateSyntax(code: string): Promise<MermaidValidationResult> {
-    return this.executeOperation<MermaidValidationResult>("validate", { code })
+    return this.executeOperation<MermaidValidationResult>("validate", { code });
   }
 
   public async detectDiagramType(code: string): Promise<{ diagramType: string }> {
-    return this.executeOperation<{ diagramType: string }>("detectType", { code })
+    return this.executeOperation<{ diagramType: string }>("detectType", { code });
   }
 
   public dispose(): void {

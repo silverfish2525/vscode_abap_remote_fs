@@ -74,15 +74,15 @@ This section applies only if you want **central analytics** for your organizatio
 
 Each event is an action string (e.g., `command_activate_called`, `tool_search_abap_objects_called`) plus:
 
-| Field | Description |
-|---|---|
+| Field             | Description                                                       |
+| ----------------- | ----------------------------------------------------------------- |
 | Anonymous user ID | SHA hash of `hostname + username + platform` — cannot be reversed |
-| Session ID | Random ID per VS Code session |
-| Extension version | Version number |
-| VS Code version | VS Code version number |
-| Platform | Windows / Linux / Mac |
-| SAP system | System accessed (if applicable) |
-| Manager / Team | From whitelist `developers` mapping (if configured) |
+| Session ID        | Random ID per VS Code session                                     |
+| Extension version | Version number                                                    |
+| VS Code version   | VS Code version number                                            |
+| Platform          | Windows / Linux / Mac                                             |
+| SAP system        | System accessed (if applicable)                                   |
+| Manager / Team    | From whitelist `developers` mapping (if configured)               |
 
 **Not collected:** credentials, source code, object names, business data, error messages, performance metrics, HTTP requests, dependencies, or console logs. All Application Insights auto-collection features are disabled by default.
 
@@ -97,7 +97,7 @@ Each event is an action string (e.g., `command_activate_called`, `tool_search_ab
 4. **Set the connection string** in `client/src/services/appInsightsService.ts`:
 
    ```typescript
-   const connectionString = "InstrumentationKey=YOUR-KEY;IngestionEndpoint=https://..."
+   const connectionString = "InstrumentationKey=YOUR-KEY;IngestionEndpoint=https://...";
    ```
 
 5. **Build and distribute** your VSIX (see [Building and Distributing](#building-and-distributing) below).
@@ -106,19 +106,19 @@ Each event is an action string (e.g., `command_activate_called`, `tool_search_ab
 
 All auto-collection is off by default. To enable any of the following, edit the `initialize()` method in `client/src/services/appInsightsService.ts`:
 
-| Feature | Change |
-|---|---|
-| Exception tracking | `.setAutoCollectExceptions(false)` → `(true)` |
+| Feature                          | Change                                                      |
+| -------------------------------- | ----------------------------------------------------------- |
+| Exception tracking               | `.setAutoCollectExceptions(false)` → `(true)`               |
 | Performance metrics (CPU/memory) | `.setAutoCollectPerformance(false, false)` → `(true, true)` |
-| HTTP request tracking | `.setAutoCollectRequests(false)` → `(true)` |
-| Dependency tracking | `.setAutoCollectDependencies(false)` → `(true)` |
+| HTTP request tracking            | `.setAutoCollectRequests(false)` → `(true)`                 |
+| Dependency tracking              | `.setAutoCollectDependencies(false)` → `(true)`             |
 
 You can also add custom tracking anywhere in your code:
 
 ```typescript
-appInsights.defaultClient.trackEvent({ name: 'my_event' });
+appInsights.defaultClient.trackEvent({ name: "my_event" });
 appInsights.defaultClient.trackException({ exception: error });
-appInsights.defaultClient.trackMetric({ name: 'my_metric', value: 42 });
+appInsights.defaultClient.trackMetric({ name: "my_metric", value: 42 });
 ```
 
 ### Telemetry + whitelist integration

@@ -1,5 +1,5 @@
-import { AtcWorkList } from "abap-adt-api"
-import { Task } from "fp-ts/lib/Task"
+import { AtcWorkList } from "abap-adt-api";
+import { Task } from "fp-ts/lib/Task";
 import {
   commands,
   Disposable,
@@ -11,303 +11,303 @@ import {
   TreeDataProvider,
   TreeItem,
   TreeItemCollapsibleState,
-  Uri
-} from "vscode"
-import { funWindow as window } from "../../services/funMessenger"
-import { getClient } from "../../adt/conections"
-import { AdtObjectFinder } from "../../adt/operations/AdtObjectFinder"
-import { AbapFsCommands } from "../../commands"
+  Uri,
+} from "vscode";
+import { funWindow as window } from "../../services/funMessenger";
+import { getClient } from "../../adt/conections";
+import { AdtObjectFinder } from "../../adt/operations/AdtObjectFinder";
+import { AbapFsCommands } from "../../commands";
 import {
   AtcWLFinding,
   AtcWLobject,
   getVariant,
   runInspector,
-  runInspectorByAdtUrl
-} from "./codeinspector"
-import * as R from "ramda"
-import { AbapFile } from "abapfs"
-import { AdtObjectActivator } from "../../adt/operations/AdtObjectActivator"
-import { atcRefresh } from "./commands"
-import { AbapObjectBase } from "abapobject/out/AbapObject"
-import { log } from "../../lib"
-import { setContext } from "../../context"
+  runInspectorByAdtUrl,
+} from "./codeinspector";
+import * as R from "ramda";
+import { AbapFile } from "abapfs";
+import { AdtObjectActivator } from "../../adt/operations/AdtObjectActivator";
+import { atcRefresh } from "./commands";
+import { AbapObjectBase } from "abapobject/out/AbapObject";
+import { log } from "../../lib";
+import { setContext } from "../../context";
 
 export interface FindingMarker {
-  finding: AtcWLFinding
-  uri: string
-  start: Position
+  finding: AtcWLFinding;
+  uri: string;
+  start: Position;
 }
 
-export const hasExemption = (f: AtcWLFinding) => !!f.exemptionApproval
-export const approvedExemption = (f: AtcWLFinding) => f.exemptionApproval === "-"
+export const hasExemption = (f: AtcWLFinding) => !!f.exemptionApproval;
+export const approvedExemption = (f: AtcWLFinding) => f.exemptionApproval === "-";
 
 export class AtcRoot extends TreeItem {
-  systems = new Map<string, AtcSystem>()
+  systems = new Map<string, AtcSystem>();
   get filterExempt() {
-    return this.parent.exemptFilter
+    return this.parent.exemptFilter;
   }
   constructor(
     label: string,
-    private parent: AtcProvider
+    private parent: AtcProvider,
   ) {
-    super(label, TreeItemCollapsibleState.Expanded)
+    super(label, TreeItemCollapsibleState.Expanded);
   }
   get children() {
-    return [...this.systems.values()]
+    return [...this.systems.values()];
   }
   async child(key: string, variant: string) {
-    const cached = this.systems.get(key)
+    const cached = this.systems.get(key);
     if (cached) {
-      cached.updateVariant(variant)
-      return cached
+      cached.updateVariant(variant);
+      return cached;
     }
-    const system = new AtcSystem(key, variant, this)
-    this.systems.set(key, system)
-    this.parent.emitter.fire(undefined)
-    return system
+    const system = new AtcSystem(key, variant, this);
+    this.systems.set(key, system);
+    this.parent.emitter.fire(undefined);
+    return system;
   }
   static isA(x: any): x is AtcRoot {
-    return x instanceof AtcRoot
+    return x instanceof AtcRoot;
   }
 }
 interface ResFinding extends AtcWLFinding {
-  fileuri?: string
-  start?: Position
-  file?: AbapFile
+  fileuri?: string;
+  start?: Position;
+  file?: AbapFile;
 }
 interface ResObject extends AtcWLobject {
-  findings: ResFinding[]
+  findings: ResFinding[];
 }
-const zeroPos = new Position(0, 0)
+const zeroPos = new Position(0, 0);
 
 const resolveObjects = async (
   base: AtcWLobject[],
-  finder: AdtObjectFinder
+  finder: AdtObjectFinder,
 ): Promise<ResObject[]> => {
-  const result: ResObject[] = []
+  const result: ResObject[] = [];
   for (const o of base) {
-    const findings: ResFinding[] = []
+    const findings: ResFinding[] = [];
     for (const f of o.findings) {
       try {
-        const { uri, start, file } = await finder.vscodeRange(f.location)
-        findings.push({ ...f, start, file, fileuri: uri })
+        const { uri, start, file } = await finder.vscodeRange(f.location);
+        findings.push({ ...f, start, file, fileuri: uri });
       } catch (error) {
-        log(`Error resolving finding location ${f.location.uri}`)
-        findings.push(f)
+        log(`Error resolving finding location ${f.location.uri}`);
+        findings.push(f);
       }
     }
-    result.push({ ...o, findings })
+    result.push({ ...o, findings });
   }
-  return result
-}
+  return result;
+};
 
 export class AtcSystem extends TreeItem {
-  children: AtcObject[] = []
+  children: AtcObject[] = [];
   refresh: Task<void> = async () => {
     /* */
-  }
-  objects: ResObject[] = []
+  };
+  objects: ResObject[] = [];
 
   get hasErrors() {
-    for (const o of this.children) if (o.hasError) return true
-    return false
+    for (const o of this.children) if (o.hasError) return true;
+    return false;
   }
   async load(task: Task<AtcWorkList>) {
     this.refresh = async () => {
-      const wl = await task()
-      const finder = new AdtObjectFinder(this.connectionId)
-      this.children = []
+      const wl = await task();
+      const finder = new AdtObjectFinder(this.connectionId);
+      this.children = [];
 
       const objects = R.sortWith<AtcWLobject>([R.ascend(R.prop("type")), R.ascend(R.prop("name"))])(
-        wl.objects.filter(o => o.findings.length > 0)
-      )
-      this.objects = await resolveObjects(objects, finder)
-      this.updateChildren()
-    }
-    return this.refresh()
+        wl.objects.filter((o) => o.findings.length > 0),
+      );
+      this.objects = await resolveObjects(objects, finder);
+      this.updateChildren();
+    };
+    return this.refresh();
   }
   updateChildren() {
-    this.children = []
+    this.children = [];
     for (const o of this.objects) {
       const relevant = o.findings.filter(
-        f => !!f.fileuri && (!this.parent.filterExempt || !approvedExemption(f))
-      )
+        (f) => !!f.fileuri && (!this.parent.filterExempt || !approvedExemption(f)),
+      );
       if (relevant.length) {
-        const obj = new AtcObject(o, this)
+        const obj = new AtcObject(o, this);
         obj.children = relevant.map(
-          r => new AtcFind(r, obj, r.fileuri!, r.start || zeroPos, r.file)
-        )
-        this.children.push(obj)
+          (r) => new AtcFind(r, obj, r.fileuri!, r.start || zeroPos, r.file),
+        );
+        this.children.push(obj);
       }
     }
-    atcProvider.emitter.fire(this)
+    atcProvider.emitter.fire(this);
   }
   constructor(
     public readonly connectionId: string,
     public variant: string,
-    public readonly parent: AtcRoot
+    public readonly parent: AtcRoot,
   ) {
-    super(connectionId, TreeItemCollapsibleState.Expanded)
+    super(connectionId, TreeItemCollapsibleState.Expanded);
   }
   updateVariant(variant: string) {
-    this.variant = variant
+    this.variant = variant;
   }
 }
 
 export class AtcObject extends TreeItem {
-  children: AtcFind[] = []
-  hasError: boolean = false
+  children: AtcFind[] = [];
+  hasError: boolean = false;
   constructor(
     public readonly object: AtcWLobject,
-    public readonly parent: AtcSystem
+    public readonly parent: AtcSystem,
   ) {
-    super(`${object.type} ${object.name}`, TreeItemCollapsibleState.Expanded)
+    super(`${object.type} ${object.name}`, TreeItemCollapsibleState.Expanded);
   }
 }
 export class AtcFind extends TreeItem {
-  children: AtcFind[] = []
-  private unSavedStart: Position
+  children: AtcFind[] = [];
+  private unSavedStart: Position;
 
   public get start() {
-    return this.unSavedStart
+    return this.unSavedStart;
   }
   public applyEdits(edits: readonly TextDocumentContentChangeEvent[]) {
     for (const edit of edits) {
       if (edit.range.start.line <= this.start.line) {
         const deltalines =
-          edit.text.split("\n").length + edit.range.start.line - edit.range.end.line - 1
+          edit.text.split("\n").length + edit.range.start.line - edit.range.end.line - 1;
         this.unSavedStart = new Position(
           this.unSavedStart.line + deltalines,
-          this.unSavedStart.character
-        )
+          this.unSavedStart.character,
+        );
       }
     }
   }
   public savePosition() {
-    this._start = this.unSavedStart
+    this._start = this.unSavedStart;
   }
   public cancelEdits() {
-    this.unSavedStart = this.start
+    this.unSavedStart = this.start;
   }
   constructor(
     public readonly finding: AtcWLFinding,
     public readonly parent: AtcObject,
     public readonly uri: string,
     private _start: Position,
-    file?: AbapFile
+    file?: AbapFile,
   ) {
-    super(finding.messageTitle, TreeItemCollapsibleState.None)
-    this.unSavedStart = _start
+    super(finding.messageTitle, TreeItemCollapsibleState.None);
+    this.unSavedStart = _start;
     if (hasExemption(finding)) {
-      this.contextValue = "finding_exempted"
-      this.iconPath = new ThemeIcon("check", this.iconColor())
+      this.contextValue = "finding_exempted";
+      this.iconPath = new ThemeIcon("check", this.iconColor());
     } else {
-      this.iconPath = new ThemeIcon("issue-opened", this.iconColor())
-      this.contextValue = "finding"
+      this.iconPath = new ThemeIcon("issue-opened", this.iconColor());
+      this.contextValue = "finding";
     }
-    this.description = finding.checkTitle
-    if (file) this.tooltip = `${file.object.type} ${file.object.name}`
+    this.description = finding.checkTitle;
+    if (file) this.tooltip = `${file.object.type} ${file.object.name}`;
     this.command = {
       title: "Open",
       command: AbapFsCommands.openLocation,
-      arguments: [this]
-    }
+      arguments: [this],
+    };
   }
   iconColor() {
     switch (this.finding.priority) {
       case 1:
-        return new ThemeColor("list.errorForeground")
+        return new ThemeColor("list.errorForeground");
       case 2:
-        return new ThemeColor("list.warningForeground")
+        return new ThemeColor("list.warningForeground");
       default:
-        return new ThemeColor("list.deemphasizedForeground")
+        return new ThemeColor("list.deemphasizedForeground");
     }
   }
 }
 
-export type AtcNode = AtcRoot | AtcSystem | AtcObject | AtcFind
+export type AtcNode = AtcRoot | AtcSystem | AtcObject | AtcFind;
 class AtcProvider implements TreeDataProvider<AtcNode> {
-  emitter = new EventEmitter<AtcNode | undefined>()
-  root = new AtcRoot("systems", this)
-  private autoRefresh = false
-  activationListeners = new Map<string, Disposable>()
-  exemptFilter: boolean = true
+  emitter = new EventEmitter<AtcNode | undefined>();
+  root = new AtcRoot("systems", this);
+  private autoRefresh = false;
+  activationListeners = new Map<string, Disposable>();
+  exemptFilter: boolean = true;
   constructor() {
-    this.setExemptFilter(true)
+    this.setExemptFilter(true);
   }
 
   get onDidChangeTreeData() {
-    return this.emitter.event
+    return this.emitter.event;
   }
   getTreeItem(element: AtcNode): AtcNode {
-    return element
+    return element;
   }
   async getChildren(element?: AtcNode): Promise<AtcNode[]> {
-    return element ? element.children : this.root.children
+    return element ? element.children : this.root.children;
   }
 
   setExemptFilter(enabled: boolean) {
-    this.exemptFilter = enabled
-    setContext("abapfs:atc:exemptFilterOn", enabled)
-    for (const s of this.root.children) s.updateChildren()
+    this.exemptFilter = enabled;
+    setContext("abapfs:atc:exemptFilterOn", enabled);
+    for (const s of this.root.children) s.updateChildren();
   }
 
   setAutoRefresh(enabled: boolean) {
-    this.autoRefresh = enabled
-    setContext("abapfs:atc:autorefreshOn", enabled)
+    this.autoRefresh = enabled;
+    setContext("abapfs:atc:autorefreshOn", enabled);
     if (enabled) {
       for (const s of this.root.children) {
-        if (this.activationListeners.has(s.connectionId)) continue
-        const listener = AdtObjectActivator.get(s.connectionId).onActivate(e => {
-          const parent = e.object instanceof AbapObjectBase ? e.object.parent : undefined
+        if (this.activationListeners.has(s.connectionId)) continue;
+        const listener = AdtObjectActivator.get(s.connectionId).onActivate((e) => {
+          const parent = e.object instanceof AbapObjectBase ? e.object.parent : undefined;
           const h = s.children.find(
-            o =>
+            (o) =>
               (o.object.name === e.object.name && o.object.objectTypeId === e.object.type) ||
-              (o.object.name === parent?.name && o.object.objectTypeId === parent?.type)
-          )
-          if (h) atcRefresh()
-        })
-        this.activationListeners.set(s.connectionId, listener)
+              (o.object.name === parent?.name && o.object.objectTypeId === parent?.type),
+          );
+          if (h) atcRefresh();
+        });
+        this.activationListeners.set(s.connectionId, listener);
       }
     } else {
-      for (const [connectionId, listener] of this.activationListeners) listener.dispose()
-      this.activationListeners.clear()
+      for (const [connectionId, listener] of this.activationListeners) listener.dispose();
+      this.activationListeners.clear();
     }
   }
 
   public findings() {
-    return [...this.root.systems.values()].flatMap(s => s.children.flatMap(o => o.children))
+    return [...this.root.systems.values()].flatMap((s) => s.children.flatMap((o) => o.children));
   }
 
   reportError(system: AtcSystem) {
     if (system.hasErrors)
       window.showErrorMessage(
-        "Errors during ATC analysis, some issues won't be reported see ABAPFS logs for details."
-      )
+        "Errors during ATC analysis, some issues won't be reported see ABAPFS logs for details.",
+      );
   }
 
   async runInspectorByAdtUrl(uri: string, connectionId: string): Promise<string> {
-    const client = getClient(connectionId)
-    const { variant, checkVariant } = await getVariant(client, connectionId)
-    const system = await this.root.child(connectionId, checkVariant)
-    await system.load(() => runInspectorByAdtUrl(uri, system.variant, client))
-    commands.executeCommand("abapfs.atcFinds.focus")
-    this.setAutoRefresh(this.autoRefresh)
-    this.reportError(system)
-    return variant
+    const client = getClient(connectionId);
+    const { variant, checkVariant } = await getVariant(client, connectionId);
+    const system = await this.root.child(connectionId, checkVariant);
+    await system.load(() => runInspectorByAdtUrl(uri, system.variant, client));
+    commands.executeCommand("abapfs.atcFinds.focus");
+    this.setAutoRefresh(this.autoRefresh);
+    this.reportError(system);
+    return variant;
   }
 
   async runInspector(uri: Uri, setvariant?: (variant: string) => void): Promise<string> {
-    const client = getClient(uri.authority)
-    const { variant, checkVariant } = await getVariant(client, uri.authority)
-    if (setvariant) setvariant(variant)
-    const system = await this.root.child(uri.authority, checkVariant)
-    await system.load(() => runInspector(uri, system.variant, client))
-    commands.executeCommand("abapfs.atcFinds.focus")
-    this.setAutoRefresh(this.autoRefresh)
-    this.reportError(system)
-    return variant
+    const client = getClient(uri.authority);
+    const { variant, checkVariant } = await getVariant(client, uri.authority);
+    if (setvariant) setvariant(variant);
+    const system = await this.root.child(uri.authority, checkVariant);
+    await system.load(() => runInspector(uri, system.variant, client));
+    commands.executeCommand("abapfs.atcFinds.focus");
+    this.setAutoRefresh(this.autoRefresh);
+    this.reportError(system);
+    return variant;
   }
 }
 
-export const atcProvider = new AtcProvider()
+export const atcProvider = new AtcProvider();

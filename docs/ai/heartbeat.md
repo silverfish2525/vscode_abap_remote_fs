@@ -38,13 +38,13 @@ Open VS Code Settings (`Ctrl+,`) and add:
 }
 ```
 
-| Setting | Description | Default |
-|---------|-------------|---------|
-| `abapfs.heartbeat.enabled` | Enable/disable the service | `false` |
-| `abapfs.heartbeat.model` | AI model for background checks — use a cheap model | Required |
-| `abapfs.heartbeat.every` | Check interval (`"5m"`, `"1h"`, `"30s"`) | `"5m"` |
-| `abapfs.heartbeat.activeHours` | Only run during these hours | `"08:00-18:00"` |
-| `abapfs.heartbeat.maxConsecutiveErrors` | Auto-pause after N errors | `20` |
+| Setting                                 | Description                                        | Default         |
+| --------------------------------------- | -------------------------------------------------- | --------------- |
+| `abapfs.heartbeat.enabled`              | Enable/disable the service                         | `false`         |
+| `abapfs.heartbeat.model`                | AI model for background checks — use a cheap model | Required        |
+| `abapfs.heartbeat.every`                | Check interval (`"5m"`, `"1h"`, `"30s"`)           | `"5m"`          |
+| `abapfs.heartbeat.activeHours`          | Only run during these hours                        | `"08:00-18:00"` |
+| `abapfs.heartbeat.maxConsecutiveErrors` | Auto-pause after N errors                          | `20`            |
 
 **Recommended models (cost-effective):**
 
@@ -76,12 +76,12 @@ Copilot creates the task definitions and saves them to `heartbeat.json` in your 
 
 When heartbeat is running, a heart ❤️ appears in the VS Code status bar.
 
-| Status | Meaning |
-|--------|---------|
-| ❤️ (pulsing) | Active, waiting for next check |
-| ❤️ beat... | Running a check now |
-| ❤️ zzz | Paused (errors or outside active hours) |
-| (hidden) | Stopped |
+| Status       | Meaning                                 |
+| ------------ | --------------------------------------- |
+| ❤️ (pulsing) | Active, waiting for next check          |
+| ❤️ beat...   | Running a check now                     |
+| ❤️ zzz       | Paused (errors or outside active hours) |
+| (hidden)     | Stopped                                 |
 
 **Click the heart** to open `heartbeat.json` directly.
 
@@ -115,21 +115,21 @@ The agent stores what it already reported in `lastNotifiedFindings` and only tri
 
 ## Task Properties Reference
 
-| Property | Description |
-|----------|-------------|
-| `id` | Unique identifier |
-| `description` | What this task monitors or reminds |
-| `connectionId` | SAP system ID (e.g. `"dev100"`) |
-| `enabled` | Whether the task is active |
-| `category` | `transport`, `dump`, `job`, `reminder`, `custom` |
-| `priority` | `high`, `medium`, `low` |
-| `sampleQuery` | SQL query for the agent to run |
-| `checkInstructions` | Step-by-step instructions for the agent |
-| `startAt` | ISO timestamp — don't check before this time |
-| `reminderOnly` | Notify once and auto-remove |
-| `removeWhenDone` | Auto-remove when the condition is met |
-| `cooldownMinutes` | Don't re-notify within this period |
-| `alertThreshold` | Only alert if count exceeds this value |
+| Property            | Description                                      |
+| ------------------- | ------------------------------------------------ |
+| `id`                | Unique identifier                                |
+| `description`       | What this task monitors or reminds               |
+| `connectionId`      | SAP system ID (e.g. `"dev100"`)                  |
+| `enabled`           | Whether the task is active                       |
+| `category`          | `transport`, `dump`, `job`, `reminder`, `custom` |
+| `priority`          | `high`, `medium`, `low`                          |
+| `sampleQuery`       | SQL query for the agent to run                   |
+| `checkInstructions` | Step-by-step instructions for the agent          |
+| `startAt`           | ISO timestamp — don't check before this time     |
+| `reminderOnly`      | Notify once and auto-remove                      |
+| `removeWhenDone`    | Auto-remove when the condition is met            |
+| `cooldownMinutes`   | Don't re-notify within this period               |
+| `alertThreshold`    | Only alert if count exceeds this value           |
 
 ---
 
@@ -190,14 +190,14 @@ These are the JSON entries stored in `heartbeat.json`. You can let Copilot gener
 
 ## Managing Heartbeat via Copilot
 
-| What you want | Ask Copilot |
-|---------------|-------------|
-| Check status | `"What's the heartbeat status?"` |
-| List tasks | `"Show me the heartbeat watchlist"` |
-| Add a task | `"Monitor DEV for stuck jobs"` |
+| What you want | Ask Copilot                              |
+| ------------- | ---------------------------------------- |
+| Check status  | `"What's the heartbeat status?"`         |
+| List tasks    | `"Show me the heartbeat watchlist"`      |
+| Add a task    | `"Monitor DEV for stuck jobs"`           |
 | Remove a task | `"Remove the transport monitoring task"` |
-| Run check now | `"Trigger a heartbeat check now"` |
-| Stop service | `"Stop the heartbeat service"` |
+| Run check now | `"Trigger a heartbeat check now"`        |
+| Stop service  | `"Stop the heartbeat service"`           |
 
 ---
 

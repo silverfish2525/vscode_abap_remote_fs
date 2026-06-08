@@ -7,14 +7,14 @@ SAP Data Workbooks are VS Code notebooks that combine ABAP SQL queries, JavaScri
 1. Open the Command Palette (`Ctrl+Shift+P`)
 2. Run **ABAP FS: New SAP Data Workbook**
 
-Alternatively, create any file with the `.sapwb` extension, or ask Copilot: *"Create a workbook to analyze material master data quality."*
+Alternatively, create any file with the `.sapwb` extension, or ask Copilot: _"Create a workbook to analyze material master data quality."_
 
 ## Cell Types
 
-| Type | Purpose |
-|------|---------|
-| **Markdown** | Section headers, notes, documentation |
-| **ABAP SQL** | Query SAP tables (`SELECT` and `WITH` only — no DML) |
+| Type           | Purpose                                                |
+| -------------- | ------------------------------------------------------ |
+| **Markdown**   | Section headers, notes, documentation                  |
+| **ABAP SQL**   | Query SAP tables (`SELECT` and `WITH` only — no DML)   |
 | **JavaScript** | Process, filter, or compare results from earlier cells |
 
 ## Key Concepts
@@ -85,7 +85,7 @@ Workbook files store no system IDs, so they can be shared with colleagues who us
 
 ## Commands
 
-| Command | Shortcut / Notes |
-|---------|-----------------|
-| `ABAP FS: New SAP Data Workbook` | Creates a new `.sapwb` file |
-| `ABAP FS: Set Cell Max Rows` | Sets row limit for the current SQL cell |
+| Command                          | Shortcut / Notes                        |
+| -------------------------------- | --------------------------------------- |
+| `ABAP FS: New SAP Data Workbook` | Creates a new `.sapwb` file             |
+| `ABAP FS: Set Cell Max Rows`     | Sets row limit for the current SQL cell |

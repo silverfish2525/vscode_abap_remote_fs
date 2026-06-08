@@ -10,21 +10,21 @@ AI Subagents are specialized AI assistants, each focused on one type of ABAP tas
 
 ## Available Subagents
 
-| Agent | What it does | Tier |
-|-------|-------------|------|
-| `abap-orchestrator` | Routes tasks, writes all code, coordinates other agents | 3 (Premium) |
-| `abap-code-reviewer` | Deep code review — security, performance, best practices | 3 (Premium) |
-| `abap-usage-analyzer` | Where-used analysis, dependencies, change impact | 2 (Mid-tier) |
-| `abap-quality-checker` | ATC analysis, unit tests, code health | 2 (Mid-tier) |
-| `abap-historian` | Version history, transport requests | 2 (Mid-tier) |
-| `abap-debugger` | Runtime debugging — breakpoints, stepping | 2 (Mid-tier) |
-| `abap-troubleshooter` | Analyze dumps, traces, performance issues | 2 (Mid-tier) |
-| `abap-data-analyst` | Query SAP tables, analyze data patterns | 2 (Mid-tier) |
-| `abap-discoverer` | Find ABAP objects by name/pattern | 1 (Cheap/Fast) |
-| `abap-reader` | Read and extract info from source code | 1 (Cheap/Fast) |
-| `abap-creator` | Create new ABAP objects (shells) | 1 (Cheap/Fast) |
-| `abap-visualizer` | Create diagrams from code | 1 (Cheap/Fast) |
-| `abap-documenter` | Generate technical documentation | 1 (Cheap/Fast) |
+| Agent                  | What it does                                             | Tier           |
+| ---------------------- | -------------------------------------------------------- | -------------- |
+| `abap-orchestrator`    | Routes tasks, writes all code, coordinates other agents  | 3 (Premium)    |
+| `abap-code-reviewer`   | Deep code review — security, performance, best practices | 3 (Premium)    |
+| `abap-usage-analyzer`  | Where-used analysis, dependencies, change impact         | 2 (Mid-tier)   |
+| `abap-quality-checker` | ATC analysis, unit tests, code health                    | 2 (Mid-tier)   |
+| `abap-historian`       | Version history, transport requests                      | 2 (Mid-tier)   |
+| `abap-debugger`        | Runtime debugging — breakpoints, stepping                | 2 (Mid-tier)   |
+| `abap-troubleshooter`  | Analyze dumps, traces, performance issues                | 2 (Mid-tier)   |
+| `abap-data-analyst`    | Query SAP tables, analyze data patterns                  | 2 (Mid-tier)   |
+| `abap-discoverer`      | Find ABAP objects by name/pattern                        | 1 (Cheap/Fast) |
+| `abap-reader`          | Read and extract info from source code                   | 1 (Cheap/Fast) |
+| `abap-creator`         | Create new ABAP objects (shells)                         | 1 (Cheap/Fast) |
+| `abap-visualizer`      | Create diagrams from code                                | 1 (Cheap/Fast) |
+| `abap-documenter`      | Generate technical documentation                         | 1 (Cheap/Fast) |
 
 ## How to Use Subagents
 
@@ -59,11 +59,11 @@ Configure subagents for ABAP development
 
 Copilot will suggest models for each tier and ask for confirmation before applying. Recommended assignments:
 
-| Tier | Agents | Example models |
-|------|--------|---------------|
-| 1 — Cheap/Fast | discoverer, reader, creator, visualizer, documenter | Claude Haiku 4.5, Gemini 3 Flash |
-| 2 — Mid-tier | usage-analyzer, quality-checker, historian, debugger, troubleshooter, data-analyst | GPT-4o, Claude Sonnet 4 |
-| 3 — Premium | orchestrator, code-reviewer | Claude Sonnet/Opus 4.6, GPT-5.4 |
+| Tier           | Agents                                                                             | Example models                   |
+| -------------- | ---------------------------------------------------------------------------------- | -------------------------------- |
+| 1 — Cheap/Fast | discoverer, reader, creator, visualizer, documenter                                | Claude Haiku 4.5, Gemini 3 Flash |
+| 2 — Mid-tier   | usage-analyzer, quality-checker, historian, debugger, troubleshooter, data-analyst | GPT-4o, Claude Sonnet 4          |
+| 3 — Premium    | orchestrator, code-reviewer                                                        | Claude Sonnet/Opus 4.6, GPT-5.4  |
 
 **Avoid assigning premium models to Tier 1 agents** — it eliminates the cost benefit without improving results for simple tasks.
 
@@ -85,14 +85,14 @@ You may see a notification asking to enable `chat.customAgentInSubagent.enabled`
 
 All management is done through Copilot chat:
 
-| What you want | What to ask |
-|---------------|-------------|
-| Check current status | `Show subagent status` |
-| Disable all agents | `Disable subagents` |
-| Re-enable agents | `Enable subagents` |
-| Change a model | `Change abap-discoverer to use GPT-4o` |
+| What you want        | What to ask                            |
+| -------------------- | -------------------------------------- |
+| Check current status | `Show subagent status`                 |
+| Disable all agents   | `Disable subagents`                    |
+| Re-enable agents     | `Enable subagents`                     |
+| Change a model       | `Change abap-discoverer to use GPT-4o` |
 | See available models | `What models can I use for subagents?` |
-| See available tools | `List available tools for subagents` |
+| See available tools  | `List available tools for subagents`   |
 
 When you disable subagents, agent files move to `agents_disabled/` (not deleted). Re-enabling restores them with your customizations intact.
 
@@ -123,16 +123,21 @@ Changes survive disable/re-enable cycles — only the `model:` line is updated w
 ## Troubleshooting
 
 ### "Cannot enable subagents - missing models"
+
 All 13 agents must have models configured. Ask Copilot to configure missing agents.
 
 ### Agent files show validation errors
+
 Some model names aren't valid for agent files. Try a different model (e.g., use `Claude Haiku 4.5` instead of `GPT-4o mini`).
 
 ### Subagents auto-disabled
+
 This happens when configured models become unavailable. Reconfigure with available models.
 
 ### Ghost files in explorer after disable
+
 This is a VS Code refresh issue. The extension refreshes the explorer automatically, but occasionally you may need to collapse/expand the folder.
 
 ### Delegation not using custom agents
+
 Make sure `chat.customAgentInSubagent.enabled` is set to `true` in your VS Code settings.

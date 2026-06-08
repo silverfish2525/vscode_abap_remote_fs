@@ -16,11 +16,11 @@ export enum FileType {
   /**
    * A symbolic link to a file.
    */
-  SymbolicLink = 64
+  SymbolicLink = 64,
 }
 
 export class FileSystemError extends Error {
   static FileNotADirectory(messageOrUri?: string) {
-    return new Error(messageOrUri)
+    return new Error(messageOrUri);
   }
 }

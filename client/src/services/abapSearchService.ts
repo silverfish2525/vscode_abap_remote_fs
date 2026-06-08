@@ -2,26 +2,26 @@
  * ABAP Object Search Service
  */
 
-import { getClient } from "../adt/conections"
-import { logSearch } from "./abapCopilotLogger"
+import { getClient } from "../adt/conections";
+import { logSearch } from "./abapCopilotLogger";
 
 // Export interfaces for compatibility (simplified for line-based access)
 export interface ABAPObjectInfo {
-  name: string
-  type: string
-  description: string
-  package: string
-  systemType: "STANDARD" | "CUSTOM"
-  lastModified?: Date
-  uri?: string
-  details?: any
+  name: string;
+  type: string;
+  description: string;
+  package: string;
+  systemType: "STANDARD" | "CUSTOM";
+  lastModified?: Date;
+  uri?: string;
+  details?: any;
 }
 
 export class searchService {
-  private connectionId: string
+  private connectionId: string;
 
   constructor(connectionId: string) {
-    this.connectionId = connectionId
+    this.connectionId = connectionId;
   }
 
   /**
@@ -30,12 +30,12 @@ export class searchService {
   async searchObjects(
     pattern: string,
     types?: string[],
-    maxResults: number = 50
+    maxResults: number = 50,
   ): Promise<ABAPObjectInfo[]> {
     try {
-      const client = getClient(this.connectionId)
-      const searchPattern = pattern.toUpperCase()
-      const results: ABAPObjectInfo[] = []
+      const client = getClient(this.connectionId);
+      const searchPattern = pattern.toUpperCase();
+      const results: ABAPObjectInfo[] = [];
 
       // Determine which types to search
       const searchTypes =
@@ -79,15 +79,15 @@ export class searchService {
               "NROB", // Number Range Objects
               "SUSO", // Authorization Object Sets
               "BDEF", // Behavior Definitions
-              "SRVB" // Service Bindings
-            ]
+              "SRVB", // Service Bindings
+            ];
 
       for (const type of searchTypes) {
         try {
-          const searchResults = await client.searchObject(searchPattern, type)
+          const searchResults = await client.searchObject(searchPattern, type);
           for (const result of searchResults.slice(0, maxResults)) {
-            const objName = result["adtcore:name"]
-            const objType = result["adtcore:type"]
+            const objName = result["adtcore:name"];
+            const objType = result["adtcore:type"];
 
             if (objName && objType) {
               const objectInfo: ABAPObjectInfo = {
@@ -96,24 +96,24 @@ export class searchService {
                 description: result["adtcore:description"] || "",
                 package: result["adtcore:packageName"] || "",
                 systemType: this.determineSystemType(objName),
-                uri: result["adtcore:uri"] || ""
-              }
-              results.push(objectInfo)
+                uri: result["adtcore:uri"] || "",
+              };
+              results.push(objectInfo);
 
-              if (results.length >= maxResults) break
+              if (results.length >= maxResults) break;
             }
           }
 
-          if (results.length >= maxResults) break
+          if (results.length >= maxResults) break;
         } catch (error) {
           // Skip types that fail
         }
       }
 
-      return results
+      return results;
     } catch (error) {
-      logSearch.error("Error searching objects", error)
-      return []
+      logSearch.error("Error searching objects", error);
+      return [];
     }
   }
 
@@ -121,16 +121,16 @@ export class searchService {
    * Determine if object is standard or custom
    */
   private determineSystemType(name: string): "STANDARD" | "CUSTOM" {
-    return name.startsWith("Z") || name.startsWith("Y") ? "CUSTOM" : "STANDARD"
+    return name.startsWith("Z") || name.startsWith("Y") ? "CUSTOM" : "STANDARD";
   }
 }
 
 // Global search instances
-const search = new Map<string, searchService>()
+const search = new Map<string, searchService>();
 
 export function getSearchService(connectionId: string): searchService {
   if (!search.has(connectionId)) {
-    search.set(connectionId, new searchService(connectionId))
+    search.set(connectionId, new searchService(connectionId));
   }
-  return search.get(connectionId)!
+  return search.get(connectionId)!;
 }

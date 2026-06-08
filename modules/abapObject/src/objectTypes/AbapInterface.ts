@@ -1,12 +1,12 @@
-import { AbapObjectCreator } from "../creator"
-import { AbapObject, AbapObjectBase, AbapObjectService } from ".."
+import { AbapObjectCreator } from "../creator";
+import { AbapObject, AbapObjectBase, AbapObjectService } from "..";
 
-const tag = Symbol("AbapInterface")
+const tag = Symbol("AbapInterface");
 @AbapObjectCreator("INTF/OI")
 export class AbapInterface extends AbapObjectBase {
-  [tag] = true
+  [tag] = true;
   get extension() {
-    return ".intf.abap"
+    return ".intf.abap";
   }
   constructor(
     type: string,
@@ -17,10 +17,10 @@ export class AbapInterface extends AbapObjectBase {
     parent: AbapObject | undefined,
     sapGuiUri: string,
     service: AbapObjectService,
-    owner?: string
+    owner?: string,
   ) {
-    super(type, name, path, false, techName, parent, sapGuiUri, service, owner)
+    super(type, name, path, false, techName, parent, sapGuiUri, service, owner);
   }
 }
 
-export const isAbapInterface = (x: any): x is AbapInterface => !!x?.[tag]
+export const isAbapInterface = (x: any): x is AbapInterface => !!x?.[tag];

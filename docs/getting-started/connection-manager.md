@@ -14,13 +14,13 @@ The Connection Manager is a visual interface for adding, editing, and organizing
 
 ## Configuration Fields
 
-| Section | Fields |
-|---|---|
-| **Basic** | ADT URL, username, SAP client, language |
-| **SSL** | Allow self-signed certificates, custom CA certificate |
-| **SAP GUI** | Server, system number, router string, message server, GUI type (Desktop / Embedded WebGUI / Browser) |
-| **OAuth** | Client ID, secret, login URL |
-| **Advanced** | ATC approver, ATC check variant, max debug threads, diff formatter |
+| Section      | Fields                                                                                               |
+| ------------ | ---------------------------------------------------------------------------------------------------- |
+| **Basic**    | ADT URL, username, SAP client, language                                                              |
+| **SSL**      | Allow self-signed certificates, custom CA certificate                                                |
+| **SAP GUI**  | Server, system number, router string, message server, GUI type (Desktop / Embedded WebGUI / Browser) |
+| **OAuth**    | Client ID, secret, login URL                                                                         |
+| **Advanced** | ATC approver, ATC check variant, max debug threads, diff formatter                                   |
 
 ## Import / Export
 
@@ -42,9 +42,9 @@ A confirmation dialog appears before any bulk action is applied.
 
 Passwords are stored securely in the OS credential manager (never in settings files).
 
-| Command | What it does |
-|---|---|
-| **ABAP FS: Change Connection Password** | Select a system and enter a new password |
+| Command                                 | What it does                                                    |
+| --------------------------------------- | --------------------------------------------------------------- |
+| **ABAP FS: Change Connection Password** | Select a system and enter a new password                        |
 | **ABAP FS: Forget connection password** | Removes the stored password; you'll be prompted on next connect |
 
 ## User vs. Workspace Settings

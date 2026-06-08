@@ -1,13 +1,13 @@
-import { AbapObjectCreator } from "../creator"
-import { AbapObjectBase, AbapObject, AbapObjectService } from ".."
-import { ObjectErrors } from "../AOError"
+import { AbapObjectCreator } from "../creator";
+import { AbapObjectBase, AbapObject, AbapObjectService } from "..";
+import { ObjectErrors } from "../AOError";
 
-const tag = Symbol("AbapFunction")
+const tag = Symbol("AbapFunction");
 @AbapObjectCreator("FUGR/FF")
 export class AbapFunction extends AbapObjectBase {
-  [tag] = true
+  [tag] = true;
   get extension() {
-    return ".fugr.abap"
+    return ".fugr.abap";
   }
   constructor(
     type: string,
@@ -17,17 +17,19 @@ export class AbapFunction extends AbapObjectBase {
     techName: string,
     parent: AbapObject | undefined,
     sapGuiUri: string,
-    client: AbapObjectService
+    client: AbapObjectService,
   ) {
-    super(type, name, path, expandable, techName, parent, sapGuiUri, client)
+    super(type, name, path, expandable, techName, parent, sapGuiUri, client);
     if (parent?.type !== "FUGR/F")
-      throw ObjectErrors.Invalid(this, "Parent function group is required for function modules")
-    if (!this.path.toLowerCase().startsWith(parent.path.replace(/\/source\/main$/i, "").toLowerCase()))
-      throw ObjectErrors.Invalid(this, `Function ${name} doesn't belong to group ${parent.name}`)
+      throw ObjectErrors.Invalid(this, "Parent function group is required for function modules");
+    if (
+      !this.path.toLowerCase().startsWith(parent.path.replace(/\/source\/main$/i, "").toLowerCase())
+    )
+      throw ObjectErrors.Invalid(this, `Function ${name} doesn't belong to group ${parent.name}`);
 
-    this.parent = parent
+    this.parent = parent;
   }
-  readonly parent: AbapObject
+  readonly parent: AbapObject;
 }
 
-export const isAbapFunction = (x: any): x is AbapFunction => !!x?.[tag]
+export const isAbapFunction = (x: any): x is AbapFunction => !!x?.[tag];

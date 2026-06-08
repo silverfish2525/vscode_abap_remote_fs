@@ -16,13 +16,13 @@ Connect to a SAP system (`Ctrl+Shift+P` → **ABAP FS: Connect to an ABAP system
 
 When you type a question, Copilot picks the appropriate tool behind the scenes:
 
-| What you ask | Tool Copilot uses |
-|---|---|
-| "Where is BAPI_USER_GET_DETAIL used?" | `find_where_used` |
-| "Show me the code for ZCL_MY_CLASS" | `get_abap_object_lines` |
-| "Find all classes with 'pricing' in the name" | `search_abap_objects` |
-| "Create a new class ZCL_TEST" | `create_object_programmatically` |
-| "Run ATC on ZTEST_PROG" | `run_atc_analysis` |
+| What you ask                                  | Tool Copilot uses                |
+| --------------------------------------------- | -------------------------------- |
+| "Where is BAPI_USER_GET_DETAIL used?"         | `find_where_used`                |
+| "Show me the code for ZCL_MY_CLASS"           | `get_abap_object_lines`          |
+| "Find all classes with 'pricing' in the name" | `search_abap_objects`            |
+| "Create a new class ZCL_TEST"                 | `create_object_programmatically` |
+| "Run ATC on ZTEST_PROG"                       | `run_atc_analysis`               |
 
 ## Available Tools
 

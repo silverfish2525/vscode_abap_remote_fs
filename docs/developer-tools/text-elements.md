@@ -10,20 +10,22 @@ Manage translatable text elements (symbols) in ABAP programs, classes, and funct
 
 Three ways to open it for the active file:
 
-| Method | Steps |
-|--------|-------|
-| Command Palette | `Ctrl+Shift+P` → **ABAP FS: Text Elements Manager** |
-| Context menu | Right-click an ABAP file in Explorer → **Text Elements Manager** |
-| Copilot | Ask: *"Show me text elements for ZTEST_PROGRAM"* |
+| Method          | Steps                                                            |
+| --------------- | ---------------------------------------------------------------- |
+| Command Palette | `Ctrl+Shift+P` → **ABAP FS: Text Elements Manager**              |
+| Context menu    | Right-click an ABAP file in Explorer → **Text Elements Manager** |
+| Copilot         | Ask: _"Show me text elements for ZTEST_PROGRAM"_                 |
 
 ---
 
 ## What You Can Do
 
 ### Read text elements
+
 Works on **all SAP systems**. Displays existing text element IDs and their translations in an interactive webview.
 
 ### Create / Update text elements
+
 Available on **newer systems** with ADT text elements API support. Lets you add new symbols or change existing text directly in VS Code — no SAP GUI needed.
 
 > **Older systems fallback:** If the ADT API is not available, the extension automatically opens the text element editor in SAP GUI instead.
@@ -43,18 +45,18 @@ Available on **newer systems** with ADT text elements API support. Lets you add 
 
 ## Compared to SE38 Text Elements
 
-| SE38 / SE24 | VS Code (ABAP FS) |
-|-------------|-------------------|
-| Navigate to program → Goto → Text Elements | Command Palette or right-click |
-| Edit in ABAP editor screen | Interactive webview |
-| Save with `Ctrl+S` | Save within the webview |
-| Requires SAP GUI | Works directly in VS Code (newer systems) |
+| SE38 / SE24                                | VS Code (ABAP FS)                         |
+| ------------------------------------------ | ----------------------------------------- |
+| Navigate to program → Goto → Text Elements | Command Palette or right-click            |
+| Edit in ABAP editor screen                 | Interactive webview                       |
+| Save with `Ctrl+S`                         | Save within the webview                   |
+| Requires SAP GUI                           | Works directly in VS Code (newer systems) |
 
 ---
 
 ## System Compatibility
 
-| Operation | Older systems | Newer systems (ADT API) |
-|-----------|--------------|------------------------|
-| Read | Yes | Yes |
-| Create / Update | Opens SAP GUI fallback | Yes, in VS Code |
+| Operation       | Older systems          | Newer systems (ADT API) |
+| --------------- | ---------------------- | ----------------------- |
+| Read            | Yes                    | Yes                     |
+| Create / Update | Opens SAP GUI fallback | Yes, in VS Code         |

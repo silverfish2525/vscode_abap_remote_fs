@@ -1,8 +1,12 @@
-vi.mock("vscode", () => ({
-  window: {
-    createOutputChannel: vi.fn()
-  }
-}), { virtual: true })
+vi.mock(
+  "vscode",
+  () => ({
+    window: {
+      createOutputChannel: vi.fn(),
+    },
+  }),
+  { virtual: true },
+);
 
 vi.mock("../lib/logger", () => {
   const mockChannel = {
@@ -13,281 +17,281 @@ vi.mock("../lib/logger", () => {
     trace: vi.fn(),
     show: vi.fn(),
     clear: vi.fn(),
-    dispose: vi.fn()
-  }
-  return { channel: mockChannel }
-})
+    dispose: vi.fn(),
+  };
+  return { channel: mockChannel };
+});
 
-import { copilotLogger, logInlineProvider, logSearch, logCommands } from "./abapCopilotLogger"
-import { channel } from "../lib/logger"
+import { copilotLogger, logInlineProvider, logSearch, logCommands } from "./abapCopilotLogger";
+import { channel } from "../lib/logger";
 
-const mockChannel = channel as any
+const mockChannel = channel as any;
 
 beforeEach(() => {
-  vi.clearAllMocks()
-})
+  vi.clearAllMocks();
+});
 
 // ─── copilotLogger singleton ──────────────────────────────────────────────────
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("copilotLogger singleton", () => {
   test("copilotLogger is defined", () => {
-    expect(copilotLogger).toBeDefined()
-  })
+    expect(copilotLogger).toBeDefined();
+  });
 
   test("repeated require returns same exported instance", () => {
-    const { copilotLogger: a } = require("./abapCopilotLogger")
-    const { copilotLogger: b } = require("./abapCopilotLogger")
-    expect(a).toBe(b)
-  })
-})
+    const { copilotLogger: a } = require("./abapCopilotLogger");
+    const { copilotLogger: b } = require("./abapCopilotLogger");
+    expect(a).toBe(b);
+  });
+});
 
 // ─── copilotLogger.info ───────────────────────────────────────────────────────
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("copilotLogger.info", () => {
   test("calls outputChannel.info with formatted message", () => {
-    copilotLogger.info("MyComponent", "test info message")
-    expect(mockChannel.info).toHaveBeenCalledWith("[MyComponent] test info message")
-  })
+    copilotLogger.info("MyComponent", "test info message");
+    expect(mockChannel.info).toHaveBeenCalledWith("[MyComponent] test info message");
+  });
 
   test("formats message with component prefix", () => {
-    copilotLogger.info("Search", "found 5 results")
-    const call = mockChannel.info.mock.calls[0][0] as string
-    expect(call).toMatch(/^\[Search\]/)
-    expect(call).toContain("found 5 results")
-  })
-})
+    copilotLogger.info("Search", "found 5 results");
+    const call = mockChannel.info.mock.calls[0][0] as string;
+    expect(call).toMatch(/^\[Search\]/);
+    expect(call).toContain("found 5 results");
+  });
+});
 
 // ─── copilotLogger.warn ───────────────────────────────────────────────────────
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("copilotLogger.warn", () => {
   test("calls outputChannel.warn with formatted message", () => {
-    copilotLogger.warn("InlineProvider", "something might be wrong")
-    expect(mockChannel.warn).toHaveBeenCalledWith("[InlineProvider] something might be wrong")
-  })
-})
+    copilotLogger.warn("InlineProvider", "something might be wrong");
+    expect(mockChannel.warn).toHaveBeenCalledWith("[InlineProvider] something might be wrong");
+  });
+});
 
 // ─── copilotLogger.error ──────────────────────────────────────────────────────
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("copilotLogger.error", () => {
   test("calls outputChannel.error with formatted message", () => {
-    copilotLogger.error("Commands", "something failed")
-    expect(mockChannel.error).toHaveBeenCalledWith("[Commands] something failed")
-  })
+    copilotLogger.error("Commands", "something failed");
+    expect(mockChannel.error).toHaveBeenCalledWith("[Commands] something failed");
+  });
 
   test("appends error object to message", () => {
-    const err = new Error("underlying cause")
-    copilotLogger.error("Commands", "something failed", err)
+    const err = new Error("underlying cause");
+    copilotLogger.error("Commands", "something failed", err);
 
-    const call = mockChannel.error.mock.calls[0][0] as string
-    expect(call).toContain("Error: Error: underlying cause")
-  })
+    const call = mockChannel.error.mock.calls[0][0] as string;
+    expect(call).toContain("Error: Error: underlying cause");
+  });
 
   test("appends stack trace when available", () => {
-    const err = new Error("with stack")
-    err.stack = "Error: with stack\n  at line1"
-    copilotLogger.error("Commands", "failed", err)
+    const err = new Error("with stack");
+    err.stack = "Error: with stack\n  at line1";
+    copilotLogger.error("Commands", "failed", err);
 
-    const call = mockChannel.error.mock.calls[0][0] as string
-    expect(call).toContain("Stack:")
-    expect(call).toContain("at line1")
-  })
+    const call = mockChannel.error.mock.calls[0][0] as string;
+    expect(call).toContain("Stack:");
+    expect(call).toContain("at line1");
+  });
 
   test("works without error argument", () => {
-    expect(() => copilotLogger.error("Commands", "plain error")).not.toThrow()
-    expect(mockChannel.error).toHaveBeenCalledWith("[Commands] plain error")
-  })
-})
+    expect(() => copilotLogger.error("Commands", "plain error")).not.toThrow();
+    expect(mockChannel.error).toHaveBeenCalledWith("[Commands] plain error");
+  });
+});
 
 // ─── copilotLogger.debug ──────────────────────────────────────────────────────
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("copilotLogger.debug", () => {
   test("calls outputChannel.debug with formatted message", () => {
-    copilotLogger.debug("Search", "debug info")
-    expect(mockChannel.debug).toHaveBeenCalledWith("[Search] debug info")
-  })
-})
+    copilotLogger.debug("Search", "debug info");
+    expect(mockChannel.debug).toHaveBeenCalledWith("[Search] debug info");
+  });
+});
 
 // ─── copilotLogger.trace ──────────────────────────────────────────────────────
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("copilotLogger.trace", () => {
   test("calls outputChannel.trace with operation in message", () => {
-    copilotLogger.trace("InlineProvider", "fetchData")
-    const call = mockChannel.trace.mock.calls[0][0] as string
-    expect(call).toContain("TRACE: fetchData")
-    expect(call).toContain("[InlineProvider]")
-  })
+    copilotLogger.trace("InlineProvider", "fetchData");
+    const call = mockChannel.trace.mock.calls[0][0] as string;
+    expect(call).toContain("TRACE: fetchData");
+    expect(call).toContain("[InlineProvider]");
+  });
 
   test("includes JSON-serialized data when provided", () => {
-    copilotLogger.trace("Search", "searchObjects", { query: "ZTEST*", count: 5 })
-    const call = mockChannel.trace.mock.calls[0][0] as string
-    expect(call).toContain('"query": "ZTEST*"')
-    expect(call).toContain('"count": 5')
-  })
+    copilotLogger.trace("Search", "searchObjects", { query: "ZTEST*", count: 5 });
+    const call = mockChannel.trace.mock.calls[0][0] as string;
+    expect(call).toContain('"query": "ZTEST*"');
+    expect(call).toContain('"count": 5');
+  });
 
   test("works without data argument", () => {
-    expect(() => copilotLogger.trace("Search", "noData")).not.toThrow()
-    expect(mockChannel.trace).toHaveBeenCalled()
-  })
-})
+    expect(() => copilotLogger.trace("Search", "noData")).not.toThrow();
+    expect(mockChannel.trace).toHaveBeenCalled();
+  });
+});
 
 // ─── copilotLogger.show ──────────────────────────────────────────────────────
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("copilotLogger.show", () => {
   test("delegates to outputChannel.show", () => {
-    copilotLogger.show()
-    expect(mockChannel.show).toHaveBeenCalled()
-  })
-})
+    copilotLogger.show();
+    expect(mockChannel.show).toHaveBeenCalled();
+  });
+});
 
 // ─── copilotLogger.clear ─────────────────────────────────────────────────────
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("copilotLogger.clear", () => {
   test("delegates to outputChannel.clear", () => {
-    copilotLogger.clear()
-    expect(mockChannel.clear).toHaveBeenCalled()
-  })
-})
+    copilotLogger.clear();
+    expect(mockChannel.clear).toHaveBeenCalled();
+  });
+});
 
 // ─── copilotLogger.dispose ───────────────────────────────────────────────────
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("copilotLogger.dispose", () => {
   test("delegates to outputChannel.dispose", () => {
-    copilotLogger.dispose()
-    expect(mockChannel.dispose).toHaveBeenCalled()
-  })
-})
+    copilotLogger.dispose();
+    expect(mockChannel.dispose).toHaveBeenCalled();
+  });
+});
 
 // ─── logInlineProvider facade ─────────────────────────────────────────────────
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("logInlineProvider facade", () => {
   test("info uses 'InlineProvider' component", () => {
-    logInlineProvider.info("something happened")
-    expect(mockChannel.info).toHaveBeenCalledWith("[InlineProvider] something happened")
-  })
+    logInlineProvider.info("something happened");
+    expect(mockChannel.info).toHaveBeenCalledWith("[InlineProvider] something happened");
+  });
 
   test("warn uses 'InlineProvider' component", () => {
-    logInlineProvider.warn("warning here")
-    expect(mockChannel.warn).toHaveBeenCalledWith("[InlineProvider] warning here")
-  })
+    logInlineProvider.warn("warning here");
+    expect(mockChannel.warn).toHaveBeenCalledWith("[InlineProvider] warning here");
+  });
 
   test("error uses 'InlineProvider' component", () => {
-    logInlineProvider.error("error occurred")
-    expect(mockChannel.error).toHaveBeenCalledWith("[InlineProvider] error occurred")
-  })
+    logInlineProvider.error("error occurred");
+    expect(mockChannel.error).toHaveBeenCalledWith("[InlineProvider] error occurred");
+  });
 
   test("debug uses 'InlineProvider' component", () => {
-    logInlineProvider.debug("debug info")
-    expect(mockChannel.debug).toHaveBeenCalledWith("[InlineProvider] debug info")
-  })
+    logInlineProvider.debug("debug info");
+    expect(mockChannel.debug).toHaveBeenCalledWith("[InlineProvider] debug info");
+  });
 
   test("trace uses 'InlineProvider' component", () => {
-    logInlineProvider.trace("operation", { key: "value" })
-    const call = mockChannel.trace.mock.calls[0][0] as string
-    expect(call).toContain("[InlineProvider]")
-    expect(call).toContain("TRACE: operation")
-  })
-})
+    logInlineProvider.trace("operation", { key: "value" });
+    const call = mockChannel.trace.mock.calls[0][0] as string;
+    expect(call).toContain("[InlineProvider]");
+    expect(call).toContain("TRACE: operation");
+  });
+});
 
 // ─── logSearch facade ─────────────────────────────────────────────────────────
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("logSearch facade", () => {
   test("info uses 'Search' component", () => {
-    logSearch.info("search info")
-    expect(mockChannel.info).toHaveBeenCalledWith("[Search] search info")
-  })
+    logSearch.info("search info");
+    expect(mockChannel.info).toHaveBeenCalledWith("[Search] search info");
+  });
 
   test("warn uses 'Search' component", () => {
-    logSearch.warn("search warn")
-    expect(mockChannel.warn).toHaveBeenCalledWith("[Search] search warn")
-  })
+    logSearch.warn("search warn");
+    expect(mockChannel.warn).toHaveBeenCalledWith("[Search] search warn");
+  });
 
   test("error uses 'Search' component", () => {
-    logSearch.error("search error")
-    expect(mockChannel.error).toHaveBeenCalledWith("[Search] search error")
-  })
+    logSearch.error("search error");
+    expect(mockChannel.error).toHaveBeenCalledWith("[Search] search error");
+  });
 
   test("debug uses 'Search' component", () => {
-    logSearch.debug("search debug")
-    expect(mockChannel.debug).toHaveBeenCalledWith("[Search] search debug")
-  })
+    logSearch.debug("search debug");
+    expect(mockChannel.debug).toHaveBeenCalledWith("[Search] search debug");
+  });
 
   test("trace uses 'Search' component", () => {
-    logSearch.trace("findObjects", { pattern: "Z*" })
-    const call = mockChannel.trace.mock.calls[0][0] as string
-    expect(call).toContain("[Search]")
-    expect(call).toContain("TRACE: findObjects")
-  })
-})
+    logSearch.trace("findObjects", { pattern: "Z*" });
+    const call = mockChannel.trace.mock.calls[0][0] as string;
+    expect(call).toContain("[Search]");
+    expect(call).toContain("TRACE: findObjects");
+  });
+});
 
 // ─── logCommands facade ───────────────────────────────────────────────────────
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("logCommands facade", () => {
   test("info uses 'Commands' component", () => {
-    logCommands.info("command info")
-    expect(mockChannel.info).toHaveBeenCalledWith("[Commands] command info")
-  })
+    logCommands.info("command info");
+    expect(mockChannel.info).toHaveBeenCalledWith("[Commands] command info");
+  });
 
   test("warn uses 'Commands' component", () => {
-    logCommands.warn("command warn")
-    expect(mockChannel.warn).toHaveBeenCalledWith("[Commands] command warn")
-  })
+    logCommands.warn("command warn");
+    expect(mockChannel.warn).toHaveBeenCalledWith("[Commands] command warn");
+  });
 
   test("error uses 'Commands' component", () => {
-    logCommands.error("command error")
-    expect(mockChannel.error).toHaveBeenCalledWith("[Commands] command error")
-  })
+    logCommands.error("command error");
+    expect(mockChannel.error).toHaveBeenCalledWith("[Commands] command error");
+  });
 
   test("debug uses 'Commands' component", () => {
-    logCommands.debug("command debug")
-    expect(mockChannel.debug).toHaveBeenCalledWith("[Commands] command debug")
-  })
+    logCommands.debug("command debug");
+    expect(mockChannel.debug).toHaveBeenCalledWith("[Commands] command debug");
+  });
 
   test("trace uses 'Commands' component", () => {
-    logCommands.trace("executeActivate", { object: "ZCL_TEST" })
-    const call = mockChannel.trace.mock.calls[0][0] as string
-    expect(call).toContain("[Commands]")
-    expect(call).toContain("TRACE: executeActivate")
-  })
-})
+    logCommands.trace("executeActivate", { object: "ZCL_TEST" });
+    const call = mockChannel.trace.mock.calls[0][0] as string;
+    expect(call).toContain("[Commands]");
+    expect(call).toContain("TRACE: executeActivate");
+  });
+});
 
 // ─── Message formatting edge cases ───────────────────────────────────────────
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("message formatting edge cases", () => {
   test("empty component string still formats message", () => {
-    copilotLogger.info("", "test message")
-    expect(mockChannel.info).toHaveBeenCalledWith("[] test message")
-  })
+    copilotLogger.info("", "test message");
+    expect(mockChannel.info).toHaveBeenCalledWith("[] test message");
+  });
 
   test("empty message string still formats correctly", () => {
-    copilotLogger.info("MyComponent", "")
-    expect(mockChannel.info).toHaveBeenCalledWith("[MyComponent] ")
-  })
+    copilotLogger.info("MyComponent", "");
+    expect(mockChannel.info).toHaveBeenCalledWith("[MyComponent] ");
+  });
 
   test("component and message with special characters", () => {
-    copilotLogger.info("My/Component[1]", "message: value=42 & done")
-    expect(mockChannel.info).toHaveBeenCalledWith("[My/Component[1]] message: value=42 & done")
-  })
+    copilotLogger.info("My/Component[1]", "message: value=42 & done");
+    expect(mockChannel.info).toHaveBeenCalledWith("[My/Component[1]] message: value=42 & done");
+  });
 
   test("trace with null data does not crash", () => {
-    expect(() => copilotLogger.trace("Component", "operation", null)).not.toThrow()
-  })
+    expect(() => copilotLogger.trace("Component", "operation", null)).not.toThrow();
+  });
 
   test("error with string as error argument", () => {
-    copilotLogger.error("Component", "failed", "plain string error")
-    const call = mockChannel.error.mock.calls[0][0] as string
-    expect(call).toContain("plain string error")
-  })
-})
+    copilotLogger.error("Component", "failed", "plain string error");
+    const call = mockChannel.error.mock.calls[0][0] as string;
+    expect(call).toContain("plain string error");
+  });
+});

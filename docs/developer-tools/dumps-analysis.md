@@ -23,17 +23,17 @@ Or ask Copilot directly (see [Using Copilot](#using-copilot) below).
 
 Type any of these in the Copilot chat:
 
-| Prompt | What it does |
-|---|---|
-| `Analyze the latest dumps` | Lists recent dumps and analyzes the most recent one |
-| `Show me dumps from today` | Filters to today's dumps |
-| `What caused the RABAX error?` | AI root cause analysis on the current dump |
-| `Analyze dump with ID xyz123` | Analyzes a specific dump by ID |
+| Prompt                         | What it does                                        |
+| ------------------------------ | --------------------------------------------------- |
+| `Analyze the latest dumps`     | Lists recent dumps and analyzes the most recent one |
+| `Show me dumps from today`     | Filters to today's dumps                            |
+| `What caused the RABAX error?` | AI root cause analysis on the current dump          |
+| `Analyze dump with ID xyz123`  | Analyzes a specific dump by ID                      |
 
 ## Compared to ST22
 
-| ST22 (SAP GUI) | VS Code Dumps panel |
-|---|---|
-| Manual navigation through raw HTML | Structured, parsed output |
-| No AI assistance | Copilot explains cause and suggests fix |
-| Separate tool from your editor | Inline with your code |
+| ST22 (SAP GUI)                     | VS Code Dumps panel                     |
+| ---------------------------------- | --------------------------------------- |
+| Manual navigation through raw HTML | Structured, parsed output               |
+| No AI assistance                   | Copilot explains cause and suggests fix |
+| Separate tool from your editor     | Inline with your code                   |

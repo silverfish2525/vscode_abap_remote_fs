@@ -1,24 +1,24 @@
-import * as vscode from "vscode"
-import * as path from "path"
-import { ReplPanel } from "./replPanel"
-import { log } from "../lib"
+import * as vscode from "vscode";
+import * as path from "path";
+import { ReplPanel } from "./replPanel";
+import { log } from "../lib";
 
-const REPL_DISCLAIMER_ACCEPTED_KEY = "abapfs.replDisclaimerAccepted"
+const REPL_DISCLAIMER_ACCEPTED_KEY = "abapfs.replDisclaimerAccepted";
 
 async function showReplDisclaimer(context: vscode.ExtensionContext): Promise<boolean> {
   if (context.globalState.get<boolean>(REPL_DISCLAIMER_ACCEPTED_KEY)) {
-    return true
+    return true;
   }
 
   const panel = vscode.window.createWebviewPanel(
     "abapReplDisclaimer",
     "ABAP REPL - Important Notice",
     vscode.ViewColumn.One,
-    { enableScripts: true }
-  )
+    { enableScripts: true },
+  );
 
-  return new Promise<boolean>(resolve => {
-    let resolved = false
+  return new Promise<boolean>((resolve) => {
+    let resolved = false;
     panel.webview.html = `<!DOCTYPE html>
 <html>
 <head>
@@ -59,47 +59,47 @@ async function showReplDisclaimer(context: vscode.ExtensionContext): Promise<boo
     function post(action) { vscode.postMessage({ action }); }
   </script>
 </body>
-</html>`
+</html>`;
 
-    panel.webview.onDidReceiveMessage(msg => {
-      if (resolved) return
-      resolved = true
+    panel.webview.onDidReceiveMessage((msg) => {
+      if (resolved) return;
+      resolved = true;
       if (msg.action === "agree-always") {
-        context.globalState.update(REPL_DISCLAIMER_ACCEPTED_KEY, true)
-        panel.dispose()
-        resolve(true)
+        context.globalState.update(REPL_DISCLAIMER_ACCEPTED_KEY, true);
+        panel.dispose();
+        resolve(true);
       } else if (msg.action === "agree") {
-        panel.dispose()
-        resolve(true)
+        panel.dispose();
+        resolve(true);
       } else {
-        panel.dispose()
-        resolve(false)
+        panel.dispose();
+        resolve(false);
       }
-    })
+    });
 
     panel.onDidDispose(() => {
       if (!resolved) {
-        resolved = true
-        resolve(false)
+        resolved = true;
+        resolve(false);
       }
-    })
-  })
+    });
+  });
 }
 
 export function registerAbapRepl(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand("abapfs.executeAbapCode", async () => {
-      const accepted = await showReplDisclaimer(context)
+      const accepted = await showReplDisclaimer(context);
       if (accepted) {
-        ReplPanel.create(context.extensionUri)
+        ReplPanel.create(context.extensionUri);
       }
     }),
     vscode.commands.registerCommand("abapfs.abapReplSetupGuide", () => {
       const uri = vscode.Uri.file(
-        path.join(context.extensionUri.fsPath, "client", "dist", "media", "REPL_SETUP_GUIDE.md")
-      )
-      vscode.commands.executeCommand("markdown.showPreview", uri)
-    })
-  )
-  log("ABAP REPL commands registered")
+        path.join(context.extensionUri.fsPath, "client", "dist", "media", "REPL_SETUP_GUIDE.md"),
+      );
+      vscode.commands.executeCommand("markdown.showPreview", uri);
+    }),
+  );
+  log("ABAP REPL commands registered");
 }

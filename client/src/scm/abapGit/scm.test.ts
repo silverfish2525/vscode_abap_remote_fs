@@ -1,99 +1,123 @@
-vi.mock("vscode", () => ({
-  Uri: {
-    parse: vi.fn((s: string) => ({
-      scheme: s.split("://")[0],
-      authority: s.split("://")[1]?.split("/")[0] || "",
-      path: "/" + (s.split("://")[1]?.split("/").slice(1).join("/") || ""),
-      toString: () => s
-    }))
-  },
-  scm: {
-    createSourceControl: vi.fn().mockReturnValue({
-      inputBox: { placeholder: "" },
-      statusBarCommands: [],
-      createResourceGroup: vi.fn().mockReturnValue({
-        hideWhenEmpty: false,
-        resourceStates: [],
-        id: "staged",
-        [Symbol.iterator]: vi.fn().mockReturnValue([][Symbol.iterator]())
-      })
-    })
-  },
-  SourceControl: vi.fn(),
-  SourceControlResourceGroup: vi.fn(),
-  SourceControlResourceState: vi.fn()
-}), { virtual: true })
+vi.mock(
+  "vscode",
+  () => ({
+    Uri: {
+      parse: vi.fn((s: string) => ({
+        scheme: s.split("://")[0],
+        authority: s.split("://")[1]?.split("/")[0] || "",
+        path: "/" + (s.split("://")[1]?.split("/").slice(1).join("/") || ""),
+        toString: () => s,
+      })),
+    },
+    scm: {
+      createSourceControl: vi.fn().mockReturnValue({
+        inputBox: { placeholder: "" },
+        statusBarCommands: [],
+        createResourceGroup: vi.fn().mockReturnValue({
+          hideWhenEmpty: false,
+          resourceStates: [],
+          id: "staged",
+          [Symbol.iterator]: vi.fn().mockReturnValue([][Symbol.iterator]()),
+        }),
+      }),
+    },
+    SourceControl: vi.fn(),
+    SourceControlResourceGroup: vi.fn(),
+    SourceControlResourceState: vi.fn(),
+  }),
+  { virtual: true },
+);
 
 vi.mock("../../lib", () => ({
   Cache: vi.fn(),
   mapGet: vi.fn((map: Map<any, any>, key: string, fn: () => any) => {
-    if (!map.has(key)) map.set(key, fn())
-    return map.get(key)
+    if (!map.has(key)) map.set(key, fn());
+    return map.get(key);
   }),
   cache: vi.fn((fn: any) => {
-    const map = new Map()
+    const map = new Map();
     return {
-      get: (k: string) => { if (!map.has(k)) map.set(k, fn(k)); return map.get(k) },
-      [Symbol.iterator]: function*() { yield* map.entries() }
-    }
-  })
-}))
+      get: (k: string) => {
+        if (!map.has(k)) map.set(k, fn(k));
+        return map.get(k);
+      },
+      [Symbol.iterator]: function* () {
+        yield* map.entries();
+      },
+    };
+  }),
+}));
 
 vi.mock("./credentials", () => ({
-  dataCredentials: vi.fn()
-}))
+  dataCredentials: vi.fn(),
+}));
 
 vi.mock("./documentProvider", () => ({
-  gitUrl: vi.fn((data: any, href: string) => ({ toString: () => href }))
-}))
+  gitUrl: vi.fn((data: any, href: string) => ({ toString: () => href })),
+}));
 
 vi.mock("../../commands", () => ({
-  AbapFsCommands: { agitBranch: "abapfs.agitBranch" }
-}))
+  AbapFsCommands: { agitBranch: "abapfs.agitBranch" },
+}));
 
 vi.mock("fp-ts/lib/Option", () => ({
   isNone: vi.fn(),
-  fromNullable: vi.fn((v: any) => v ? { _tag: "Some", value: v } : { _tag: "None" }),
-  some: vi.fn((v: any) => ({ _tag: "Some", value: v }))
-}))
+  fromNullable: vi.fn((v: any) => (v ? { _tag: "Some", value: v } : { _tag: "None" })),
+  some: vi.fn((v: any) => ({ _tag: "Some", value: v })),
+}));
 
-vi.mock("./storage", () => ({ saveRepos: vi.fn() }))
+vi.mock("./storage", () => ({ saveRepos: vi.fn() }));
 
 vi.mock("../../adt/conections", () => ({
-  getClient: vi.fn()
-}))
+  getClient: vi.fn(),
+}));
 
 import {
-  STAGED, UNSTAGED, IGNORED,
-  scmKey, scmData, fileUri, isAgResState,
-  setStatusCommand, addRepo, fromSC, fromGroup, ScmData
-} from "./scm"
-import { Uri } from "vscode"
+  STAGED,
+  UNSTAGED,
+  IGNORED,
+  scmKey,
+  scmData,
+  fileUri,
+  isAgResState,
+  setStatusCommand,
+  addRepo,
+  fromSC,
+  fromGroup,
+  ScmData,
+} from "./scm";
+import { Uri } from "vscode";
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("constants", () => {
-  it("STAGED is 'staged'", () => { expect(STAGED).toBe("staged") })
-  it("UNSTAGED is 'unstaged'", () => { expect(UNSTAGED).toBe("unstaged") })
-  it("IGNORED is 'ignored'", () => { expect(IGNORED).toBe("ignored") })
-})
+  it("STAGED is 'staged'", () => {
+    expect(STAGED).toBe("staged");
+  });
+  it("UNSTAGED is 'unstaged'", () => {
+    expect(UNSTAGED).toBe("unstaged");
+  });
+  it("IGNORED is 'ignored'", () => {
+    expect(IGNORED).toBe("ignored");
+  });
+});
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("scmKey", () => {
   it("generates correct key format", () => {
-    expect(scmKey("conn1", "ZPACKAGE")).toBe("abapGit_conn1_ZPACKAGE")
-  })
+    expect(scmKey("conn1", "ZPACKAGE")).toBe("abapGit_conn1_ZPACKAGE");
+  });
 
   it("generates key for different conn and package", () => {
-    expect(scmKey("dev100", "ZPKG2")).toBe("abapGit_dev100_ZPKG2")
-  })
-})
+    expect(scmKey("dev100", "ZPKG2")).toBe("abapGit_dev100_ZPKG2");
+  });
+});
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("scmData", () => {
   it("returns undefined for unknown key", () => {
-    expect(scmData("unknown_key")).toBeUndefined()
-  })
-})
+    expect(scmData("unknown_key")).toBeUndefined();
+  });
+});
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("fileUri", () => {
@@ -101,118 +125,116 @@ describe.skip("fileUri", () => {
     const file: any = {
       path: "/sap/bc/adt/abapgit/repos/",
       name: "ZCL_TEST.clas.abap",
-      links: []
-    }
-    const uri = fileUri(file)
+      links: [],
+    };
+    const uri = fileUri(file);
     expect(Uri.parse).toHaveBeenCalledWith(
-      expect.stringContaining(encodeURIComponent("ZCL_TEST.clas.abap"))
-    )
-  })
+      expect.stringContaining(encodeURIComponent("ZCL_TEST.clas.abap")),
+    );
+  });
 
   it("encodes special characters in filename", () => {
     const file: any = {
       path: "/path/",
       name: "Z CL TEST.clas.abap",
-      links: []
-    }
-    const uri = fileUri(file)
-    expect(Uri.parse).toHaveBeenCalledWith(
-      expect.stringContaining("Z%20CL%20TEST")
-    )
-  })
-})
+      links: [],
+    };
+    const uri = fileUri(file);
+    expect(Uri.parse).toHaveBeenCalledWith(expect.stringContaining("Z%20CL%20TEST"));
+  });
+});
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("isAgResState", () => {
   it("returns true for valid AgResState", () => {
     const state: any = {
       resourceUri: { toString: () => "adt://conn/path" },
-      data: { connId: "conn1", repo: {}, scm: {}, groups: {}, notNew: true }
-    }
-    expect(isAgResState(state)).toBe(true)
-  })
+      data: { connId: "conn1", repo: {}, scm: {}, groups: {}, notNew: true },
+    };
+    expect(isAgResState(state)).toBe(true);
+  });
 
   it("returns false for missing data", () => {
-    expect(isAgResState({ resourceUri: {} })).toBe(false)
-  })
+    expect(isAgResState({ resourceUri: {} })).toBe(false);
+  });
 
   it("returns false for missing resourceUri", () => {
-    expect(isAgResState({ data: { connId: "c" } })).toBe(false)
-  })
+    expect(isAgResState({ data: { connId: "c" } })).toBe(false);
+  });
 
   it("returns false for null/undefined", () => {
-    expect(isAgResState(null)).toBe(false)
-    expect(isAgResState(undefined)).toBe(false)
-  })
+    expect(isAgResState(null)).toBe(false);
+    expect(isAgResState(undefined)).toBe(false);
+  });
 
   it("returns false for missing connId", () => {
-    expect(isAgResState({ resourceUri: {}, data: {} })).toBe(false)
-  })
-})
+    expect(isAgResState({ resourceUri: {}, data: {} })).toBe(false);
+  });
+});
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("setStatusCommand", () => {
   it("sets status bar command with branch name", () => {
-    const mockScm: any = { statusBarCommands: [] }
+    const mockScm: any = { statusBarCommands: [] };
     const data: any = {
       scm: mockScm,
-      repo: { branch_name: "refs/heads/main", sapPackage: "ZPKG" }
-    }
-    setStatusCommand(data)
-    expect(mockScm.statusBarCommands).toHaveLength(1)
-    expect(mockScm.statusBarCommands[0].title).toBe("main")
-  })
+      repo: { branch_name: "refs/heads/main", sapPackage: "ZPKG" },
+    };
+    setStatusCommand(data);
+    expect(mockScm.statusBarCommands).toHaveLength(1);
+    expect(mockScm.statusBarCommands[0].title).toBe("main");
+  });
 
   it("strips refs/heads/ prefix from branch name", () => {
-    const mockScm: any = { statusBarCommands: [] }
+    const mockScm: any = { statusBarCommands: [] };
     const data: any = {
       scm: mockScm,
-      repo: { branch_name: "/refs/heads/feature/my-branch", sapPackage: "ZPKG" }
-    }
-    setStatusCommand(data)
-    expect(mockScm.statusBarCommands[0].title).toBe("feature/my-branch")
-  })
+      repo: { branch_name: "/refs/heads/feature/my-branch", sapPackage: "ZPKG" },
+    };
+    setStatusCommand(data);
+    expect(mockScm.statusBarCommands[0].title).toBe("feature/my-branch");
+  });
 
   it("keeps branch name as-is when not refs/heads/ format", () => {
-    const mockScm: any = { statusBarCommands: [] }
+    const mockScm: any = { statusBarCommands: [] };
     const data: any = {
       scm: mockScm,
-      repo: { branch_name: "custom-branch", sapPackage: "ZPKG" }
-    }
-    setStatusCommand(data)
-    expect(mockScm.statusBarCommands[0].title).toBe("custom-branch")
-  })
-})
+      repo: { branch_name: "custom-branch", sapPackage: "ZPKG" },
+    };
+    setStatusCommand(data);
+    expect(mockScm.statusBarCommands[0].title).toBe("custom-branch");
+  });
+});
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("addRepo", () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => vi.clearAllMocks());
 
   it("creates a new ScmData when not existing", async () => {
     const mockRepo: any = {
       key: "repokey1",
       sapPackage: "ZPKG",
-      branch_name: "main"
-    }
-    const result = await addRepo("conn1", mockRepo, false)
-    expect(result).toBeDefined()
-    expect(result.connId).toBe("conn1")
-    expect(result.repo.key).toBe("repokey1")
-  })
+      branch_name: "main",
+    };
+    const result = await addRepo("conn1", mockRepo, false);
+    expect(result).toBeDefined();
+    expect(result.connId).toBe("conn1");
+    expect(result.repo.key).toBe("repokey1");
+  });
 
   it("marks notNew=true when addnew=false", async () => {
-    const mockRepo: any = { key: "repokey2", sapPackage: "ZPKG2", branch_name: "dev" }
-    const result = await addRepo("conn1", mockRepo, false)
-    expect(result.notNew).toBe(true)
-  })
-})
+    const mockRepo: any = { key: "repokey2", sapPackage: "ZPKG2", branch_name: "dev" };
+    const result = await addRepo("conn1", mockRepo, false);
+    expect(result.notNew).toBe(true);
+  });
+});
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("fromSC", () => {
   it("returns None when scm not found", () => {
-    const { fromNullable } = require("fp-ts/lib/Option")
-    const fakeSC: any = {}
-    const result = fromSC(fakeSC)
-    expect(fromNullable).toHaveBeenCalledWith(undefined)
-  })
-})
+    const { fromNullable } = require("fp-ts/lib/Option");
+    const fakeSC: any = {};
+    const result = fromSC(fakeSC);
+    expect(fromNullable).toHaveBeenCalledWith(undefined);
+  });
+});

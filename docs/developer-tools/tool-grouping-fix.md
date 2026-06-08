@@ -14,11 +14,11 @@ The check runs after you first connect to a SAP system (not at extension activat
 
 A non-modal notification appears with three options:
 
-| Option | Effect |
-|---|---|
+| Option               | Effect                                                                         |
+| -------------------- | ------------------------------------------------------------------------------ |
 | **Disable & Reload** | Sets the threshold to `0` globally and in your workspace, then reloads VS Code |
-| **Later** | Skips the prompt this session; asks again on next connection |
-| **Don't Ask Again** | Permanently suppresses the prompt |
+| **Later**            | Skips the prompt this session; asks again on next connection                   |
+| **Don't Ask Again**  | Permanently suppresses the prompt                                              |
 
 Choose **Disable & Reload** unless you have a specific reason to keep grouping enabled.
 

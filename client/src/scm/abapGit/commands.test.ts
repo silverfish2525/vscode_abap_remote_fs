@@ -1,29 +1,33 @@
-vi.mock("vscode", () => ({
-  commands: { executeCommand: vi.fn() },
-  Uri: {
-    parse: vi.fn((s: string) => ({
-      toString: () => s,
-      path: s.replace(/^\w+:\/\/[^/]*/, ""),
-      authority: "",
-      scheme: "adt"
-    })),
-    file: vi.fn((s: string) => ({ toString: () => s, fsPath: s }))
-  },
-  SourceControlResourceGroup: vi.fn(),
-  SourceControlResourceState: vi.fn(),
-  SourceControl: vi.fn(),
-  Memento: vi.fn(),
-  QuickPickItem: vi.fn()
-}), { virtual: true })
+vi.mock(
+  "vscode",
+  () => ({
+    commands: { executeCommand: vi.fn() },
+    Uri: {
+      parse: vi.fn((s: string) => ({
+        toString: () => s,
+        path: s.replace(/^\w+:\/\/[^/]*/, ""),
+        authority: "",
+        scheme: "adt",
+      })),
+      file: vi.fn((s: string) => ({ toString: () => s, fsPath: s })),
+    },
+    SourceControlResourceGroup: vi.fn(),
+    SourceControlResourceState: vi.fn(),
+    SourceControl: vi.fn(),
+    Memento: vi.fn(),
+    QuickPickItem: vi.fn(),
+  }),
+  { virtual: true },
+);
 
 vi.mock("../../services/funMessenger", () => ({
   funWindow: {
     showQuickPick: vi.fn(),
     showErrorMessage: vi.fn(),
     showInformationMessage: vi.fn(),
-    withProgress: vi.fn((_opts: any, cb: any) => cb())
-  }
-}))
+    withProgress: vi.fn((_opts: any, cb: any) => cb()),
+  },
+}));
 
 vi.mock("../../commands", () => ({
   AbapFsCommands: {
@@ -33,10 +37,10 @@ vi.mock("../../commands", () => ({
     agitAdd: "abapfs.agitAdd",
     agitRemove: "abapfs.agitRemove",
     agitresetPwd: "abapfs.agitresetPwd",
-    agitBranch: "abapfs.switchBranch"
+    agitBranch: "abapfs.switchBranch",
   },
-  command: vi.fn(() => vi.fn())
-}))
+  command: vi.fn(() => vi.fn()),
+}));
 
 vi.mock("./scm", () => ({
   refresh: vi.fn(),
@@ -49,8 +53,8 @@ vi.mock("./scm", () => ({
   IGNORED: "ignored",
   fileUri: vi.fn((f: any) => ({ toString: () => f.name || "file" })),
   scmData: vi.fn(),
-  scmKey: vi.fn()
-}))
+  scmKey: vi.fn(),
+}));
 
 vi.mock("../../lib", () => ({
   after: vi.fn().mockResolvedValue(undefined),
@@ -63,8 +67,8 @@ vi.mock("../../lib", () => ({
   inputBox: vi.fn(),
   quickPick: vi.fn(),
   caughtToString: vi.fn((e: any) => String(e)),
-  askConfirmation: vi.fn()
-}))
+  askConfirmation: vi.fn(),
+}));
 
 vi.mock("fp-ts/lib/Option", () => ({
   map: vi.fn(),
@@ -73,90 +77,90 @@ vi.mock("fp-ts/lib/Option", () => ({
   fromEither: vi.fn(),
   isSome: vi.fn().mockReturnValue(false),
   fromNullable: vi.fn(),
-  some: vi.fn((v: any) => ({ _tag: "Some", value: v }))
-}))
+  some: vi.fn((v: any) => ({ _tag: "Some", value: v })),
+}));
 
 vi.mock("./credentials", () => ({
   dataCredentials: vi.fn(),
   listPasswords: vi.fn().mockResolvedValue([]),
   deletePassword: vi.fn(),
-  deleteDefaultUser: vi.fn()
-}))
+  deleteDefaultUser: vi.fn(),
+}));
 
 vi.mock("../../extension", () => ({
   context: {
     globalState: { get: vi.fn(), update: vi.fn() },
-    asAbsolutePath: vi.fn((s: string) => s)
-  }
-}))
+    asAbsolutePath: vi.fn((s: string) => s),
+  },
+}));
 
 vi.mock("../../adt/AdtTransports", () => ({
-  selectTransport: vi.fn()
-}))
+  selectTransport: vi.fn(),
+}));
 
 vi.mock("../../config", () => ({
-  pickAdtRoot: vi.fn()
-}))
+  pickAdtRoot: vi.fn(),
+}));
 
 vi.mock("fp-ts/lib/Either", () => ({
   isRight: vi.fn().mockReturnValue(false),
-  isLeft: vi.fn().mockReturnValue(true)
-}))
+  isLeft: vi.fn().mockReturnValue(true),
+}));
 
 vi.mock("../../views/abapgit", () => ({
   confirmPull: vi.fn(),
-  packageUri: vi.fn()
-}))
+  packageUri: vi.fn(),
+}));
 
 vi.mock("../../adt/conections", () => ({
   getClient: vi.fn(),
-  uriRoot: vi.fn()
-}))
+  uriRoot: vi.fn(),
+}));
 
-import { isAgResState, fromGroup, STAGED, UNSTAGED, IGNORED } from "./scm"
-import { funWindow as window } from "../../services/funMessenger"
+import { isAgResState, fromGroup, STAGED, UNSTAGED, IGNORED } from "./scm";
+import { funWindow as window } from "../../services/funMessenger";
 
 // import the module to trigger decorator registrations
-require("./commands")
+require("./commands");
 
 beforeEach(() => {
-  vi.clearAllMocks()
-})
+  vi.clearAllMocks();
+});
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("abapGit scm commands", () => {
   describe("transfer logic", () => {
     it("isAgResState returns true for valid state objects", () => {
       // Test the mock passthrough
-      ;(isAgResState as unknown as Mock).mockReturnValue(true)
-      expect(isAgResState({ data: { connId: "x" }, resourceUri: {} })).toBe(true)
-    })
+      (isAgResState as unknown as Mock).mockReturnValue(true);
+      expect(isAgResState({ data: { connId: "x" }, resourceUri: {} })).toBe(true);
+    });
 
     it("isAgResState returns false for invalid objects", () => {
-      ;(isAgResState as unknown as Mock).mockReturnValue(false)
-      expect(isAgResState(null)).toBe(false)
-      expect(isAgResState({})).toBe(false)
-    })
-  })
+      (isAgResState as unknown as Mock).mockReturnValue(false);
+      expect(isAgResState(null)).toBe(false);
+      expect(isAgResState({})).toBe(false);
+    });
+  });
 
   describe("constants", () => {
     it("STAGED equals 'staged'", () => {
-      expect(STAGED).toBe("staged")
-    })
+      expect(STAGED).toBe("staged");
+    });
 
     it("UNSTAGED equals 'unstaged'", () => {
-      expect(UNSTAGED).toBe("unstaged")
-    })
+      expect(UNSTAGED).toBe("unstaged");
+    });
 
     it("IGNORED equals 'ignored'", () => {
-      expect(IGNORED).toBe("ignored")
-    })
-  })
+      expect(IGNORED).toBe("ignored");
+    });
+  });
 
   describe("logErrors decorator behavior", () => {
     it("showErrorMessage is available on funWindow mock", () => {
-      expect(window.showErrorMessage).toBeDefined()
-      expect(typeof window.showErrorMessage).toBe("function")
-    })
-  })
-})
+      expect(window.showErrorMessage).toBeDefined();
+      expect(typeof window.showErrorMessage).toBe("function");
+    });
+  });
+});

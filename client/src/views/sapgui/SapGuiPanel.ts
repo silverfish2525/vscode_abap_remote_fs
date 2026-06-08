@@ -1,9 +1,9 @@
-import * as vscode from "vscode"
-import { funWindow as window } from "../../services/funMessenger"
-import { ADTClient } from "abap-adt-api"
-import { log } from "../../lib"
-import { RemoteManager } from "../../config"
-import { runInSapGui } from "../../adt/sapgui/sapgui"
+import * as vscode from "vscode";
+import { funWindow as window } from "../../services/funMessenger";
+import { ADTClient } from "abap-adt-api";
+import { log } from "../../lib";
+import { RemoteManager } from "../../config";
+import { runInSapGui } from "../../adt/sapgui/sapgui";
 
 /**
  * Manages embedded SAP GUI webview panels for ABAP execution
@@ -14,21 +14,21 @@ export class SapGuiPanel {
   /**
    * Track the currently panel. Allow multiple panels for different reports
    */
-  private static currentPanels: Map<string, SapGuiPanel> = new Map()
+  private static currentPanels: Map<string, SapGuiPanel> = new Map();
 
-  public static readonly viewType = "ABAPSapGui"
+  public static readonly viewType = "ABAPSapGui";
 
-  private readonly _panel: vscode.WebviewPanel
-  private readonly _extensionUri: vscode.Uri
-  private _disposables: vscode.Disposable[] = []
+  private readonly _panel: vscode.WebviewPanel;
+  private readonly _extensionUri: vscode.Uri;
+  private _disposables: vscode.Disposable[] = [];
 
-  private _client: ADTClient
-  private _connectionId: string
-  private _objectName: string
-  private _objectType: string
+  private _client: ADTClient;
+  private _connectionId: string;
+  private _objectName: string;
+  private _objectType: string;
 
   // Flag to prevent duplicate execution when authenticated URL is already loaded
-  private _authenticatedUrlLoaded: boolean = false
+  private _authenticatedUrlLoaded: boolean = false;
 
   /**
    * Creates or shows an embedded SAP GUI panel for executing ABAP objects
@@ -38,17 +38,17 @@ export class SapGuiPanel {
     client: ADTClient,
     connectionId: string,
     objectName: string,
-    objectType: string = "PROG/P"
+    objectType: string = "PROG/P",
   ) {
-    const column = window.activeTextEditor ? window.activeTextEditor.viewColumn : undefined
+    const column = window.activeTextEditor ? window.activeTextEditor.viewColumn : undefined;
 
-    const panelKey = `${connectionId}-${objectName}`
+    const panelKey = `${connectionId}-${objectName}`;
 
     // If we already have a panel for this object, show it
     if (SapGuiPanel.currentPanels.has(panelKey)) {
-      const panel = SapGuiPanel.currentPanels.get(panelKey)!
-      panel._panel.reveal(column)
-      return panel
+      const panel = SapGuiPanel.currentPanels.get(panelKey)!;
+      panel._panel.reveal(column);
+      return panel;
     }
 
     // Otherwise, create a new panel
@@ -61,9 +61,9 @@ export class SapGuiPanel {
         enableForms: true,
         enableCommandUris: true,
         retainContextWhenHidden: true, // Keep state when hidden
-        localResourceRoots: [extensionUri]
-      }
-    )
+        localResourceRoots: [extensionUri],
+      },
+    );
 
     const sapGuiPanel = new SapGuiPanel(
       panel,
@@ -71,10 +71,10 @@ export class SapGuiPanel {
       client,
       connectionId,
       objectName,
-      objectType
-    )
-    SapGuiPanel.currentPanels.set(panelKey, sapGuiPanel)
-    return sapGuiPanel
+      objectType,
+    );
+    SapGuiPanel.currentPanels.set(panelKey, sapGuiPanel);
+    return sapGuiPanel;
   }
 
   private constructor(
@@ -83,67 +83,67 @@ export class SapGuiPanel {
     client: ADTClient,
     connectionId: string,
     objectName: string,
-    objectType: string
+    objectType: string,
   ) {
-    this._panel = panel
-    this._client = client
-    this._extensionUri = extensionUri
-    this._connectionId = connectionId
-    this._objectName = objectName
-    this._objectType = objectType
+    this._panel = panel;
+    this._client = client;
+    this._extensionUri = extensionUri;
+    this._connectionId = connectionId;
+    this._objectName = objectName;
+    this._objectType = objectType;
 
     // Set the webview's initial html content
-    this._update()
+    this._update();
 
     // Listen for when the panel is disposed
     // This happens when the user closes the panel or when the panel is closed programmatically
-    this._panel.onDidDispose(() => this.dispose(), null, this._disposables)
+    this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
 
     // Handle messages from the webview
     this._panel.webview.onDidReceiveMessage(
-      message => {
+      (message) => {
         switch (message.command) {
           case "execute":
             // If we already have an authenticated URL loaded, don't re-execute
             if (this._authenticatedUrlLoaded) {
-              return
+              return;
             }
-            this.executeObject(message.parameters)
-            return
+            this.executeObject(message.parameters);
+            return;
           case "refresh":
-            this.refreshExecution()
-            return
+            this.refreshExecution();
+            return;
           case "refreshAuth":
-            this.refreshAuthentication()
-            return
+            this.refreshAuthentication();
+            return;
           case "refreshTransaction":
-            this.refreshTransaction()
-            return
+            this.refreshTransaction();
+            return;
           case "webviewLog":
-            return
+            return;
           case "webGuiLoaded":
-            return
+            return;
           case "webGuiError":
-            log("❌ WEBVIEW: SAP GUI iframe failed to load")
+            log("❌ WEBVIEW: SAP GUI iframe failed to load");
             window.showErrorMessage(
-              "Failed to load SAP GUI in WebView. Try refreshing or using external GUI."
-            )
-            return
+              "Failed to load SAP GUI in WebView. Try refreshing or using external GUI.",
+            );
+            return;
           case "webGuiLoaded":
-            return
+            return;
           case "webGuiError":
             window.showErrorMessage(
-              "Failed to load Direct WebGUI in WebView. Try refreshing or using external GUI."
-            )
-            return
+              "Failed to load Direct WebGUI in WebView. Try refreshing or using external GUI.",
+            );
+            return;
 
           case "webviewLog":
-            return
+            return;
         }
       },
       null,
-      this._disposables
-    )
+      this._disposables,
+    );
   }
 
   /**
@@ -151,31 +151,31 @@ export class SapGuiPanel {
    * Made public for the new get_abap_object_url language tool
    */
   public async buildWebGuiUrl(): Promise<string> {
-    const transactionInfo = SapGuiPanel.getTransactionInfo(this._objectType, this._objectName)
-    const config = RemoteManager.get().byId(this._connectionId)
+    const transactionInfo = SapGuiPanel.getTransactionInfo(this._objectType, this._objectName);
+    const config = RemoteManager.get().byId(this._connectionId);
 
     if (!config) {
-      throw new Error("Connection configuration not found")
+      throw new Error("Connection configuration not found");
     }
 
     // Build base URL
-    let baseUrl = config.url.replace(/\/sap\/bc\/adt.*$/, "")
+    let baseUrl = config.url.replace(/\/sap\/bc\/adt.*$/, "");
     if (!baseUrl.startsWith("https://") && !baseUrl.startsWith("http://")) {
-      baseUrl = "https://" + baseUrl
+      baseUrl = "https://" + baseUrl;
     } else if (baseUrl.startsWith("http://")) {
-      baseUrl = baseUrl.replace("http://", "https://")
+      baseUrl = baseUrl.replace("http://", "https://");
     }
 
     // Generate WebGUI URL
-    const cleanedObjectName = transactionInfo.sapGuiCommand.parameters[0].value
+    const cleanedObjectName = transactionInfo.sapGuiCommand.parameters[0].value;
     const webguiUrl =
       `${baseUrl}/sap/bc/gui/sap/its/webgui?` +
       `%7etransaction=%2a${transactionInfo.transaction}%20${transactionInfo.dynprofield}%3d${cleanedObjectName}%3bDYNP_OKCODE%3d${transactionInfo.okcode}` +
       `&sap-client=${config.client}` +
       `&sap-language=${config.language || "EN"}` +
-      `&saml2=disabled`
+      `&saml2=disabled`;
 
-    return webguiUrl
+    return webguiUrl;
   }
 
   /**
@@ -184,22 +184,22 @@ export class SapGuiPanel {
    */
   private async executeObject(parameters: any = {}) {
     try {
-      this.showProgress("Loading SAP GUI for HTML...")
+      this.showProgress("Loading SAP GUI for HTML...");
 
       // Reuse existing SAP GUI infrastructure
       // runInSapGui and RemoteManager are statically imported above
 
-      const originalConfig = RemoteManager.get().byId(this._connectionId)
+      const originalConfig = RemoteManager.get().byId(this._connectionId);
       if (!originalConfig) {
-        this.showError("Connection configuration not found")
-        return
+        this.showError("Connection configuration not found");
+        return;
       }
 
       // Create a mutable copy of the configuration to avoid read-only property errors
-      const config = JSON.parse(JSON.stringify(originalConfig))
+      const config = JSON.parse(JSON.stringify(originalConfig));
 
       // Force embedded mode for our panel
-      const originalGuiType = config.sapGui?.guiType
+      const originalGuiType = config.sapGui?.guiType;
 
       // Ensure sapGui config exists with required properties for embedded mode
       if (!config.sapGui) {
@@ -211,25 +211,25 @@ export class SapGuiPanel {
           group: "",
           server: "",
           systemNumber: "",
-          guiType: "WEBGUI_UNSAFE_EMBEDDED"
-        }
+          guiType: "WEBGUI_UNSAFE_EMBEDDED",
+        };
       } else {
         // Now we can safely modify the copy
-        config.sapGui.guiType = "WEBGUI_UNSAFE_EMBEDDED"
+        config.sapGui.guiType = "WEBGUI_UNSAFE_EMBEDDED";
       }
 
       // Use existing runInSapGui logic but capture the URL instead of opening external browser
-      const url = await this.generateSapGuiUrl(config)
+      const url = await this.generateSapGuiUrl(config);
       if (url) {
-        this.showEmbeddedSapGui(url)
+        this.showEmbeddedSapGui(url);
       } else {
-        this.showError("Could not generate SAP GUI URL. Please check your connection settings.")
+        this.showError("Could not generate SAP GUI URL. Please check your connection settings.");
       }
     } catch (error) {
       //log('Failed to load SAP GUI: ' + (error instanceof Error ? error.message : String(error)))
       this.showError(
-        `Failed to load SAP GUI: ${error instanceof Error ? error.message : String(error)}`
-      )
+        `Failed to load SAP GUI: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -239,20 +239,22 @@ export class SapGuiPanel {
    */
   public loadDirectWebGuiUrl(webguiUrl: string) {
     // Check if user prefers VS Code's integrated browser over embedded webview
-    const useIntegratedBrowser = vscode.workspace.getConfiguration("abapfs.sapGui").get<boolean>("useIntegratedBrowser", true)
+    const useIntegratedBrowser = vscode.workspace
+      .getConfiguration("abapfs.sapGui")
+      .get<boolean>("useIntegratedBrowser", true);
     if (useIntegratedBrowser) {
       vscode.commands.executeCommand("simpleBrowser.api.open", webguiUrl, {
         viewColumn: vscode.ViewColumn.Beside,
-        preserveFocus: false
-      })
-      this.dispose()
-      return
+        preserveFocus: false,
+      });
+      this.dispose();
+      return;
     }
 
     // Set flag to prevent duplicate executions
-    this._authenticatedUrlLoaded = true
+    this._authenticatedUrlLoaded = true;
 
-    this.showDirectWebGui(webguiUrl)
+    this.showDirectWebGui(webguiUrl);
   }
 
   /**
@@ -261,14 +263,14 @@ export class SapGuiPanel {
   private sanitizeUrl(url: string): string {
     try {
       // Parse URL to validate structure and prevent injection
-      const parsedUrl = new URL(url)
+      const parsedUrl = new URL(url);
       // Only allow https and http protocols
       if (!["https:", "http:"].includes(parsedUrl.protocol)) {
-        throw new Error("Invalid protocol")
+        throw new Error("Invalid protocol");
       }
-      return parsedUrl.toString()
+      return parsedUrl.toString();
     } catch (error) {
-      throw new Error(`Invalid URL: ${error}`)
+      throw new Error(`Invalid URL: ${error}`);
     }
   }
 
@@ -277,7 +279,7 @@ export class SapGuiPanel {
    */
   private showDirectWebGui(webguiUrl: string) {
     // Sanitize URL to prevent injection
-    const sanitizedUrl = this.sanitizeUrl(webguiUrl)
+    const sanitizedUrl = this.sanitizeUrl(webguiUrl);
 
     const html = `
             <div class="execution-container">
@@ -363,9 +365,9 @@ export class SapGuiPanel {
                 // Log when iframe starts loading
                 vscode.postMessage({ command: 'webviewLog', message: '🚀 Starting to load Direct WebGUI iframe: ' + '${sanitizedUrl}' });
             </script>
-        `
+        `;
 
-    this.showResult(html)
+    this.showResult(html);
     // log('✅ WEBVIEW: Direct WebGUI HTML rendered, waiting for iframe to load...')
   }
 
@@ -449,9 +451,9 @@ export class SapGuiPanel {
                 // Log when iframe starts loading
                 console.//log('🚀 Starting to load SAP GUI in WebView iframe:', '${authenticatedUrl}');
             </script>
-        `
+        `;
 
-    this.showResult(html)
+    this.showResult(html);
     //log('✅ WebView HTML rendered, waiting for iframe to load...')
   }
 
@@ -466,67 +468,67 @@ export class SapGuiPanel {
       //log('🔄 Refreshing transaction for object: ' + this._objectName + ' (type: ' + this._objectType + ')')
 
       // Get config for URL building
-      const config = RemoteManager.get().byId(this._connectionId)
+      const config = RemoteManager.get().byId(this._connectionId);
       if (!config) {
         //log('❌ No config found for connection: ' + this._connectionId)
-        return
+        return;
       }
 
       // Build base URL
-      let baseUrl = config.url.replace(/\/sap\/bc\/adt.*$/, "")
+      let baseUrl = config.url.replace(/\/sap\/bc\/adt.*$/, "");
       if (!baseUrl.startsWith("https://") && !baseUrl.startsWith("http://")) {
-        baseUrl = "https://" + baseUrl
+        baseUrl = "https://" + baseUrl;
       } else if (baseUrl.startsWith("http://")) {
-        baseUrl = baseUrl.replace("http://", "https://")
+        baseUrl = baseUrl.replace("http://", "https://");
       }
 
       // 🎯 USE CENTRALIZED transaction mapping
-      const transactionInfo = SapGuiPanel.getTransactionInfo(this._objectType, this._objectName)
+      const transactionInfo = SapGuiPanel.getTransactionInfo(this._objectType, this._objectName);
 
       // Rebuild the WebGUI URL using the cleaned object name from the transaction info
-      const cleanedObjectName = transactionInfo.sapGuiCommand.parameters[0].value
+      const cleanedObjectName = transactionInfo.sapGuiCommand.parameters[0].value;
       const webguiUrl =
         `${baseUrl}/sap/bc/gui/sap/its/webgui?` +
         `%7etransaction=%2a${transactionInfo.transaction}%20${transactionInfo.dynprofield}%3d${cleanedObjectName}%3bDYNP_OKCODE%3d${transactionInfo.okcode}` +
         `&sap-client=${config.client}` +
         `&sap-language=${config.language || "EN"}` +
-        `&saml2=disabled`
+        `&saml2=disabled`;
 
       //log('🔄 Refreshing with URL: ' + webguiUrl)
 
       // Send message to WebView to reload iframe instead of recreating HTML
       this._panel.webview.postMessage({
         command: "reloadIframe",
-        url: webguiUrl
-      })
+        url: webguiUrl,
+      });
     } catch (error) {
       //log('❌ Error refreshing transaction: ' + error)
-      window.showErrorMessage("Failed to refresh transaction: " + error)
+      window.showErrorMessage("Failed to refresh transaction: " + error);
     }
   }
 
   private async refreshAuthentication() {
     try {
       //log('🔄 Refreshing SAP GUI authentication...')
-      this.showProgress("Refreshing authentication...")
+      this.showProgress("Refreshing authentication...");
 
       // Get fresh configuration and regenerate authenticated URL
-      const config = RemoteManager.get().byId(this._connectionId)
+      const config = RemoteManager.get().byId(this._connectionId);
       if (!config) {
-        throw new Error("Connection configuration not found")
+        throw new Error("Connection configuration not found");
       }
 
       // Generate new authenticated URL
-      const url = await this.generateSapGuiUrl(config)
+      const url = await this.generateSapGuiUrl(config);
       if (url) {
-        this.showAuthenticatedSapGui(url)
+        this.showAuthenticatedSapGui(url);
       } else {
-        this.showError("Could not regenerate SAP GUI URL. Please check your connection.")
+        this.showError("Could not regenerate SAP GUI URL. Please check your connection.");
       }
     } catch (error) {
       this.showError(
-        `Failed to refresh authentication: ${error instanceof Error ? error.message : String(error)}`
-      )
+        `Failed to refresh authentication: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -536,29 +538,29 @@ export class SapGuiPanel {
   private async generateSapGuiUrl(config: any): Promise<string | null> {
     try {
       // 🎯 USE CENTRALIZED transaction mapping - NO MORE DUPLICATION!
-      const transactionInfo = SapGuiPanel.getTransactionInfo(this._objectType, this._objectName)
+      const transactionInfo = SapGuiPanel.getTransactionInfo(this._objectType, this._objectName);
 
       // Build base URL (same as working WebView logic)
-      let baseUrl = config.url.replace(/\/sap\/bc\/adt.*$/, "")
+      let baseUrl = config.url.replace(/\/sap\/bc\/adt.*$/, "");
       if (!baseUrl.startsWith("https://") && !baseUrl.startsWith("http://")) {
-        baseUrl = "https://" + baseUrl
+        baseUrl = "https://" + baseUrl;
       } else if (baseUrl.startsWith("http://")) {
-        baseUrl = baseUrl.replace("http://", "https://")
+        baseUrl = baseUrl.replace("http://", "https://");
       }
 
       // Use centralized transaction info (same as working WebView)
-      const cleanedObjectName = transactionInfo.sapGuiCommand.parameters[0].value
+      const cleanedObjectName = transactionInfo.sapGuiCommand.parameters[0].value;
       const webguiUrl =
         `${baseUrl}/sap/bc/gui/sap/its/webgui?` +
         `%7etransaction=%2a${transactionInfo.transaction}%20${transactionInfo.dynprofield}%3d${cleanedObjectName}%3bDYNP_OKCODE%3d${transactionInfo.okcode}` +
         `&sap-client=${config.client}` +
         `&sap-language=${config.language || "EN"}` +
-        `&saml2=disabled`
+        `&saml2=disabled`;
 
-      return webguiUrl
+      return webguiUrl;
     } catch (error) {
-      console.error("Error generating SAP GUI URL:", error)
-      return null
+      console.error("Error generating SAP GUI URL:", error);
+      return null;
     }
   }
 
@@ -570,51 +572,51 @@ export class SapGuiPanel {
    */
   public static getTransactionInfo(
     objectType: string,
-    objectName: string
+    objectName: string,
   ): {
-    transaction: string
-    dynprofield: string
-    okcode: string
-    sapGuiCommand: any
+    transaction: string;
+    dynprofield: string;
+    okcode: string;
+    sapGuiCommand: any;
   } {
     // Clean up object name for classes - remove .main/.inc/.etc suffixes
-    let cleanObjectName = objectName
+    let cleanObjectName = objectName;
     if (objectType === "CLAS/OC" || objectType === "CLAS/I") {
-      cleanObjectName = objectName.split(".")[0] // ZCL_DEMO_ABAP.main → ZCL_DEMO_ABAP
+      cleanObjectName = objectName.split(".")[0]; // ZCL_DEMO_ABAP.main → ZCL_DEMO_ABAP
     }
 
-    let transaction: string
-    let dynprofield: string
-    let okcode: string
+    let transaction: string;
+    let dynprofield: string;
+    let okcode: string;
 
     switch (objectType) {
       case "PROG/P":
-        transaction = "SE38"
-        dynprofield = "RS38M-PROGRAMM"
-        okcode = "STRT"
-        break
+        transaction = "SE38";
+        dynprofield = "RS38M-PROGRAMM";
+        okcode = "STRT";
+        break;
       case "FUGR/FF":
-        transaction = "SE37"
-        dynprofield = "RS38L-NAME"
-        okcode = "WB_EXEC"
-        break
+        transaction = "SE37";
+        dynprofield = "RS38L-NAME";
+        okcode = "WB_EXEC";
+        break;
       case "FUNC/FM":
         // Individual function module - use SE37 with function module name
-        transaction = "SE37"
-        dynprofield = "RS38L-NAME"
-        okcode = "WB_EXEC"
-        break
+        transaction = "SE37";
+        dynprofield = "RS38L-NAME";
+        okcode = "WB_EXEC";
+        break;
       case "CLAS/OC":
       case "CLAS/I": // Class include - treat same as class
-        transaction = "SE24"
-        dynprofield = "SEOCLASS-CLSNAME"
-        okcode = "WB_EXEC"
-        break
+        transaction = "SE24";
+        dynprofield = "SEOCLASS-CLSNAME";
+        okcode = "WB_EXEC";
+        break;
       default:
-        transaction = "SE38"
-        dynprofield = "RS38M-PROGRAMM"
-        okcode = "STRT"
-        break
+        transaction = "SE38";
+        dynprofield = "RS38M-PROGRAMM";
+        okcode = "STRT";
+        break;
     }
 
     const sapGuiCommand = {
@@ -622,11 +624,11 @@ export class SapGuiPanel {
       command: `*${transaction}`,
       parameters: [
         { name: dynprofield, value: cleanObjectName },
-        { name: "DYNP_OKCODE", value: okcode }
-      ]
-    }
+        { name: "DYNP_OKCODE", value: okcode },
+      ],
+    };
 
-    return { transaction, dynprofield, okcode, sapGuiCommand }
+    return { transaction, dynprofield, okcode, sapGuiCommand };
   }
 
   /**
@@ -649,9 +651,9 @@ export class SapGuiPanel {
                     title="SAP GUI for HTML - ${this._objectName}"
                 ></iframe>
             </div>
-        `
+        `;
 
-    this.showResult(html)
+    this.showResult(html);
   }
 
   /**
@@ -665,15 +667,15 @@ export class SapGuiPanel {
                     <span>${message}</span>
                 </div>
             </div>
-        `
-    this._panel.webview.html = this.getFullHtml(html)
+        `;
+    this._panel.webview.html = this.getFullHtml(html);
   }
 
   /**
    * Show execution result
    */
   private showResult(resultHtml: string) {
-    this._panel.webview.html = this.getFullHtml(resultHtml)
+    this._panel.webview.html = this.getFullHtml(resultHtml);
   }
 
   /**
@@ -688,15 +690,15 @@ export class SapGuiPanel {
                     <button onclick="refreshExecution()">🔄 Try Again</button>
                 </div>
             </div>
-        `
-    this._panel.webview.html = this.getFullHtml(html)
+        `;
+    this._panel.webview.html = this.getFullHtml(html);
   }
 
   /**
    * Refresh the current execution
    */
   private refreshExecution() {
-    this.executeObject()
+    this.executeObject();
   }
 
   /**
@@ -758,25 +760,25 @@ export class SapGuiPanel {
                 </script>
             </body>
             </html>
-        `
+        `;
   }
 
   private _update() {
-    this.showProgress("Initializing SAP GUI for HTML...")
+    this.showProgress("Initializing SAP GUI for HTML...");
   }
 
   public dispose() {
-    const panelKey = `${this._connectionId}-${this._objectName}`
-    SapGuiPanel.currentPanels.delete(panelKey)
+    const panelKey = `${this._connectionId}-${this._objectName}`;
+    SapGuiPanel.currentPanels.delete(panelKey);
 
     // Clean up panel resources
-    this._panel.dispose()
+    this._panel.dispose();
 
     // Clean up other disposables
     while (this._disposables.length) {
-      const x = this._disposables.pop()
+      const x = this._disposables.pop();
       if (x) {
-        x.dispose()
+        x.dispose();
       }
     }
   }

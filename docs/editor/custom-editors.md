@@ -18,8 +18,8 @@ A form-based editor for configuring SAP HTTP services (SICF nodes).
 
 ## Common Actions
 
-| Action | How |
-|--------|-----|
-| Save changes | `Ctrl+S` |
-| Switch to raw XML | Right-click file → **Open With** → **Text Editor** |
-| Revert unsaved changes | `File` → **Revert File** |
+| Action                 | How                                                |
+| ---------------------- | -------------------------------------------------- |
+| Save changes           | `Ctrl+S`                                           |
+| Switch to raw XML      | Right-click file → **Open With** → **Text Editor** |
+| Revert unsaved changes | `File` → **Revert File**                           |

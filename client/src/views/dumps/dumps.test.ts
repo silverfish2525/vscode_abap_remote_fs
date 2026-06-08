@@ -1,18 +1,25 @@
 // Tests for views/dumps/dumps.ts
-vi.mock("vscode", () => {
-  const EventEmitter = class {
-    event = vi.fn()
-    fire = vi.fn()
-  }
-  const TreeItem = class {
-    constructor(public label: string, public collapsibleState?: number) {}
-    command: any
-    contextValue: any
-  }
-  const TreeItemCollapsibleState = { None: 0, Collapsed: 1, Expanded: 2 }
-  const ViewColumn = { Active: 1, Beside: 2 }
-  return { EventEmitter, TreeItem, TreeItemCollapsibleState, ViewColumn }
-}, { virtual: true })
+vi.mock(
+  "vscode",
+  () => {
+    const EventEmitter = class {
+      event = vi.fn();
+      fire = vi.fn();
+    };
+    const TreeItem = class {
+      constructor(
+        public label: string,
+        public collapsibleState?: number,
+      ) {}
+      command: any;
+      contextValue: any;
+    };
+    const TreeItemCollapsibleState = { None: 0, Collapsed: 1, Expanded: 2 };
+    const ViewColumn = { Active: 1, Beside: 2 };
+    return { EventEmitter, TreeItem, TreeItemCollapsibleState, ViewColumn };
+  },
+  { virtual: true },
+);
 
 vi.mock("../../services/funMessenger", () => ({
   funWindow: {
@@ -20,134 +27,134 @@ vi.mock("../../services/funMessenger", () => ({
       webview: {
         html: "",
         onDidReceiveMessage: vi.fn(),
-        options: {}
-      }
-    }))
-  }
-}))
+        options: {},
+      },
+    })),
+  },
+}));
 
 vi.mock("../../adt/conections", () => ({
-  getOrCreateClient: vi.fn()
-}))
+  getOrCreateClient: vi.fn(),
+}));
 
 vi.mock("../../adt/operations/AdtObjectFinder", () => ({
   AdtObjectFinder: vi.fn().mockImplementation(() => ({
-    displayAdtUri: vi.fn()
-  }))
-}))
+    displayAdtUri: vi.fn(),
+  })),
+}));
 
 vi.mock("../../commands", () => ({
   AbapFsCommands: {
     showDump: "abapfs.showDump",
-    refreshDumps: "abapfs.refreshDumps"
+    refreshDumps: "abapfs.refreshDumps",
   },
-  command: vi.fn((name: string) => (_target: any, _key: string, descriptor: PropertyDescriptor) => descriptor)
-}))
+  command: vi.fn(
+    (name: string) => (_target: any, _key: string, descriptor: PropertyDescriptor) => descriptor,
+  ),
+}));
 
 vi.mock("../../config", () => ({
-  connectedRoots: vi.fn(() => new Map([["DEV100", {}]]))
-}))
+  connectedRoots: vi.fn(() => new Map([["DEV100", {}]])),
+}));
 
-import { dumpProvider } from "./dumps"
+import { dumpProvider } from "./dumps";
 
 const jsFooter = `<script type="text/javascript">
-const vscode = acquireVsCodeApi();`
+const vscode = acquireVsCodeApi();`;
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("dumps.ts", () => {
   describe("jsFooter injection logic", () => {
     // Test the inject function logic directly
-    const inject = (x: string) => `${x}${jsFooter}`
+    const inject = (x: string) => `${x}${jsFooter}`;
 
     it("appends footer to content", () => {
-      const html = "<html><body>dump</body></html>"
-      const result = inject(html)
-      expect(result).toContain(html)
-      expect(result).toContain("acquireVsCodeApi")
-    })
+      const html = "<html><body>dump</body></html>";
+      const result = inject(html);
+      expect(result).toContain(html);
+      expect(result).toContain("acquireVsCodeApi");
+    });
 
     it("original content is preserved", () => {
-      const original = "<h1>Error</h1>"
-      const result = inject(original)
-      expect(result.startsWith(original)).toBe(true)
-    })
-  })
+      const original = "<h1>Error</h1>";
+      const result = inject(original);
+      expect(result.startsWith(original)).toBe(true);
+    });
+  });
 
   describe("dumpProvider", () => {
     describe("onDidChangeTreeData", () => {
       it("exposes the event emitter event", () => {
-        expect(dumpProvider.onDidChangeTreeData).toBeDefined()
-      })
-    })
+        expect(dumpProvider.onDidChangeTreeData).toBeDefined();
+      });
+    });
 
     describe("getTreeItem", () => {
       it("returns the item as-is", () => {
-        const fakeItem = { tag: "system", label: "DEV100" } as any
-        expect(dumpProvider.getTreeItem(fakeItem)).toBe(fakeItem)
-      })
-    })
+        const fakeItem = { tag: "system", label: "DEV100" } as any;
+        expect(dumpProvider.getTreeItem(fakeItem)).toBe(fakeItem);
+      });
+    });
 
     describe("getChildren - root level", () => {
       it("returns system items when called with no argument", async () => {
-        const children = await dumpProvider.getChildren(undefined as any)
-        expect(Array.isArray(children)).toBe(true)
-      })
+        const children = await dumpProvider.getChildren(undefined as any);
+        expect(Array.isArray(children)).toBe(true);
+      });
 
       it("creates system items for each connected root", async () => {
-        const children = await dumpProvider.getChildren(undefined as any)
-        expect(children.length).toBeGreaterThanOrEqual(1)
-      })
-    })
+        const children = await dumpProvider.getChildren(undefined as any);
+        expect(children.length).toBeGreaterThanOrEqual(1);
+      });
+    });
 
     describe("getChildren - dump item", () => {
       it("returns empty array for DumpItem (leaf node)", async () => {
-        const dumpItem = { tag: "dump" } as any
-        const result = await dumpProvider.getChildren(dumpItem)
-        expect(result).toEqual([])
-      })
-    })
+        const dumpItem = { tag: "dump" } as any;
+        const result = await dumpProvider.getChildren(dumpItem);
+        expect(result).toEqual([]);
+      });
+    });
 
     describe("getChildren - system item", () => {
       it("fetches dumps from client when system item provided", async () => {
-        const { getOrCreateClient } = require("../../adt/conections")
-        ;(getOrCreateClient as Mock).mockResolvedValue({
-          feeds: vi.fn().mockResolvedValue([
-            { href: "/sap/bc/adt/runtime/dumps" }
-          ]),
+        const { getOrCreateClient } = require("../../adt/conections");
+        (getOrCreateClient as Mock).mockResolvedValue({
+          feeds: vi.fn().mockResolvedValue([{ href: "/sap/bc/adt/runtime/dumps" }]),
           dumps: vi.fn().mockResolvedValue({
             dumps: [
               {
                 categories: [{ label: "ABAP runtime error", term: "DUMP_123" }],
-                text: "<html>Dump content</html>"
-              }
-            ]
-          })
-        })
+                text: "<html>Dump content</html>",
+              },
+            ],
+          }),
+        });
 
-        const systemChildren = await dumpProvider.getChildren(undefined as any)
+        const systemChildren = await dumpProvider.getChildren(undefined as any);
         // systemChildren are SystemItem instances with tag=system
-        const systemItem = systemChildren[0] as any
-        expect(systemItem.tag).toBe("system")
+        const systemItem = systemChildren[0] as any;
+        expect(systemItem.tag).toBe("system");
 
-        const dumpChildren = await dumpProvider.getChildren(systemItem)
-        expect(Array.isArray(dumpChildren)).toBe(true)
-      })
+        const dumpChildren = await dumpProvider.getChildren(systemItem);
+        expect(Array.isArray(dumpChildren)).toBe(true);
+      });
 
       it("returns empty array when no dump feed available", async () => {
-        const { getOrCreateClient } = require("../../adt/conections")
-        ;(getOrCreateClient as Mock).mockResolvedValue({
+        const { getOrCreateClient } = require("../../adt/conections");
+        (getOrCreateClient as Mock).mockResolvedValue({
           feeds: vi.fn().mockResolvedValue([
-            { href: "/sap/bc/adt/other" } // No dumps feed
+            { href: "/sap/bc/adt/other" }, // No dumps feed
           ]),
-          dumps: vi.fn().mockResolvedValue({ dumps: [] })
-        })
+          dumps: vi.fn().mockResolvedValue({ dumps: [] }),
+        });
 
-        const systemChildren = await dumpProvider.getChildren(undefined as any)
-        const systemItem = systemChildren[0] as any
+        const systemChildren = await dumpProvider.getChildren(undefined as any);
+        const systemItem = systemChildren[0] as any;
 
-        const dumpChildren = await dumpProvider.getChildren(systemItem)
-        expect(dumpChildren).toEqual([])
-      })
-    })
-  })
-})
+        const dumpChildren = await dumpProvider.getChildren(systemItem);
+        expect(dumpChildren).toEqual([]);
+      });
+    });
+  });
+});

@@ -4,88 +4,88 @@ vi.mock(
     LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
     LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
     MarkdownString: vi.fn().mockImplementation((text: string) => ({ text })),
-    lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) }
+    lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) },
   }),
-  { virtual: true }
-)
+  { virtual: true },
+);
 
 vi.mock("../../adt/conections", () => ({
   getClient: vi.fn(),
-  abapUri: vi.fn()
-}))
-vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+  abapUri: vi.fn(),
+}));
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }));
 vi.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() }))
-}))
-vi.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }))
-vi.mock("../../views/transports", () => ({ readTransports: vi.fn() }))
+  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() })),
+}));
+vi.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }));
+vi.mock("../../views/transports", () => ({ readTransports: vi.fn() }));
 
-import { ManageTransportRequestsTool } from "./transportTool"
-import { getClient } from "../../adt/conections"
-import { logTelemetry } from "../telemetry"
-import { funWindow as window } from "../funMessenger"
+import { ManageTransportRequestsTool } from "./transportTool";
+import { getClient } from "../../adt/conections";
+import { logTelemetry } from "../telemetry";
+import { funWindow as window } from "../funMessenger";
 
-const mockToken = {} as any
+const mockToken = {} as any;
 
 function makeOptions(input: any = {}) {
-  return { input } as any
+  return { input } as any;
 }
 
 const mockClient: any = {
   userTransports: vi.fn(),
   transportDetails: vi.fn(),
-  transportObjectContents: vi.fn()
-}
+  transportObjectContents: vi.fn(),
+};
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("ManageTransportRequestsTool", () => {
-  let tool: ManageTransportRequestsTool
+  let tool: ManageTransportRequestsTool;
 
   beforeEach(() => {
-    tool = new ManageTransportRequestsTool()
-    vi.clearAllMocks()
-    ;(getClient as Mock).mockReturnValue(mockClient)
-    ;(window as any).activeTextEditor = undefined
-  })
+    tool = new ManageTransportRequestsTool();
+    vi.clearAllMocks();
+    (getClient as Mock).mockReturnValue(mockClient);
+    (window as any).activeTextEditor = undefined;
+  });
 
   describe("prepareInvocation", () => {
     it("returns invocation message for get_user_transports", async () => {
       const result = await tool.prepareInvocation(
         makeOptions({ action: "get_user_transports", connectionId: "dev100" }),
-        mockToken
-      )
-      expect(result.invocationMessage).toContain("transport")
-    })
+        mockToken,
+      );
+      expect(result.invocationMessage).toContain("transport");
+    });
 
     it("returns get_transport_details message with transport number", async () => {
       const result = await tool.prepareInvocation(
         makeOptions({
           action: "get_transport_details",
           transportNumber: "DEV100001",
-          connectionId: "dev100"
+          connectionId: "dev100",
         }),
-        mockToken
-      )
-      expect((result.confirmationMessages as any).message.text).toContain("DEV100001")
-    })
+        mockToken,
+      );
+      expect((result.confirmationMessages as any).message.text).toContain("DEV100001");
+    });
 
     it("throws when get_transport_details has no transportNumber", async () => {
       await expect(
         tool.prepareInvocation(
           makeOptions({ action: "get_transport_details", connectionId: "dev100" }),
-          mockToken
-        )
-      ).rejects.toThrow("transportNumber is required")
-    })
+          mockToken,
+        ),
+      ).rejects.toThrow("transportNumber is required");
+    });
 
     it("throws when get_transport_objects has no transportNumber", async () => {
       await expect(
         tool.prepareInvocation(
           makeOptions({ action: "get_transport_objects", connectionId: "dev100" }),
-          mockToken
-        )
-      ).rejects.toThrow("transportNumber is required")
-    })
+          mockToken,
+        ),
+      ).rejects.toThrow("transportNumber is required");
+    });
 
     it("throws when compare_transports has fewer than 2 transport numbers", async () => {
       await expect(
@@ -93,12 +93,12 @@ describe.skip("ManageTransportRequestsTool", () => {
           makeOptions({
             action: "compare_transports",
             transportNumbers: ["DEV100001"],
-            connectionId: "dev100"
+            connectionId: "dev100",
           }),
-          mockToken
-        )
-      ).rejects.toThrow("At least 2 transport numbers")
-    })
+          mockToken,
+        ),
+      ).rejects.toThrow("At least 2 transport numbers");
+    });
 
     it("accepts compare_transports with 2 transport numbers", async () => {
       await expect(
@@ -106,60 +106,60 @@ describe.skip("ManageTransportRequestsTool", () => {
           makeOptions({
             action: "compare_transports",
             transportNumbers: ["DEV100001", "DEV100002"],
-            connectionId: "dev100"
+            connectionId: "dev100",
           }),
-          mockToken
-        )
-      ).resolves.toBeDefined()
-    })
-  })
+          mockToken,
+        ),
+      ).resolves.toBeDefined();
+    });
+  });
 
   describe("invoke", () => {
     it("logs telemetry", async () => {
-      mockClient.userTransports.mockResolvedValue([])
+      mockClient.userTransports.mockResolvedValue([]);
       await tool
         .invoke(makeOptions({ action: "get_user_transports", connectionId: "dev100" }), mockToken)
-        .catch(() => {})
+        .catch(() => {});
       expect(logTelemetry).toHaveBeenCalledWith("tool_manage_transport_requests_called", {
-        connectionId: "dev100"
-      })
-    })
+        connectionId: "dev100",
+      });
+    });
 
     it("normalizes connectionId to lowercase", async () => {
-      mockClient.userTransports.mockResolvedValue([])
+      mockClient.userTransports.mockResolvedValue([]);
       await tool
         .invoke(makeOptions({ action: "get_user_transports", connectionId: "DEV100" }), mockToken)
-        .catch(() => {})
-      expect(getClient).toHaveBeenCalledWith("dev100")
-    })
+        .catch(() => {});
+      expect(getClient).toHaveBeenCalledWith("dev100");
+    });
 
     it("throws when no connectionId and no active ABAP editor", async () => {
-      ;(window as any).activeTextEditor = undefined
+      (window as any).activeTextEditor = undefined;
       await expect(
-        tool.invoke(makeOptions({ action: "get_user_transports" }), mockToken)
-      ).rejects.toThrow()
-    })
+        tool.invoke(makeOptions({ action: "get_user_transports" }), mockToken),
+      ).rejects.toThrow();
+    });
 
     it("wraps client errors", async () => {
-      ;(getClient as Mock).mockImplementation(() => {
-        throw new Error("transport service error")
-      })
+      (getClient as Mock).mockImplementation(() => {
+        throw new Error("transport service error");
+      });
       await expect(
         tool.invoke(
           makeOptions({ action: "get_user_transports", connectionId: "dev100" }),
-          mockToken
-        )
-      ).rejects.toThrow()
-    })
-  })
+          mockToken,
+        ),
+      ).rejects.toThrow();
+    });
+  });
 
   // ====================================================================
   // getUserTransports: verify actual output formatting
   // ====================================================================
   describe("invoke - get_user_transports output", () => {
     it("formats user transports with category headers, targets, and transport details", async () => {
-      const { readTransports } = require("../../views/transports")
-      ;(readTransports as Mock).mockResolvedValue({
+      const { readTransports } = require("../../views/transports");
+      (readTransports as Mock).mockResolvedValue({
         workbench: [
           {
             "tm:name": "TRG",
@@ -171,38 +171,38 @@ describe.skip("ManageTransportRequestsTool", () => {
                 "tm:desc": "My transport",
                 "tm:status": "D",
                 tasks: [{ id: 1 }],
-                objects: [{ id: 1 }, { id: 2 }]
-              }
+                objects: [{ id: 1 }, { id: 2 }],
+              },
             ],
-            released: []
-          }
+            released: [],
+          },
         ],
         customizing: [],
-        transportofcopies: []
-      })
-      mockClient.username = "TESTUSER"
+        transportofcopies: [],
+      });
+      mockClient.username = "TESTUSER";
 
       const result: any = await tool.invoke(
         makeOptions({ action: "get_user_transports", connectionId: "dev100" }),
-        mockToken
-      )
-      const text: string = result.parts[0].text
+        mockToken,
+      );
+      const text: string = result.parts[0].text;
 
-      expect(text).toContain("Transport Requests for User: TESTUSER")
-      expect(text).toContain("WORKBENCH")
-      expect(text).toContain("Target: TRG - Target System")
-      expect(text).toContain("MODIFIABLE")
-      expect(text).toContain("DEV100001")
-      expect(text).toContain("My transport")
-      expect(text).toContain("Tasks: 1")
-      expect(text).toContain("Objects: 2")
-      expect(text).toContain("Summary")
-      expect(text).toContain("Found 1 transport requests")
-    })
+      expect(text).toContain("Transport Requests for User: TESTUSER");
+      expect(text).toContain("WORKBENCH");
+      expect(text).toContain("Target: TRG - Target System");
+      expect(text).toContain("MODIFIABLE");
+      expect(text).toContain("DEV100001");
+      expect(text).toContain("My transport");
+      expect(text).toContain("Tasks: 1");
+      expect(text).toContain("Objects: 2");
+      expect(text).toContain("Summary");
+      expect(text).toContain("Found 1 transport requests");
+    });
 
     it("counts transports across multiple categories and targets", async () => {
-      const { readTransports } = require("../../views/transports")
-      ;(readTransports as Mock).mockResolvedValue({
+      const { readTransports } = require("../../views/transports");
+      (readTransports as Mock).mockResolvedValue({
         workbench: [
           {
             "tm:name": "TRG",
@@ -214,7 +214,7 @@ describe.skip("ManageTransportRequestsTool", () => {
                 "tm:desc": "D1",
                 "tm:status": "D",
                 tasks: [],
-                objects: []
+                objects: [],
               },
               {
                 "tm:number": "T2",
@@ -222,8 +222,8 @@ describe.skip("ManageTransportRequestsTool", () => {
                 "tm:desc": "D2",
                 "tm:status": "D",
                 tasks: [],
-                objects: []
-              }
+                objects: [],
+              },
             ],
             released: [
               {
@@ -232,10 +232,10 @@ describe.skip("ManageTransportRequestsTool", () => {
                 "tm:desc": "D3",
                 "tm:status": "R",
                 tasks: [],
-                objects: []
-              }
-            ]
-          }
+                objects: [],
+              },
+            ],
+          },
         ],
         customizing: [
           {
@@ -248,29 +248,29 @@ describe.skip("ManageTransportRequestsTool", () => {
                 "tm:desc": "D4",
                 "tm:status": "D",
                 tasks: [],
-                objects: []
-              }
+                objects: [],
+              },
             ],
-            released: []
-          }
+            released: [],
+          },
         ],
-        transportofcopies: []
-      })
-      mockClient.username = "U"
+        transportofcopies: [],
+      });
+      mockClient.username = "U";
 
       const result: any = await tool.invoke(
         makeOptions({ action: "get_user_transports", connectionId: "dev100" }),
-        mockToken
-      )
-      const text: string = result.parts[0].text
+        mockToken,
+      );
+      const text: string = result.parts[0].text;
 
       // 2 modifiable + 1 released + 1 customizing = 4
-      expect(text).toContain("Found 4 transport requests")
-    })
+      expect(text).toContain("Found 4 transport requests");
+    });
 
     it("shows released section with lock icon", async () => {
-      const { readTransports } = require("../../views/transports")
-      ;(readTransports as Mock).mockResolvedValue({
+      const { readTransports } = require("../../views/transports");
+      (readTransports as Mock).mockResolvedValue({
         workbench: [
           {
             "tm:name": "TRG",
@@ -283,83 +283,83 @@ describe.skip("ManageTransportRequestsTool", () => {
                 "tm:desc": "Released one",
                 "tm:status": "R",
                 tasks: [],
-                objects: []
-              }
-            ]
-          }
+                objects: [],
+              },
+            ],
+          },
         ],
         customizing: [],
-        transportofcopies: []
-      })
-      mockClient.username = "U"
+        transportofcopies: [],
+      });
+      mockClient.username = "U";
 
       const result: any = await tool.invoke(
         makeOptions({ action: "get_user_transports", connectionId: "dev100" }),
-        mockToken
-      )
-      const text: string = result.parts[0].text
+        mockToken,
+      );
+      const text: string = result.parts[0].text;
 
-      expect(text).toContain("RELEASED")
-      expect(text).toContain("REL001")
-      expect(text).toContain("Released one")
-    })
+      expect(text).toContain("RELEASED");
+      expect(text).toContain("REL001");
+      expect(text).toContain("Released one");
+    });
 
     it("skips empty categories and empty target status sections", async () => {
-      const { readTransports } = require("../../views/transports")
-      ;(readTransports as Mock).mockResolvedValue({
+      const { readTransports } = require("../../views/transports");
+      (readTransports as Mock).mockResolvedValue({
         workbench: [],
         customizing: [],
-        transportofcopies: []
-      })
-      mockClient.username = "NOBODY"
+        transportofcopies: [],
+      });
+      mockClient.username = "NOBODY";
 
       const result: any = await tool.invoke(
         makeOptions({ action: "get_user_transports", connectionId: "dev100" }),
-        mockToken
-      )
-      const text: string = result.parts[0].text
+        mockToken,
+      );
+      const text: string = result.parts[0].text;
 
-      expect(text).not.toContain("WORKBENCH")
-      expect(text).not.toContain("CUSTOMIZING")
-      expect(text).toContain("Found 0 transport requests")
-    })
+      expect(text).not.toContain("WORKBENCH");
+      expect(text).not.toContain("CUSTOMIZING");
+      expect(text).toContain("Found 0 transport requests");
+    });
 
     it("uses client.username when user parameter is not provided", async () => {
-      const { readTransports } = require("../../views/transports")
-      ;(readTransports as Mock).mockResolvedValue({
+      const { readTransports } = require("../../views/transports");
+      (readTransports as Mock).mockResolvedValue({
         workbench: [],
         customizing: [],
-        transportofcopies: []
-      })
-      mockClient.username = "DEFAULTUSER"
+        transportofcopies: [],
+      });
+      mockClient.username = "DEFAULTUSER";
 
       const result: any = await tool.invoke(
         makeOptions({ action: "get_user_transports", connectionId: "dev100" }),
-        mockToken
-      )
-      const text: string = result.parts[0].text
+        mockToken,
+      );
+      const text: string = result.parts[0].text;
 
-      expect(text).toContain("DEFAULTUSER")
-    })
-  })
+      expect(text).toContain("DEFAULTUSER");
+    });
+  });
 
   // ====================================================================
   // getTransportDetails
   // ====================================================================
   describe("invoke - get_transport_details", () => {
     function makeTransportRequest(opts: {
-      number: string
-      owner?: string
-      desc?: string
-      status?: string
-      objects?: Array<{ name: string; type: string; pgmid?: string; obj_info?: string }>
+      number: string;
+      owner?: string;
+      desc?: string;
+      status?: string;
+      objects?: Array<{ name: string; type: string; pgmid?: string; obj_info?: string }>;
       tasks?: Array<{
-        number: string
-        owner?: string
-        desc?: string
-        status?: string
-        objects?: Array<{ name: string; type: string; pgmid?: string; obj_info?: string }>
-      }>
+        number: string;
+        owner?: string;
+        desc?: string;
+        status?: string;
+        objects?: Array<{ name: string; type: string; pgmid?: string; obj_info?: string }>;
+      }>;
     }): any {
       return {
         "tm:number": opts.number,
@@ -368,29 +368,29 @@ describe.skip("ManageTransportRequestsTool", () => {
         "tm:status": opts.status || "D",
         "tm:uri": `/sap/bc/adt/cts/transportrequests/${opts.number}`,
         links: [],
-        objects: (opts.objects || []).map(o => ({
+        objects: (opts.objects || []).map((o) => ({
           "tm:name": o.name,
           "tm:type": o.type,
           "tm:pgmid": o.pgmid || "R3TR",
           "tm:dummy_uri": "",
-          "tm:obj_info": o.obj_info || ""
+          "tm:obj_info": o.obj_info || "",
         })),
-        tasks: (opts.tasks || []).map(t => ({
+        tasks: (opts.tasks || []).map((t) => ({
           "tm:number": t.number,
           "tm:owner": t.owner || "DEVUSER",
           "tm:desc": t.desc || "",
           "tm:status": t.status || "D",
           "tm:uri": `/sap/bc/adt/cts/transportrequests/${t.number}`,
           links: [],
-          objects: (t.objects || []).map(o => ({
+          objects: (t.objects || []).map((o) => ({
             "tm:name": o.name,
             "tm:type": o.type,
             "tm:pgmid": o.pgmid || "R3TR",
             "tm:dummy_uri": "",
-            "tm:obj_info": o.obj_info || ""
-          }))
-        }))
-      }
+            "tm:obj_info": o.obj_info || "",
+          })),
+        })),
+      };
     }
 
     it("extracts transport number, owner, description and status", async () => {
@@ -399,24 +399,24 @@ describe.skip("ManageTransportRequestsTool", () => {
           number: "DEVK900123",
           owner: "JDOE",
           desc: "Fix customer report",
-          status: "D"
-        })
-      )
+          status: "D",
+        }),
+      );
 
       const result: any = await tool.invoke(
         makeOptions({
           action: "get_transport_details",
           transportNumber: "DEVK900123",
-          connectionId: "dev100"
+          connectionId: "dev100",
         }),
-        mockToken
-      )
-      const text: string = result.parts[0].text
+        mockToken,
+      );
+      const text: string = result.parts[0].text;
 
-      expect(text).toContain("DEVK900123")
-      expect(text).toContain("JDOE")
-      expect(text).toContain("Fix customer report")
-    })
+      expect(text).toContain("DEVK900123");
+      expect(text).toContain("JDOE");
+      expect(text).toContain("Fix customer report");
+    });
 
     it("parses objects", async () => {
       mockClient.transportDetails.mockResolvedValue(
@@ -424,27 +424,27 @@ describe.skip("ManageTransportRequestsTool", () => {
           number: "DEVK900124",
           objects: [
             { name: "ZCL_MYCLASS", type: "CLAS", pgmid: "R3TR", obj_info: "My class" },
-            { name: "ZMYREPORT", type: "PROG", pgmid: "R3TR", obj_info: "My report" }
-          ]
-        })
-      )
+            { name: "ZMYREPORT", type: "PROG", pgmid: "R3TR", obj_info: "My report" },
+          ],
+        }),
+      );
 
       const result: any = await tool.invoke(
         makeOptions({
           action: "get_transport_details",
           transportNumber: "DEVK900124",
-          connectionId: "dev100"
+          connectionId: "dev100",
         }),
-        mockToken
-      )
-      const text: string = result.parts[0].text
+        mockToken,
+      );
+      const text: string = result.parts[0].text;
 
-      expect(text).toContain("Objects**: 2")
-      expect(text).toContain("ZCL_MYCLASS")
-      expect(text).toContain("CLAS")
-      expect(text).toContain("ZMYREPORT")
-      expect(text).toContain("PROG")
-    })
+      expect(text).toContain("Objects**: 2");
+      expect(text).toContain("ZCL_MYCLASS");
+      expect(text).toContain("CLAS");
+      expect(text).toContain("ZMYREPORT");
+      expect(text).toContain("PROG");
+    });
 
     it("parses tasks with their objects", async () => {
       mockClient.transportDetails.mockResolvedValue(
@@ -458,93 +458,93 @@ describe.skip("ManageTransportRequestsTool", () => {
               status: "D",
               objects: [
                 { name: "ZTABLE1", type: "TABL", obj_info: "A table" },
-                { name: "ZDTEL1", type: "DTEL", obj_info: "A data element" }
-              ]
-            }
-          ]
-        })
-      )
+                { name: "ZDTEL1", type: "DTEL", obj_info: "A data element" },
+              ],
+            },
+          ],
+        }),
+      );
 
       const result: any = await tool.invoke(
         makeOptions({
           action: "get_transport_details",
           transportNumber: "DEVK900124",
-          connectionId: "dev100"
+          connectionId: "dev100",
         }),
-        mockToken
-      )
-      const text: string = result.parts[0].text
+        mockToken,
+      );
+      const text: string = result.parts[0].text;
 
-      expect(text).toContain("Tasks** (1)")
-      expect(text).toContain("DEVK900125")
-      expect(text).toContain("Task 1")
-    })
+      expect(text).toContain("Tasks** (1)");
+      expect(text).toContain("DEVK900125");
+      expect(text).toContain("Task 1");
+    });
 
     it("returns not-found message when transport does not exist", async () => {
-      mockClient.transportDetails.mockRejectedValue(new Error("404 not found"))
+      mockClient.transportDetails.mockRejectedValue(new Error("404 not found"));
 
       const result: any = await tool.invoke(
         makeOptions({
           action: "get_transport_details",
           transportNumber: "DEVK900999",
-          connectionId: "dev100"
+          connectionId: "dev100",
         }),
-        mockToken
-      )
-      const text: string = result.parts[0].text
+        mockToken,
+      );
+      const text: string = result.parts[0].text;
 
-      expect(text).toContain("not found")
-    })
+      expect(text).toContain("not found");
+    });
 
     it("handles 404 error gracefully with not-found message", async () => {
-      mockClient.transportDetails.mockRejectedValue(new Error("404 not found"))
+      mockClient.transportDetails.mockRejectedValue(new Error("404 not found"));
 
       const result: any = await tool.invoke(
         makeOptions({
           action: "get_transport_details",
           transportNumber: "DEVK900999",
-          connectionId: "dev100"
+          connectionId: "dev100",
         }),
-        mockToken
-      )
-      const text: string = result.parts[0].text
+        mockToken,
+      );
+      const text: string = result.parts[0].text;
 
-      expect(text).toContain("not found")
-      expect(text).not.toContain("Failed to manage")
-    })
+      expect(text).toContain("not found");
+      expect(text).not.toContain("Failed to manage");
+    });
 
     it("throws wrapped error for non-404 API errors", async () => {
-      mockClient.transportDetails.mockRejectedValue(new Error("500 internal server error"))
+      mockClient.transportDetails.mockRejectedValue(new Error("500 internal server error"));
 
       await expect(
         tool.invoke(
           makeOptions({
             action: "get_transport_details",
             transportNumber: "DEVK900100",
-            connectionId: "dev100"
+            connectionId: "dev100",
           }),
-          mockToken
-        )
-      ).rejects.toThrow("Failed to manage transport requests")
-    })
-  })
+          mockToken,
+        ),
+      ).rejects.toThrow("Failed to manage transport requests");
+    });
+  });
 
   // ====================================================================
   // getTransportObjects: verify object aggregation from transport + tasks
   // ====================================================================
   describe("invoke - get_transport_objects", () => {
     function makeTransportRequest(opts: {
-      number: string
-      owner?: string
-      desc?: string
-      objects?: Array<{ name: string; type: string; pgmid?: string; obj_info?: string }>
+      number: string;
+      owner?: string;
+      desc?: string;
+      objects?: Array<{ name: string; type: string; pgmid?: string; obj_info?: string }>;
       tasks?: Array<{
-        number: string
-        owner?: string
-        desc?: string
-        status?: string
-        objects?: Array<{ name: string; type: string; pgmid?: string; obj_info?: string }>
-      }>
+        number: string;
+        owner?: string;
+        desc?: string;
+        status?: string;
+        objects?: Array<{ name: string; type: string; pgmid?: string; obj_info?: string }>;
+      }>;
     }): any {
       return {
         "tm:number": opts.number,
@@ -553,29 +553,29 @@ describe.skip("ManageTransportRequestsTool", () => {
         "tm:status": "D",
         "tm:uri": `/sap/bc/adt/cts/transportrequests/${opts.number}`,
         links: [],
-        objects: (opts.objects || []).map(o => ({
+        objects: (opts.objects || []).map((o) => ({
           "tm:name": o.name,
           "tm:type": o.type,
           "tm:pgmid": o.pgmid || "R3TR",
           "tm:dummy_uri": "",
-          "tm:obj_info": o.obj_info || ""
+          "tm:obj_info": o.obj_info || "",
         })),
-        tasks: (opts.tasks || []).map(t => ({
+        tasks: (opts.tasks || []).map((t) => ({
           "tm:number": t.number,
           "tm:owner": t.owner || "DEVUSER",
           "tm:desc": t.desc || "",
           "tm:status": t.status || "D",
           "tm:uri": `/sap/bc/adt/cts/transportrequests/${t.number}`,
           links: [],
-          objects: (t.objects || []).map(o => ({
+          objects: (t.objects || []).map((o) => ({
             "tm:name": o.name,
             "tm:type": o.type,
             "tm:pgmid": o.pgmid || "R3TR",
             "tm:dummy_uri": "",
-            "tm:obj_info": o.obj_info || ""
-          }))
-        }))
-      }
+            "tm:obj_info": o.obj_info || "",
+          })),
+        })),
+      };
     }
 
     it("groups objects by type under main transport section", async () => {
@@ -585,46 +585,46 @@ describe.skip("ManageTransportRequestsTool", () => {
           objects: [
             { name: "ZCL_A", type: "CLAS", pgmid: "R3TR", obj_info: "Class A" },
             { name: "ZCL_B", type: "CLAS", pgmid: "R3TR", obj_info: "Class B" },
-            { name: "ZREPORT", type: "PROG", pgmid: "R3TR", obj_info: "Report" }
-          ]
-        })
-      )
+            { name: "ZREPORT", type: "PROG", pgmid: "R3TR", obj_info: "Report" },
+          ],
+        }),
+      );
 
       const result: any = await tool.invoke(
         makeOptions({
           action: "get_transport_objects",
           transportNumber: "DEVK800001",
-          connectionId: "dev100"
+          connectionId: "dev100",
         }),
-        mockToken
-      )
-      const text: string = result.parts[0].text
+        mockToken,
+      );
+      const text: string = result.parts[0].text;
 
-      expect(text).toContain("MAIN TRANSPORT")
-      expect(text).toContain("CLAS")
-      expect(text).toContain("2 objects")
-      expect(text).toContain("PROG")
-      expect(text).toContain("ZCL_A")
-      expect(text).toContain("ZCL_B")
-      expect(text).toContain("ZREPORT")
-    })
+      expect(text).toContain("MAIN TRANSPORT");
+      expect(text).toContain("CLAS");
+      expect(text).toContain("2 objects");
+      expect(text).toContain("PROG");
+      expect(text).toContain("ZCL_A");
+      expect(text).toContain("ZCL_B");
+      expect(text).toContain("ZREPORT");
+    });
 
     it("shows 'no objects' warning when transport is empty", async () => {
-      mockClient.transportDetails.mockResolvedValue(makeTransportRequest({ number: "DEVK800002" }))
+      mockClient.transportDetails.mockResolvedValue(makeTransportRequest({ number: "DEVK800002" }));
 
       const result: any = await tool.invoke(
         makeOptions({
           action: "get_transport_objects",
           transportNumber: "DEVK800002",
-          connectionId: "dev100"
+          connectionId: "dev100",
         }),
-        mockToken
-      )
-      const text: string = result.parts[0].text
+        mockToken,
+      );
+      const text: string = result.parts[0].text;
 
-      expect(text).toContain("No objects found")
-      expect(text).toContain("Total Objects**: 0")
-    })
+      expect(text).toContain("No objects found");
+      expect(text).toContain("Total Objects**: 0");
+    });
 
     it("counts total objects including task objects", async () => {
       mockClient.transportDetails.mockResolvedValue(
@@ -639,27 +639,27 @@ describe.skip("ManageTransportRequestsTool", () => {
               status: "D",
               objects: [
                 { name: "ZTASK1", type: "TABL", obj_info: "Task table" },
-                { name: "ZTASK2", type: "DTEL", obj_info: "Task dtel" }
-              ]
-            }
-          ]
-        })
-      )
+                { name: "ZTASK2", type: "DTEL", obj_info: "Task dtel" },
+              ],
+            },
+          ],
+        }),
+      );
 
       const result: any = await tool.invoke(
         makeOptions({
           action: "get_transport_objects",
           transportNumber: "DEVK800004",
-          connectionId: "dev100"
+          connectionId: "dev100",
         }),
-        mockToken
-      )
-      const text: string = result.parts[0].text
+        mockToken,
+      );
+      const text: string = result.parts[0].text;
 
       // 1 main + 2 task = 3 total
-      expect(text).toContain("Total Objects**: 3")
-    })
-  })
+      expect(text).toContain("Total Objects**: 3");
+    });
+  });
 
   // ====================================================================
   // compareTransports: common vs unique objects, edge cases
@@ -667,7 +667,7 @@ describe.skip("ManageTransportRequestsTool", () => {
   describe("invoke - compare_transports logic", () => {
     function makeTransportRequest(
       number: string,
-      objects: Array<{ name: string; type: string; pgmid?: string; obj_info?: string }>
+      objects: Array<{ name: string; type: string; pgmid?: string; obj_info?: string }>,
     ): any {
       return {
         "tm:number": number,
@@ -676,15 +676,15 @@ describe.skip("ManageTransportRequestsTool", () => {
         "tm:status": "D",
         "tm:uri": `/sap/bc/adt/cts/transportrequests/${number}`,
         links: [],
-        objects: objects.map(o => ({
+        objects: objects.map((o) => ({
           "tm:name": o.name,
           "tm:type": o.type,
           "tm:pgmid": o.pgmid || "R3TR",
           "tm:dummy_uri": "",
-          "tm:obj_info": o.obj_info || ""
+          "tm:obj_info": o.obj_info || "",
         })),
-        tasks: []
-      }
+        tasks: [],
+      };
     }
 
     it("identifies common objects shared across all transports", async () => {
@@ -692,115 +692,115 @@ describe.skip("ManageTransportRequestsTool", () => {
         .mockResolvedValueOnce(
           makeTransportRequest("TR001", [
             { name: "ZCL_SHARED", type: "CLAS", pgmid: "R3TR", obj_info: "Shared class" },
-            { name: "ZUNIQUE1", type: "PROG", pgmid: "R3TR", obj_info: "Unique to TR001" }
-          ])
+            { name: "ZUNIQUE1", type: "PROG", pgmid: "R3TR", obj_info: "Unique to TR001" },
+          ]),
         )
         .mockResolvedValueOnce(
           makeTransportRequest("TR002", [
             { name: "ZCL_SHARED", type: "CLAS", pgmid: "R3TR", obj_info: "Shared class" },
-            { name: "ZUNIQUE2", type: "PROG", pgmid: "R3TR", obj_info: "Unique to TR002" }
-          ])
-        )
+            { name: "ZUNIQUE2", type: "PROG", pgmid: "R3TR", obj_info: "Unique to TR002" },
+          ]),
+        );
 
       const result: any = await tool.invoke(
         makeOptions({
           action: "compare_transports",
           transportNumbers: ["TR001", "TR002"],
-          connectionId: "dev100"
+          connectionId: "dev100",
         }),
-        mockToken
-      )
-      const text: string = result.parts[0].text
+        mockToken,
+      );
+      const text: string = result.parts[0].text;
 
-      expect(text).toContain("COMMON OBJECTS")
-      expect(text).toContain("ZCL_SHARED")
-      expect(text).toContain("Unique to TR001")
-      expect(text).toContain("ZUNIQUE1")
-      expect(text).toContain("Unique to TR002")
-      expect(text).toContain("ZUNIQUE2")
-    })
+      expect(text).toContain("COMMON OBJECTS");
+      expect(text).toContain("ZCL_SHARED");
+      expect(text).toContain("Unique to TR001");
+      expect(text).toContain("ZUNIQUE1");
+      expect(text).toContain("Unique to TR002");
+      expect(text).toContain("ZUNIQUE2");
+    });
 
     it("reports no common objects when transports have disjoint object sets", async () => {
       mockClient.transportDetails
         .mockResolvedValueOnce(
           makeTransportRequest("TR010", [
-            { name: "ZONLY_A", type: "PROG", pgmid: "R3TR", obj_info: "Only in A" }
-          ])
+            { name: "ZONLY_A", type: "PROG", pgmid: "R3TR", obj_info: "Only in A" },
+          ]),
         )
         .mockResolvedValueOnce(
           makeTransportRequest("TR020", [
-            { name: "ZONLY_B", type: "TABL", pgmid: "R3TR", obj_info: "Only in B" }
-          ])
-        )
+            { name: "ZONLY_B", type: "TABL", pgmid: "R3TR", obj_info: "Only in B" },
+          ]),
+        );
 
       const result: any = await tool.invoke(
         makeOptions({
           action: "compare_transports",
           transportNumbers: ["TR010", "TR020"],
-          connectionId: "dev100"
+          connectionId: "dev100",
         }),
-        mockToken
-      )
-      const text: string = result.parts[0].text
+        mockToken,
+      );
+      const text: string = result.parts[0].text;
 
-      expect(text).toContain("None")
-      expect(text).toContain("ZONLY_A")
-      expect(text).toContain("ZONLY_B")
-    })
+      expect(text).toContain("None");
+      expect(text).toContain("ZONLY_A");
+      expect(text).toContain("ZONLY_B");
+    });
 
     it("counts total unique objects correctly", async () => {
       mockClient.transportDetails
         .mockResolvedValueOnce(
           makeTransportRequest("TRA", [
             { name: "OBJ1", type: "CLAS", pgmid: "R3TR", obj_info: "O1" },
-            { name: "OBJ2", type: "CLAS", pgmid: "R3TR", obj_info: "O2" }
-          ])
+            { name: "OBJ2", type: "CLAS", pgmid: "R3TR", obj_info: "O2" },
+          ]),
         )
         .mockResolvedValueOnce(
           makeTransportRequest("TRB", [
             { name: "OBJ2", type: "CLAS", pgmid: "R3TR", obj_info: "O2" },
-            { name: "OBJ3", type: "CLAS", pgmid: "R3TR", obj_info: "O3" }
-          ])
-        )
+            { name: "OBJ3", type: "CLAS", pgmid: "R3TR", obj_info: "O3" },
+          ]),
+        );
 
       const result: any = await tool.invoke(
         makeOptions({
           action: "compare_transports",
           transportNumbers: ["TRA", "TRB"],
-          connectionId: "dev100"
+          connectionId: "dev100",
         }),
-        mockToken
-      )
-      const text: string = result.parts[0].text
+        mockToken,
+      );
+      const text: string = result.parts[0].text;
 
       // 3 unique objects: OBJ1, OBJ2, OBJ3
-      expect(text).toContain("Total Unique Objects**: 3")
-    })
+      expect(text).toContain("Total Unique Objects**: 3");
+    });
 
     it("handles one transport not found during comparison", async () => {
       mockClient.transportDetails
         .mockResolvedValueOnce(
           makeTransportRequest("TROK", [
-            { name: "ZOK", type: "PROG", pgmid: "R3TR", obj_info: "OK" }
-          ])
+            { name: "ZOK", type: "PROG", pgmid: "R3TR", obj_info: "OK" },
+          ]),
         )
-        .mockRejectedValueOnce(new Error("transport not found"))
+        .mockRejectedValueOnce(new Error("transport not found"));
 
       const result: any = await tool.invoke(
         makeOptions({
           action: "compare_transports",
           transportNumbers: ["TROK", "TRBAD"],
-          connectionId: "dev100"
+          connectionId: "dev100",
         }),
-        mockToken
-      )
-      const text: string = result.parts[0].text
+        mockToken,
+      );
+      const text: string = result.parts[0].text;
 
-      expect(text).toContain("Not Found")
-      expect(text).toContain("TRBAD")
-      expect(text).toContain("Need at least 2 valid transports")
-    })
-  })
+      expect(text).toContain("Not Found");
+      expect(text).toContain("TRBAD");
+      expect(text).toContain("Need at least 2 valid transports");
+    });
+  });
 
   // ====================================================================
   // Input validation and error handling
@@ -810,19 +810,19 @@ describe.skip("ManageTransportRequestsTool", () => {
       await expect(
         tool.invoke(
           makeOptions({ action: "get_transport_details", connectionId: "dev100" }),
-          mockToken
-        )
-      ).rejects.toThrow("transportNumber is required")
-    })
+          mockToken,
+        ),
+      ).rejects.toThrow("transportNumber is required");
+    });
 
     it("throws for get_transport_objects without transportNumber", async () => {
       await expect(
         tool.invoke(
           makeOptions({ action: "get_transport_objects", connectionId: "dev100" }),
-          mockToken
-        )
-      ).rejects.toThrow("transportNumber is required")
-    })
+          mockToken,
+        ),
+      ).rejects.toThrow("transportNumber is required");
+    });
 
     it("throws for compare_transports with fewer than 2 numbers", async () => {
       await expect(
@@ -830,12 +830,12 @@ describe.skip("ManageTransportRequestsTool", () => {
           makeOptions({
             action: "compare_transports",
             transportNumbers: ["ONE"],
-            connectionId: "dev100"
+            connectionId: "dev100",
           }),
-          mockToken
-        )
-      ).rejects.toThrow("At least 2 transport numbers")
-    })
+          mockToken,
+        ),
+      ).rejects.toThrow("At least 2 transport numbers");
+    });
 
     it("throws for compare_transports with empty array", async () => {
       await expect(
@@ -843,40 +843,40 @@ describe.skip("ManageTransportRequestsTool", () => {
           makeOptions({
             action: "compare_transports",
             transportNumbers: [],
-            connectionId: "dev100"
+            connectionId: "dev100",
           }),
-          mockToken
-        )
-      ).rejects.toThrow("At least 2 transport numbers")
-    })
+          mockToken,
+        ),
+      ).rejects.toThrow("At least 2 transport numbers");
+    });
 
     it("throws for unknown action", async () => {
       await expect(
         tool.invoke(
           makeOptions({ action: "nonexistent_action", connectionId: "dev100" }),
-          mockToken
-        )
-      ).rejects.toThrow("Unknown action")
-    })
+          mockToken,
+        ),
+      ).rejects.toThrow("Unknown action");
+    });
 
     it("uses active editor authority as connectionId when none provided", async () => {
-      const { abapUri } = require("../../adt/conections")
-      ;(abapUri as Mock).mockReturnValue(true)
-      ;(window as any).activeTextEditor = {
-        document: { uri: { authority: "DEV200", scheme: "adt" } }
-      }
-      mockClient.userTransports = vi.fn()
-      const { readTransports } = require("../../views/transports")
-      ;(readTransports as Mock).mockResolvedValue({
+      const { abapUri } = require("../../adt/conections");
+      (abapUri as Mock).mockReturnValue(true);
+      (window as any).activeTextEditor = {
+        document: { uri: { authority: "DEV200", scheme: "adt" } },
+      };
+      mockClient.userTransports = vi.fn();
+      const { readTransports } = require("../../views/transports");
+      (readTransports as Mock).mockResolvedValue({
         workbench: [],
         customizing: [],
-        transportofcopies: []
-      })
-      mockClient.username = "U"
+        transportofcopies: [],
+      });
+      mockClient.username = "U";
 
-      await tool.invoke(makeOptions({ action: "get_user_transports" }), mockToken)
+      await tool.invoke(makeOptions({ action: "get_user_transports" }), mockToken);
 
-      expect(getClient).toHaveBeenCalledWith("dev200")
-    })
-  })
-})
+      expect(getClient).toHaveBeenCalledWith("dev200");
+    });
+  });
+});

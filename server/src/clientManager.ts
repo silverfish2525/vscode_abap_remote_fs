@@ -1,100 +1,100 @@
-import { ADTClient, createSSLConfig, LogData, session_types } from "abap-adt-api"
-import { createConnection, ProposedFeatures, Connection } from "vscode-languageserver/node"
-import { types } from "util"
-import { readConfiguration } from "./clientapis"
+import { ADTClient, createSSLConfig, LogData, session_types } from "abap-adt-api";
+import { createConnection, ProposedFeatures, Connection } from "vscode-languageserver/node";
+import { types } from "util";
+import { readConfiguration } from "./clientapis";
 import {
   ClientConfiguration,
   Methods,
-  CommLogTogglePayload
-} from "vscode-abap-remote-fs-sharedapi"
-import { isString } from "./functions"
-const clients: Map<string, ADTClient> = new Map()
+  CommLogTogglePayload,
+} from "vscode-abap-remote-fs-sharedapi";
+import { isString } from "./functions";
+const clients: Map<string, ADTClient> = new Map();
 
-export const connection: Connection = createConnection(ProposedFeatures.all)
-export const error = (...params: any) => connection.console.error(convertParams(...params))
-export const warn = (...params: any) => connection.console.warn(convertParams(...params))
-export const info = (...params: any) => connection.console.info(convertParams(...params))
-export const log = (...params: any) => connection.console.log(convertParams(...params))
+export const connection: Connection = createConnection(ProposedFeatures.all);
+export const error = (...params: any) => connection.console.error(convertParams(...params));
+export const warn = (...params: any) => connection.console.warn(convertParams(...params));
+export const info = (...params: any) => connection.console.info(convertParams(...params));
+export const log = (...params: any) => connection.console.log(convertParams(...params));
 
 export function clientKeyFromUrl(url: string) {
-  const match = url.match(/adt:\/\/([^\/]*)/)
-  return match && match[1]
+  const match = url.match(/adt:\/\/([^\/]*)/);
+  return match && match[1];
 }
 
 function createFetchToken(conf: ClientConfiguration) {
   if (conf.oauth)
-    return () => connection.sendRequest(Methods.getToken, conf.name) as Promise<string>
+    return () => connection.sendRequest(Methods.getToken, conf.name) as Promise<string>;
 }
 
 /** Whether the client has the comm-log panel open */
-const activeConnections = new Set<string>()
+const activeConnections = new Set<string>();
 export function setCommLogActive(active: CommLogTogglePayload) {
-  if (active.active) activeConnections.add(active.connId)
-  else activeConnections.delete(active.connId)
+  if (active.active) activeConnections.add(active.connId);
+  else activeConnections.delete(active.connId);
 }
 
 /** Build a debugCallback that chains MongoDB tracing and comm log forwarding */
 function buildServerDebugCallback(connId: string) {
   return (logData: LogData) =>
     activeConnections.has(connId) &&
-    connection.sendNotification(Methods.commLogEntry, { logData, connId })
+    connection.sendNotification(Methods.commLogEntry, { logData, connId });
 }
 
 const refreshClient = (key: string, conf: ClientConfiguration) => {
-  const oldClient = clients.get(key)
+  const oldClient = clients.get(key);
   const sslconf = conf.url.match(/https:/i)
     ? createSSLConfig(conf.allowSelfSigned, conf.customCA)
-    : {}
-  sslconf.debugCallback = buildServerDebugCallback(key)
-  const pwdOrFetch = createFetchToken(conf) || conf.password
+    : {};
+  sslconf.debugCallback = buildServerDebugCallback(key);
+  const pwdOrFetch = createFetchToken(conf) || conf.password;
   const baseclient = new ADTClient(
     conf.url,
     conf.username,
     pwdOrFetch,
     conf.client,
     conf.language,
-    sslconf
-  )
-  baseclient.stateful = session_types.stateful
-  clients.set(key, baseclient)
+    sslconf,
+  );
+  baseclient.stateful = session_types.stateful;
+  clients.set(key, baseclient);
   if (oldClient) {
     setTimeout(() => {
-      oldClient.stateful = session_types.stateless
-      oldClient.logout()
-    }, 2000)
+      oldClient.stateful = session_types.stateless;
+      oldClient.logout();
+    }, 2000);
   }
-}
+};
 
 export async function clientFromKey(key: string) {
-  key = decodeURIComponent(key)
-  let client = clients.get(key)
+  key = decodeURIComponent(key);
+  let client = clients.get(key);
   if (!client) {
-    const conf = await readConfiguration(key)
+    const conf = await readConfiguration(key);
     if (conf) {
-      refreshClient(key, conf)
+      refreshClient(key, conf);
       // as clients are stateful, they will expire, usually in 10 minutes. So we need to refresh them every 4 minutes
-      setInterval(() => refreshClient(key, conf), 240000)
+      setInterval(() => refreshClient(key, conf), 240000);
     }
   }
-  return client
+  return client;
 }
 
 export async function clientFromUrl(url: string) {
-  const key = clientKeyFromUrl(url)
-  if (!key) return
-  return clientFromKey(key)
+  const key = clientKeyFromUrl(url);
+  if (!key) return;
+  return clientFromKey(key);
 }
 
 function convertParams(...params: any) {
-  let msg = ""
+  let msg = "";
   for (const x of params) {
     try {
-      if (types.isNativeError(x)) msg += `\nError ${x.name}\n${x.message}\n\n${x.stack}\n`
-      else msg += isString(x) ? x : JSON.stringify(x)
+      if (types.isNativeError(x)) msg += `\nError ${x.name}\n${x.message}\n\n${x.stack}\n`;
+      else msg += isString(x) ? x : JSON.stringify(x);
     } catch (e) {
-      msg += x.toString()
+      msg += x.toString();
     }
-    msg += " "
+    msg += " ";
   }
-  return msg
+  return msg;
 }

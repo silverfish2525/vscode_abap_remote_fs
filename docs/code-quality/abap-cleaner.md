@@ -14,12 +14,12 @@ ABAP Cleaner requires its standalone command-line tool (`abap-cleanerc.exe`).
 
 With an ABAP file open, use any of these methods:
 
-| Method | Action |
-|---|---|
-| Keyboard shortcut | `Ctrl+Shift+Alt+F` |
-| Format on save | `Shift+Alt+F` (standard VS Code format — triggers ABAP Cleaner if configured as formatter) |
-| Command Palette | **ABAP FS: Clean ABAP Code with ABAP Cleaner** |
-| Toolbar button | Click the Cleaner button in the editor toolbar |
+| Method            | Action                                                                                     |
+| ----------------- | ------------------------------------------------------------------------------------------ |
+| Keyboard shortcut | `Ctrl+Shift+Alt+F`                                                                         |
+| Format on save    | `Shift+Alt+F` (standard VS Code format — triggers ABAP Cleaner if configured as formatter) |
+| Command Palette   | **ABAP FS: Clean ABAP Code with ABAP Cleaner**                                             |
+| Toolbar button    | Click the Cleaner button in the editor toolbar                                             |
 
 To clean only selected lines, select the code first, then trigger the command.
 

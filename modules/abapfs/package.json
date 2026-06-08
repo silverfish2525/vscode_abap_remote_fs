@@ -2,6 +2,8 @@
   "name": "abapfs",
   "version": "1.0.0",
   "description": "Abap filesystem",
+  "license": "MIT",
+  "author": "Marcello Urbani",
   "main": "out/index.js",
   "scripts": {
     "test": "vitest run",
@@ -10,15 +12,13 @@
     "clean": "rm -Rf node_modules out tsconfig.tsbuildinfo",
     "watch": "tsc -w"
   },
-  "author": "Marcello Urbani",
-  "license": "MIT",
+  "dependencies": {
+    "abap-adt-api": "^8.4.0"
+  },
   "devDependencies": {
     "@types/vscode": "^1.74.0",
     "typescript": "^6.0.0",
     "vitest": "5.0.0-beta.4",
     "vitest-mock-extended": "^4.0.0"
-  },
-  "dependencies": {
-    "abap-adt-api": "^8.4.0"
   }
 }

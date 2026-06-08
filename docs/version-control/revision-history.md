@@ -5,12 +5,14 @@ Every time an ABAP object is activated, SAP stores a version snapshot — the sa
 ## Opening Revision History
 
 **Option 1 — Command Palette** (`Ctrl+Shift+P`):
+
 > `ABAP: Show object history`
 
 **Option 2 — Explorer context menu:**
 Right-click any ABAP object → **Show object history**
 
 **Option 3 — Ask Copilot:**
+
 > "Show version history for ZCL_MY_CLASS"
 
 ## Comparing Versions
@@ -30,22 +32,22 @@ Once the history panel is open:
 
 ## vs. SE80 Version Management
 
-| SE80 (Utilities → Versions) | This Extension |
-|---|---|
-| Opens in SAP GUI | Opens inside VS Code |
-| Text-based diff | Syntax-highlighted side-by-side diff |
-| Normalized compare available | Normalization toggle available |
-| Manual copy to restore | Copy from diff pane |
+| SE80 (Utilities → Versions)  | This Extension                       |
+| ---------------------------- | ------------------------------------ |
+| Opens in SAP GUI             | Opens inside VS Code                 |
+| Text-based diff              | Syntax-highlighted side-by-side diff |
+| Normalized compare available | Normalization toggle available       |
+| Manual copy to restore       | Copy from diff pane                  |
 
 ## Using Copilot for Version History
 
 The `get_version_history` tool supports three actions. Version numbers are **1-based**, where **1 = most recent**.
 
-| Action | What it does |
-|---|---|
-| `list_versions` | Lists all versions with date, author, and transport |
+| Action               | What it does                                          |
+| -------------------- | ----------------------------------------------------- |
+| `list_versions`      | Lists all versions with date, author, and transport   |
 | `get_version_source` | Returns full source code at a specific version number |
-| `compare_versions` | Shows added/removed lines between two version numbers |
+| `compare_versions`   | Shows added/removed lines between two version numbers |
 
 **Example questions:**
 

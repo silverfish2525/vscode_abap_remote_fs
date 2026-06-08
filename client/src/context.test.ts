@@ -1,54 +1,54 @@
-import { setContext, AbapFsContexts } from "./context"
+import { setContext, AbapFsContexts } from "./context";
 
 vi.mock("vscode", () => ({
   commands: {
-    executeCommand: vi.fn()
-  }
-}))
+    executeCommand: vi.fn(),
+  },
+}));
 
-import * as vscode from "vscode"
+import * as vscode from "vscode";
 
 describe("context", () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-  })
+    vi.clearAllMocks();
+  });
 
   describe("setContext", () => {
     it("calls executeCommand with setContext and the given key and value", () => {
-      setContext("abapfs:showActivate", true)
-      expect((vscode.commands.executeCommand as Mock)).toHaveBeenCalledWith(
+      setContext("abapfs:showActivate", true);
+      expect(vscode.commands.executeCommand as Mock).toHaveBeenCalledWith(
         "setContext",
         "abapfs:showActivate",
-        true
-      )
-    })
+        true,
+      );
+    });
 
     it("passes false value correctly", () => {
-      setContext("abapfs:extensionActive", false)
-      expect((vscode.commands.executeCommand as Mock)).toHaveBeenCalledWith(
+      setContext("abapfs:extensionActive", false);
+      expect(vscode.commands.executeCommand as Mock).toHaveBeenCalledWith(
         "setContext",
         "abapfs:extensionActive",
-        false
-      )
-    })
+        false,
+      );
+    });
 
     it("passes string values correctly", () => {
-      setContext("abapfs:blameActive", "someValue")
-      expect((vscode.commands.executeCommand as Mock)).toHaveBeenCalledWith(
+      setContext("abapfs:blameActive", "someValue");
+      expect(vscode.commands.executeCommand as Mock).toHaveBeenCalledWith(
         "setContext",
         "abapfs:blameActive",
-        "someValue"
-      )
-    })
+        "someValue",
+      );
+    });
 
     it("passes undefined value correctly", () => {
-      setContext("abapfs:showTableContentIcon", undefined)
-      expect((vscode.commands.executeCommand as Mock)).toHaveBeenCalledWith(
+      setContext("abapfs:showTableContentIcon", undefined);
+      expect(vscode.commands.executeCommand as Mock).toHaveBeenCalledWith(
         "setContext",
         "abapfs:showTableContentIcon",
-        undefined
-      )
-    })
+        undefined,
+      );
+    });
 
     const allContextKeys: AbapFsContexts[] = [
       "abapfs:showActivate",
@@ -63,16 +63,12 @@ describe("context", () => {
       "abapfs:enableRightPrevRev",
       "abapfs:enableRightNextRev",
       "abapfs:blameActive",
-      "abapfs:blameAvailable"
-    ]
+      "abapfs:blameAvailable",
+    ];
 
-    it.each(allContextKeys)("works with context key '%s'", key => {
-      setContext(key, true)
-      expect((vscode.commands.executeCommand as Mock)).toHaveBeenCalledWith(
-        "setContext",
-        key,
-        true
-      )
-    })
-  })
-})
+    it.each(allContextKeys)("works with context key '%s'", (key) => {
+      setContext(key, true);
+      expect(vscode.commands.executeCommand as Mock).toHaveBeenCalledWith("setContext", key, true);
+    });
+  });
+});

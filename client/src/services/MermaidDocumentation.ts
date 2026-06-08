@@ -4,12 +4,12 @@
  */
 
 export interface DiagramTypeInfo {
-  name: string
-  description: string
-  keywords: string[]
-  syntax: string
-  example: string
-  commonElements: string[]
+  name: string;
+  description: string;
+  keywords: string[];
+  syntax: string;
+  example: string;
+  commonElements: string[];
 }
 
 export const MERMAID_DOCUMENTATION: Record<string, DiagramTypeInfo> = {
@@ -34,8 +34,8 @@ export const MERMAID_DOCUMENTATION: Record<string, DiagramTypeInfo> = {
       "Hexagon: {{Text}}",
       "Parallelogram: [/Text/]",
       "Stadium: ([Text])",
-      "Database: [(Text)]"
-    ]
+      "Database: [(Text)]",
+    ],
   },
 
   sequence: {
@@ -51,7 +51,7 @@ export const MERMAID_DOCUMENTATION: Record<string, DiagramTypeInfo> = {
       "-->",
       "activate",
       "deactivate",
-      "Note"
+      "Note",
     ],
     syntax:
       "sequenceDiagram\\n    participant A as Alice\\n    participant B as Bob\\n    A->>B: Hello Bob\\n    activate B\\n    B-->>A: Hello Alice\\n    deactivate B",
@@ -67,8 +67,8 @@ export const MERMAID_DOCUMENTATION: Record<string, DiagramTypeInfo> = {
       "Dotted line no arrow: -->",
       "Activate/deactivate: +/-",
       "Note over participant: Note over Alice: Note text",
-      "Note left/right: Note left of Alice: Note text"
-    ]
+      "Note left/right: Note left of Alice: Note text",
+    ],
   },
 
   class: {
@@ -86,7 +86,7 @@ export const MERMAID_DOCUMENTATION: Record<string, DiagramTypeInfo> = {
       "+",
       "-",
       "#",
-      "~"
+      "~",
     ],
     syntax:
       "classDiagram\\n    class Animal {\\n      +String name\\n      +int age\\n      +makeSound()\\n    }\\n    Animal <|-- Dog\\n    Animal <|-- Cat",
@@ -111,8 +111,8 @@ export const MERMAID_DOCUMENTATION: Record<string, DiagramTypeInfo> = {
       "Public: +",
       "Private: -",
       "Protected: #",
-      "Package/Internal: ~"
-    ]
+      "Package/Internal: ~",
+    ],
   },
 
   state: {
@@ -135,8 +135,8 @@ export const MERMAID_DOCUMENTATION: Record<string, DiagramTypeInfo> = {
       "Composite state: state CompositeState { [*] --> SubState }",
       "Choice: <<choice>>",
       "Fork: <<fork>>",
-      "Join: <<join>>"
-    ]
+      "Join: <<join>>",
+    ],
   },
 
   er: {
@@ -156,8 +156,8 @@ export const MERMAID_DOCUMENTATION: Record<string, DiagramTypeInfo> = {
       "Many to many: }o--o{",
       "Zero or one: ||..o|",
       "Zero or many: }o..|{",
-      "Entity attributes: ENTITY { type attribute }"
-    ]
+      "Entity attributes: ENTITY { type attribute }",
+    ],
   },
 
   journey: {
@@ -181,8 +181,8 @@ export const MERMAID_DOCUMENTATION: Record<string, DiagramTypeInfo> = {
       "Task: Task Name: Score: Actor1, Actor2",
       "Score range: 1-5 (1=bad, 5=good)",
       "Multiple actors: Actor1, Actor2",
-      "Task format: TaskName: Score: Actors"
-    ]
+      "Task format: TaskName: Score: Actors",
+    ],
   },
 
   gantt: {
@@ -196,7 +196,7 @@ export const MERMAID_DOCUMENTATION: Record<string, DiagramTypeInfo> = {
       ":done",
       ":active",
       ":crit",
-      "axisFormat"
+      "axisFormat",
     ],
     syntax:
       "gantt\\n    title Project Timeline\\n    dateFormat YYYY-MM-DD\\n    section Planning\\n    Research: done, res1, 2024-01-01, 2024-01-05\\n    Design: active, des1, 2024-01-03, 3d",
@@ -216,8 +216,8 @@ export const MERMAID_DOCUMENTATION: Record<string, DiagramTypeInfo> = {
       "Dependencies: :after taskId",
       "Duration: 30d, 3w, 2m",
       "Sections: section SectionName",
-      "Axis format: axisFormat %m/%d"
-    ]
+      "Axis format: axisFormat %m/%d",
+    ],
   },
 
   pie: {
@@ -236,8 +236,8 @@ export const MERMAID_DOCUMENTATION: Record<string, DiagramTypeInfo> = {
       "Show data: pie showData",
       "Comments: %% Comment text",
       "Multiple datasets supported",
-      "Percentage auto-calculated"
-    ]
+      "Percentage auto-calculated",
+    ],
   },
 
   gitgraph: {
@@ -262,17 +262,17 @@ export const MERMAID_DOCUMENTATION: Record<string, DiagramTypeInfo> = {
       "Switch branch: checkout branchName",
       "Merge branch: merge branchName",
       'Cherry pick: cherry-pick id: "commit-id"',
-      "Commit types: NORMAL, REVERSE, HIGHLIGHT"
-    ]
-  }
-}
+      "Commit types: NORMAL, REVERSE, HIGHLIGHT",
+    ],
+  },
+};
 
 export const GENERAL_MERMAID_INFO = {
   themes: ["default", "dark", "forest", "neutral"],
   commonDirectives: [
     "%%{init: {'theme':'dark'}}%%",
     "%%{wrap}%%",
-    "%%{config: {'fontFamily': 'Arial'}}%%"
+    "%%{config: {'fontFamily': 'Arial'}}%%",
   ],
   tips: [
     "Use quotes around text with spaces or special characters",
@@ -280,78 +280,78 @@ export const GENERAL_MERMAID_INFO = {
     "Themes can be set with %%{init: {'theme':'themeName'}}%%",
     "Direction in flowcharts: TD (top-down), LR (left-right), TB, RL",
     "Escape special characters with backslash in text",
-    "Use meaningful IDs for elements to reference them later"
+    "Use meaningful IDs for elements to reference them later",
   ],
   troubleshooting: [
     "Syntax errors: Check for missing quotes, colons, or brackets",
     "Rendering issues: Verify diagram type declaration is correct",
     "Connection problems: Ensure node IDs match exactly",
-    "Text display: Use quotes for text with spaces or special chars"
-  ]
-}
+    "Text display: Use quotes for text with spaces or special chars",
+  ],
+};
 
 export function getDocumentationForType(
   diagramType: string,
-  includeExamples: boolean = true
+  includeExamples: boolean = true,
 ): string {
   if (diagramType === "all") {
-    return getAllDocumentation(includeExamples)
+    return getAllDocumentation(includeExamples);
   }
 
-  const info = MERMAID_DOCUMENTATION[diagramType]
+  const info = MERMAID_DOCUMENTATION[diagramType];
   if (!info) {
-    return `Unknown diagram type: ${diagramType}. Available types: ${Object.keys(MERMAID_DOCUMENTATION).join(", ")}`
+    return `Unknown diagram type: ${diagramType}. Available types: ${Object.keys(MERMAID_DOCUMENTATION).join(", ")}`;
   }
 
-  let doc = `# ${info.name} Documentation\n\n`
-  doc += `**Description:** ${info.description}\n\n`
-  doc += `**Keywords:** ${info.keywords.join(", ")}\n\n`
-  doc += `**Basic Syntax:**\n\`\`\`\n${info.syntax}\n\`\`\`\n\n`
+  let doc = `# ${info.name} Documentation\n\n`;
+  doc += `**Description:** ${info.description}\n\n`;
+  doc += `**Keywords:** ${info.keywords.join(", ")}\n\n`;
+  doc += `**Basic Syntax:**\n\`\`\`\n${info.syntax}\n\`\`\`\n\n`;
 
   if (includeExamples) {
-    doc += `**Example:**\n\`\`\`mermaid\n${info.example}\n\`\`\`\n\n`
+    doc += `**Example:**\n\`\`\`mermaid\n${info.example}\n\`\`\`\n\n`;
   }
 
-  doc += `**Common Elements:**\n`
-  info.commonElements.forEach(element => {
-    doc += `- ${element}\n`
-  })
+  doc += `**Common Elements:**\n`;
+  info.commonElements.forEach((element) => {
+    doc += `- ${element}\n`;
+  });
 
-  return doc
+  return doc;
 }
 
 function getAllDocumentation(includeExamples: boolean): string {
-  let doc = `# Complete Mermaid Documentation\n\n`
+  let doc = `# Complete Mermaid Documentation\n\n`;
 
-  doc += `## Available Diagram Types\n`
+  doc += `## Available Diagram Types\n`;
   Object.entries(MERMAID_DOCUMENTATION).forEach(([type, info]) => {
-    doc += `- **${type}**: ${info.description}\n`
-  })
+    doc += `- **${type}**: ${info.description}\n`;
+  });
 
-  doc += `\n## General Information\n`
-  doc += `**Available Themes:** ${GENERAL_MERMAID_INFO.themes.join(", ")}\n\n`
+  doc += `\n## General Information\n`;
+  doc += `**Available Themes:** ${GENERAL_MERMAID_INFO.themes.join(", ")}\n\n`;
 
-  doc += `**Common Directives:**\n`
-  GENERAL_MERMAID_INFO.commonDirectives.forEach(directive => {
-    doc += `- \`${directive}\`\n`
-  })
+  doc += `**Common Directives:**\n`;
+  GENERAL_MERMAID_INFO.commonDirectives.forEach((directive) => {
+    doc += `- \`${directive}\`\n`;
+  });
 
-  doc += `\n**Tips:**\n`
-  GENERAL_MERMAID_INFO.tips.forEach(tip => {
-    doc += `- ${tip}\n`
-  })
+  doc += `\n**Tips:**\n`;
+  GENERAL_MERMAID_INFO.tips.forEach((tip) => {
+    doc += `- ${tip}\n`;
+  });
 
-  doc += `\n**Troubleshooting:**\n`
-  GENERAL_MERMAID_INFO.troubleshooting.forEach(issue => {
-    doc += `- ${issue}\n`
-  })
+  doc += `\n**Troubleshooting:**\n`;
+  GENERAL_MERMAID_INFO.troubleshooting.forEach((issue) => {
+    doc += `- ${issue}\n`;
+  });
 
   if (includeExamples) {
-    doc += `\n## Detailed Documentation by Type\n\n`
+    doc += `\n## Detailed Documentation by Type\n\n`;
     Object.entries(MERMAID_DOCUMENTATION).forEach(([type, info]) => {
-      doc += getDocumentationForType(type, true) + "\n---\n\n"
-    })
+      doc += getDocumentationForType(type, true) + "\n---\n\n";
+    });
   }
 
-  return doc
+  return doc;
 }

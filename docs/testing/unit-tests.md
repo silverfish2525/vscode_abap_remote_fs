@@ -25,23 +25,23 @@ Run ABAP unit tests directly from VS Code — no need to open SE80 or ADT.
 
 Results appear in the **VS Code Testing panel** with:
 
-| Info | Detail |
-|---|---|
-| Pass/Fail | Green ✓ / Red ✗ per test method |
-| Test counts | Total, passed, failed |
-| Execution time | Per method and total |
-| Coverage | Test coverage percentage (when available) |
+| Info           | Detail                                    |
+| -------------- | ----------------------------------------- |
+| Pass/Fail      | Green ✓ / Red ✗ per test method           |
+| Test counts    | Total, passed, failed                     |
+| Execution time | Per method and total                      |
+| Coverage       | Test coverage percentage (when available) |
 
 Failed tests show the error message inline — click a failure to jump to the relevant line.
 
 ## Compared to SE80 / ADT
 
-| | SE80 / ADT | VS Code (ABAP FS) |
-|---|---|---|
-| Run tests | Menu → Unit Test | Beaker icon or `Ctrl+Shift+P` |
-| See results | Dialog / tab | Native Testing panel |
-| Copilot analysis | No | Yes — Copilot can explain failures and suggest fixes |
-| Jump to failure | Manual | Click failure to navigate |
+|                  | SE80 / ADT       | VS Code (ABAP FS)                                    |
+| ---------------- | ---------------- | ---------------------------------------------------- |
+| Run tests        | Menu → Unit Test | Beaker icon or `Ctrl+Shift+P`                        |
+| See results      | Dialog / tab     | Native Testing panel                                 |
+| Copilot analysis | No               | Yes — Copilot can explain failures and suggest fixes |
+| Jump to failure  | Manual           | Click failure to navigate                            |
 
 ## Requirements
 

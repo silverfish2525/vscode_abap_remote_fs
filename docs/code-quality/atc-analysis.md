@@ -8,7 +8,7 @@ With an ABAP file open, use any of these methods:
 
 - **Keyboard:** `Ctrl+Shift+F2`
 - **Command Palette:** `ABAP FS: Run ABAP Test Cockpit`
-- **Copilot chat:** *"Run ATC on this file"*
+- **Copilot chat:** _"Run ATC on this file"_
 
 Findings appear immediately as colored underlines in the editor, and in the **ATC Findings** panel (Activity Bar → ABAP FS → ATC Finds).
 
@@ -16,14 +16,14 @@ Findings appear immediately as colored underlines in the editor, and in the **AT
 
 Click any finding in the ATC panel to jump to the affected line. From there you can:
 
-| Action | How |
-|---|---|
-| Read check documentation | Click **Show documentation** on the finding |
-| Apply a quick fix | Click the lightbulb / use `Ctrl+.` on the underlined code |
-| Get an AI-suggested fix | Ask Copilot: *"Fix this ATC finding"* |
-| Request an exemption | Right-click a finding → **Request exemption** (single or bulk) |
-| Hide exempted findings | Toggle **Filter exempted** in the panel toolbar |
-| Re-run after saving | Toggle **Auto-refresh** in the panel toolbar |
+| Action                   | How                                                            |
+| ------------------------ | -------------------------------------------------------------- |
+| Read check documentation | Click **Show documentation** on the finding                    |
+| Apply a quick fix        | Click the lightbulb / use `Ctrl+.` on the underlined code      |
+| Get an AI-suggested fix  | Ask Copilot: _"Fix this ATC finding"_                          |
+| Request an exemption     | Right-click a finding → **Request exemption** (single or bulk) |
+| Hide exempted findings   | Toggle **Filter exempted** in the panel toolbar                |
+| Re-run after saving      | Toggle **Auto-refresh** in the panel toolbar                   |
 
 ## Enhancement Decorations
 

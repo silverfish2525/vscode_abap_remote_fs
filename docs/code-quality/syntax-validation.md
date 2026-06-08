@@ -13,10 +13,10 @@ Syntax checking triggers automatically on:
 
 ## Viewing errors
 
-| Where | How to open |
-|---|---|
-| Inline underlines | Hover over the underlined code for details |
-| Problems panel | `Ctrl+Shift+M` |
+| Where               | How to open                                    |
+| ------------------- | ---------------------------------------------- |
+| Inline underlines   | Hover over the underlined code for details     |
+| Problems panel      | `Ctrl+Shift+M`                                 |
 | Error lens (inline) | Shown automatically next to the offending line |
 
 ## Fixing errors

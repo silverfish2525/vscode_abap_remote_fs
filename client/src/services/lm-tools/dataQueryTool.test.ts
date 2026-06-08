@@ -1,79 +1,90 @@
 // dataQueryTool tests focus purely on prepareInvocation validation logic
 // (the SQL guards and input validations) since invoke requires heavy infrastructure.
-vi.mock("vscode", () => ({
-  LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
-  LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
-  MarkdownString: vi.fn().mockImplementation((text: string) => ({ text })),
-  lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) }
-}), { virtual: true })
+vi.mock(
+  "vscode",
+  () => ({
+    LanguageModelToolResult: vi.fn().mockImplementation((parts: any[]) => ({ parts })),
+    LanguageModelTextPart: vi.fn().mockImplementation((text: string) => ({ text })),
+    MarkdownString: vi.fn().mockImplementation((text: string) => ({ text })),
+    lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) },
+  }),
+  { virtual: true },
+);
 
-vi.mock("../../adt/conections", () => ({ getClient: vi.fn() }))
-vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("../../adt/conections", () => ({ getClient: vi.fn() }));
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }));
 vi.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() }))
-}))
+  registerToolWithRegistry: vi.fn(() => ({ dispose: vi.fn() })),
+}));
 vi.mock("../webviewManager", () => ({
-  WebviewManager: { getInstance: vi.fn(() => ({ executeQuery: vi.fn(), getWebview: vi.fn() })) }
-}))
-vi.mock("../sapSystemInfo", () => ({ getSAPSystemInfo: vi.fn() }))
-vi.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }))
+  WebviewManager: { getInstance: vi.fn(() => ({ executeQuery: vi.fn(), getWebview: vi.fn() })) },
+}));
+vi.mock("../sapSystemInfo", () => ({ getSAPSystemInfo: vi.fn() }));
+vi.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }));
 
-import { ExecuteDataQueryTool } from "./dataQueryTool"
+import { ExecuteDataQueryTool } from "./dataQueryTool";
 
-const mockToken = {} as any
+const mockToken = {} as any;
 
 function makeOptions(input: any = {}) {
-  return { input } as any
+  return { input } as any;
 }
 
 describe("ExecuteDataQueryTool - prepareInvocation validation", () => {
-  let tool: ExecuteDataQueryTool
+  let tool: ExecuteDataQueryTool;
 
   beforeEach(() => {
-    tool = new ExecuteDataQueryTool()
-  })
+    tool = new ExecuteDataQueryTool();
+  });
 
   describe("displayMode validation", () => {
     it("throws for missing displayMode", async () => {
       await expect(
-        tool.prepareInvocation(makeOptions({ sql: "SELECT * FROM mara" }), mockToken)
-      ).rejects.toThrow("displayMode")
-    })
+        tool.prepareInvocation(makeOptions({ sql: "SELECT * FROM mara" }), mockToken),
+      ).rejects.toThrow("displayMode");
+    });
 
     it("throws for invalid displayMode value", async () => {
       await expect(
-        tool.prepareInvocation(makeOptions({ sql: "SELECT * FROM mara", displayMode: "invalid" }), mockToken)
-      ).rejects.toThrow("displayMode")
-    })
+        tool.prepareInvocation(
+          makeOptions({ sql: "SELECT * FROM mara", displayMode: "invalid" }),
+          mockToken,
+        ),
+      ).rejects.toThrow("displayMode");
+    });
 
     it("accepts 'internal' displayMode", async () => {
       await expect(
         tool.prepareInvocation(
-          makeOptions({ sql: "SELECT * FROM mara", displayMode: "internal", rowRange: { start: 0, end: 10 } }),
-          mockToken
-        )
-      ).resolves.toBeDefined()
-    })
+          makeOptions({
+            sql: "SELECT * FROM mara",
+            displayMode: "internal",
+            rowRange: { start: 0, end: 10 },
+          }),
+          mockToken,
+        ),
+      ).resolves.toBeDefined();
+    });
 
     it("accepts 'ui' displayMode", async () => {
       await expect(
         tool.prepareInvocation(
           makeOptions({ sql: "SELECT * FROM mara", displayMode: "ui" }),
-          mockToken
-        )
-      ).resolves.toBeDefined()
-    })
-  })
+          mockToken,
+        ),
+      ).resolves.toBeDefined();
+    });
+  });
 
   describe("internal mode validations", () => {
     it("throws when internal mode has no SQL", async () => {
       await expect(
         tool.prepareInvocation(
           makeOptions({ displayMode: "internal", rowRange: { start: 0, end: 10 } }),
-          mockToken
-        )
-      ).rejects.toThrow("Internal mode requires SQL query")
-    })
+          mockToken,
+        ),
+      ).rejects.toThrow("Internal mode requires SQL query");
+    });
 
     it("throws when internal mode has webviewId", async () => {
       await expect(
@@ -82,12 +93,12 @@ describe("ExecuteDataQueryTool - prepareInvocation validation", () => {
             displayMode: "internal",
             sql: "SELECT * FROM mara",
             webviewId: "wv1",
-            rowRange: { start: 0, end: 10 }
+            rowRange: { start: 0, end: 10 },
           }),
-          mockToken
-        )
-      ).rejects.toThrow("LOGICAL CONFLICT")
-    })
+          mockToken,
+        ),
+      ).rejects.toThrow("LOGICAL CONFLICT");
+    });
 
     it("throws when internal mode has data instead of sql", async () => {
       await expect(
@@ -95,26 +106,26 @@ describe("ExecuteDataQueryTool - prepareInvocation validation", () => {
           makeOptions({
             displayMode: "internal",
             data: { columns: [{ name: "A", type: "C" }], values: [] },
-            rowRange: { start: 0, end: 10 }
+            rowRange: { start: 0, end: 10 },
           }),
-          mockToken
-        )
-      ).rejects.toThrow("Internal mode requires SQL query")
-    })
-  })
+          mockToken,
+        ),
+      ).rejects.toThrow("Internal mode requires SQL query");
+    });
+  });
 
   describe("ui mode validations", () => {
     it("throws when ui mode has no sql, data, or webviewId", async () => {
       await expect(
-        tool.prepareInvocation(makeOptions({ displayMode: "ui" }), mockToken)
-      ).rejects.toThrow("UI mode requires SQL query, direct data, or existing webviewId")
-    })
+        tool.prepareInvocation(makeOptions({ displayMode: "ui" }), mockToken),
+      ).rejects.toThrow("UI mode requires SQL query, direct data, or existing webviewId");
+    });
 
     it("accepts ui mode with webviewId only", async () => {
       await expect(
-        tool.prepareInvocation(makeOptions({ displayMode: "ui", webviewId: "wv1" }), mockToken)
-      ).resolves.toBeDefined()
-    })
+        tool.prepareInvocation(makeOptions({ displayMode: "ui", webviewId: "wv1" }), mockToken),
+      ).resolves.toBeDefined();
+    });
 
     it("accepts ui mode with data", async () => {
       await expect(
@@ -123,105 +134,108 @@ describe("ExecuteDataQueryTool - prepareInvocation validation", () => {
             displayMode: "ui",
             data: {
               columns: [{ name: "ID", type: "C" }],
-              values: [{ ID: "1" }]
-            }
+              values: [{ ID: "1" }],
+            },
           }),
-          mockToken
-        )
-      ).resolves.toBeDefined()
-    })
-  })
+          mockToken,
+        ),
+      ).resolves.toBeDefined();
+    });
+  });
 
   describe("SQL validation", () => {
     it("accepts valid SELECT statement", async () => {
       await expect(
         tool.prepareInvocation(
           makeOptions({ displayMode: "ui", sql: "SELECT matnr FROM mara WHERE matnr = 'TEST'" }),
-          mockToken
-        )
-      ).resolves.toBeDefined()
-    })
+          mockToken,
+        ),
+      ).resolves.toBeDefined();
+    });
 
     it("accepts WITH statement", async () => {
       await expect(
         tool.prepareInvocation(
-          makeOptions({ displayMode: "ui", sql: "WITH cte AS (SELECT matnr FROM mara) SELECT * FROM cte" }),
-          mockToken
-        )
-      ).resolves.toBeDefined()
-    })
+          makeOptions({
+            displayMode: "ui",
+            sql: "WITH cte AS (SELECT matnr FROM mara) SELECT * FROM cte",
+          }),
+          mockToken,
+        ),
+      ).resolves.toBeDefined();
+    });
 
     it("throws for DROP statement", async () => {
       await expect(
         tool.prepareInvocation(
           makeOptions({ displayMode: "ui", sql: "DROP TABLE mara" }),
-          mockToken
-        )
-      ).rejects.toThrow("dangerous operation")
-    })
+          mockToken,
+        ),
+      ).rejects.toThrow("dangerous operation");
+    });
 
     it("throws for DELETE statement", async () => {
       await expect(
         tool.prepareInvocation(
           makeOptions({ displayMode: "ui", sql: "DELETE FROM mara WHERE matnr = 'X'" }),
-          mockToken
-        )
-      ).rejects.toThrow("dangerous operation")
-    })
+          mockToken,
+        ),
+      ).rejects.toThrow("dangerous operation");
+    });
 
     it("throws for INSERT statement", async () => {
       await expect(
         tool.prepareInvocation(
           makeOptions({ displayMode: "ui", sql: "INSERT INTO mara VALUES ('X')" }),
-          mockToken
-        )
-      ).rejects.toThrow("dangerous operation")
-    })
+          mockToken,
+        ),
+      ).rejects.toThrow("dangerous operation");
+    });
 
     it("throws for UPDATE statement", async () => {
       await expect(
         tool.prepareInvocation(
           makeOptions({ displayMode: "ui", sql: "UPDATE mara SET matnr = 'X'" }),
-          mockToken
-        )
-      ).rejects.toThrow("dangerous operation")
-    })
+          mockToken,
+        ),
+      ).rejects.toThrow("dangerous operation");
+    });
 
     it("throws for TRUNCATE statement", async () => {
       await expect(
         tool.prepareInvocation(
           makeOptions({ displayMode: "ui", sql: "TRUNCATE TABLE mara" }),
-          mockToken
-        )
-      ).rejects.toThrow("dangerous operation")
-    })
+          mockToken,
+        ),
+      ).rejects.toThrow("dangerous operation");
+    });
 
     it("throws for SQL with line comment --", async () => {
       await expect(
         tool.prepareInvocation(
           makeOptions({ displayMode: "ui", sql: "SELECT * FROM mara -- comment" }),
-          mockToken
-        )
-      ).rejects.toThrow("dangerous operation")
-    })
+          mockToken,
+        ),
+      ).rejects.toThrow("dangerous operation");
+    });
 
     it("throws for SQL with block comment /*", async () => {
       await expect(
         tool.prepareInvocation(
           makeOptions({ displayMode: "ui", sql: "SELECT /* comment */ * FROM mara" }),
-          mockToken
-        )
-      ).rejects.toThrow("dangerous operation")
-    })
+          mockToken,
+        ),
+      ).rejects.toThrow("dangerous operation");
+    });
 
     it("throws for non-SELECT/WITH statement", async () => {
       await expect(
         tool.prepareInvocation(
           makeOptions({ displayMode: "ui", sql: "EXEC sp_something" }),
-          mockToken
-        )
-      ).rejects.toThrow("Only SELECT and WITH statements are allowed")
-    })
+          mockToken,
+        ),
+      ).rejects.toThrow("Only SELECT and WITH statements are allowed");
+    });
 
     it("throws when both sql and data provided", async () => {
       await expect(
@@ -229,13 +243,13 @@ describe("ExecuteDataQueryTool - prepareInvocation validation", () => {
           makeOptions({
             displayMode: "ui",
             sql: "SELECT * FROM mara",
-            data: { columns: [{ name: "A", type: "C" }], values: [] }
+            data: { columns: [{ name: "A", type: "C" }], values: [] },
           }),
-          mockToken
-        )
-      ).rejects.toThrow("Cannot provide both SQL query and direct data")
-    })
-  })
+          mockToken,
+        ),
+      ).rejects.toThrow("Cannot provide both SQL query and direct data");
+    });
+  });
 
   describe("data validation", () => {
     it("throws when data.columns is empty", async () => {
@@ -243,35 +257,35 @@ describe("ExecuteDataQueryTool - prepareInvocation validation", () => {
         tool.prepareInvocation(
           makeOptions({
             displayMode: "ui",
-            data: { columns: [], values: [] }
+            data: { columns: [], values: [] },
           }),
-          mockToken
-        )
-      ).rejects.toThrow("columns must be a non-empty array")
-    })
+          mockToken,
+        ),
+      ).rejects.toThrow("columns must be a non-empty array");
+    });
 
     it("throws when data.values is not an array", async () => {
       await expect(
         tool.prepareInvocation(
           makeOptions({
             displayMode: "ui",
-            data: { columns: [{ name: "A", type: "C" }], values: null }
+            data: { columns: [{ name: "A", type: "C" }], values: null },
           }),
-          mockToken
-        )
-      ).rejects.toThrow("values must be an array")
-    })
+          mockToken,
+        ),
+      ).rejects.toThrow("values must be an array");
+    });
 
     it("throws when column has no name", async () => {
       await expect(
         tool.prepareInvocation(
           makeOptions({
             displayMode: "ui",
-            data: { columns: [{ name: "", type: "C" }], values: [] }
+            data: { columns: [{ name: "", type: "C" }], values: [] },
           }),
-          mockToken
-        )
-      ).rejects.toThrow("name")
-    })
-  })
-})
+          mockToken,
+        ),
+      ).rejects.toThrow("name");
+    });
+  });
+});

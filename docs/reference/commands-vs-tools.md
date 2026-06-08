@@ -14,11 +14,11 @@ Commands are discrete actions you trigger directly in VS Code.
 
 **Examples:**
 
-| Command | What it does |
-|---|---|
-| `ABAP FS: Create object` | Opens a dialog to create a new ABAP object |
-| `ABAP FS: Run ABAP Unit Tests` | Runs unit tests for the current object |
-| `ABAP FS: Text Elements Manager` | Opens the text elements editor |
+| Command                          | What it does                               |
+| -------------------------------- | ------------------------------------------ |
+| `ABAP FS: Create object`         | Opens a dialog to create a new ABAP object |
+| `ABAP FS: Run ABAP Unit Tests`   | Runs unit tests for the current object     |
+| `ABAP FS: Text Elements Manager` | Opens the text elements editor             |
 
 ## Language Model Tools — Copilot invokes them
 
@@ -31,10 +31,10 @@ Tools are capabilities the extension exposes to GitHub Copilot. You don't call t
 
 **Examples:**
 
-| What you type | Tool Copilot calls |
-|---|---|
-| "Where is `BAPI_USER_GET_DETAIL` used?" | `find_where_used` |
-| "Show me the code for `ZCL_MY_CLASS`" | `get_abap_object_lines` |
-| "Run ATC checks on this file" | `run_atc_analysis` |
+| What you type                           | Tool Copilot calls      |
+| --------------------------------------- | ----------------------- |
+| "Where is `BAPI_USER_GET_DETAIL` used?" | `find_where_used`       |
+| "Show me the code for `ZCL_MY_CLASS`"   | `get_abap_object_lines` |
+| "Run ATC checks on this file"           | `run_atc_analysis`      |
 
 > **New to VS Code?** Start with commands for direct actions. Use Copilot chat when you want to explore or analyze SAP objects without knowing the exact steps.

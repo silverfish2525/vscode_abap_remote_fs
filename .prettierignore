@@ -1,0 +1,28 @@
+node_modules
+out
+dist
+build
+client/media
+**/*.min.js
+**/*.min.css
+**/*.d.ts
+.vscode-test
+pnpm-lock.yaml
+package-lock.json
+modules/abapObject/out
+modules/abapObject/out/sampledata
+
+# Auto-generated from docs/ — never edit directly per CONTRIBUTING.md.
+DOCUMENTATION.md
+
+# Legal text. Don't reflow paragraphs.
+THIRD_PARTY_LICENSES.md
+
+# Settings reference consumed by the AI documentation tool —
+# changes go through that tool, not the formatter.
+client/media/ABAP-FS-SETTINGS.md
+
+# Workflow + tooling configs — leave as the maintainer wrote them.
+.github/
+.changeset/
+.markdownlint.jsonc

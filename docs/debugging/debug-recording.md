@@ -38,13 +38,13 @@ Record a live ABAP debug session and replay it offline — forward and backward 
 
 **Replay controls:**
 
-| Action | Shortcut |
-|--------|----------|
-| Step forward (next snapshot) | `F7`, `F10`, or `F11` |
+| Action                        | Shortcut                  |
+| ----------------------------- | ------------------------- |
+| Step forward (next snapshot)  | `F7`, `F10`, or `F11`     |
 | Step back (previous snapshot) | `Shift+F7` or `Shift+F11` |
-| Jump to end | `F5` (Continue) |
-| Jump to start | Reverse Continue |
-| Close session | Terminate |
+| Jump to end                   | `F5` (Continue)           |
+| Jump to start                 | Reverse Continue          |
+| Close session                 | Terminate                 |
 
 > In replay mode all three step buttons (Step Over / Into / Out) do the same thing: move to the next recorded snapshot.
 
@@ -56,33 +56,33 @@ You can inspect variables, expand structures, browse table rows, evaluate expres
 
 Large sessions can produce files tens of MB in size. Use gzip to reduce storage and sharing size.
 
-| Command | Description |
-|---------|-------------|
-| **ABAP: Compress Debug Recording** | Compress an existing `.abaprecord` → `.abaprecord.gz` |
-| **ABAP: Decompress Debug Recording** | Convert `.abaprecord.gz` back to plain JSON |
+| Command                              | Description                                           |
+| ------------------------------------ | ----------------------------------------------------- |
+| **ABAP: Compress Debug Recording**   | Compress an existing `.abaprecord` → `.abaprecord.gz` |
+| **ABAP: Decompress Debug Recording** | Convert `.abaprecord.gz` back to plain JSON           |
 
-After compression the extension shows the size reduction (e.g. *42 MB → 3.2 MB, 92% smaller*). Both formats are fully interchangeable.
+After compression the extension shows the size reduction (e.g. _42 MB → 3.2 MB, 92% smaller_). Both formats are fully interchangeable.
 
 ---
 
 ## All Commands
 
-| Command | Description |
-|---------|-------------|
-| `ABAP: Start Debug Recording` | Begin recording the active debug session |
-| `ABAP: Stop Debug Recording` | Stop and save (plain or compressed) |
-| `ABAP: Replay Debug Recording` | Open and replay a recording file |
-| `ABAP: Compress Debug Recording` | Compress an existing `.abaprecord` file |
-| `ABAP: Decompress Debug Recording` | Decompress a `.abaprecord.gz` file |
+| Command                            | Description                              |
+| ---------------------------------- | ---------------------------------------- |
+| `ABAP: Start Debug Recording`      | Begin recording the active debug session |
+| `ABAP: Stop Debug Recording`       | Stop and save (plain or compressed)      |
+| `ABAP: Replay Debug Recording`     | Open and replay a recording file         |
+| `ABAP: Compress Debug Recording`   | Compress an existing `.abaprecord` file  |
+| `ABAP: Decompress Debug Recording` | Decompress a `.abaprecord.gz` file       |
 
 ---
 
 ## Limitations
 
-| Limitation | Detail |
-|------------|--------|
-| Table rows | First 2,000 rows captured; remainder skipped (marked in replay) |
-| Variable depth | Structures/tables beyond 4 levels deep are not expanded |
-| Source unavailable | Shows `[source unavailable]` if caching failed during recording |
-| No conditional breakpoints | Replay only steps through what was recorded |
-| Step speed | ~1–3 seconds per step during recording (variable capture overhead) |
+| Limitation                 | Detail                                                             |
+| -------------------------- | ------------------------------------------------------------------ |
+| Table rows                 | First 2,000 rows captured; remainder skipped (marked in replay)    |
+| Variable depth             | Structures/tables beyond 4 levels deep are not expanded            |
+| Source unavailable         | Shows `[source unavailable]` if caching failed during recording    |
+| No conditional breakpoints | Replay only steps through what was recorded                        |
+| Step speed                 | ~1–3 seconds per step during recording (variable capture overhead) |

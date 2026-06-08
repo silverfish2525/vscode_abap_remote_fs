@@ -1,32 +1,28 @@
 {
   "name": "vscode-abap-remote-fs-client",
   "displayName": "ABAP fs client",
-  "description": "Work on your ABAP code straight from the server",
   "version": "0.7.1",
-  "publisher": "murbani",
-  "license": "MIT",
-  "icon": "images/abapfs_logo.png",
-  "author": {
-    "email": "marcello.urbani@gmail.com",
-    "name": "Marcello Urbani"
-  },
-  "homepage": "https://github.com/marcellourbani/vscode_abap_remote_fs",
-  "engines": {
-    "vscode": "^1.50.0"
-  },
+  "description": "Work on your ABAP code straight from the server",
   "categories": [
     "Other"
   ],
+  "keywords": [
+    "ABAP",
+    "filesystem",
+    "remote",
+    "sap"
+  ],
+  "homepage": "https://github.com/marcellourbani/vscode_abap_remote_fs",
+  "license": "MIT",
+  "author": {
+    "name": "Marcello Urbani",
+    "email": "marcello.urbani@gmail.com"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/marcellourbani/vscode_abap_remote_fs.git"
   },
-  "keywords": [
-    "ABAP",
-    "sap",
-    "filesystem",
-    "remote"
-  ],
+  "publisher": "murbani",
   "scripts": {
     "vscode:prepublish": "fail",
     "clean": "node ../scripts/rmrf.mjs out dist node_modules server",
@@ -34,6 +30,33 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "watch": "webpack --config-name development --watch --progress"
+  },
+  "dependencies": {
+    "@abaplint/core": "^2.102.65",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@oxc-project/runtime": "^0.134.0",
+    "@types/tmp": "0.2.3",
+    "@vscode/debugadapter": "^1.68.0",
+    "@vscode/debugprotocol": "^1.68.0",
+    "abap-adt-api": "^8.4.0",
+    "abap_cloud_platform": "^1.1.4",
+    "abapfs": "file:../modules/abapfs",
+    "abapobject": "file:../modules/abapObject",
+    "applicationinsights": "^2.9.8",
+    "diff": "^8.0.3",
+    "docx": "^9.5.1",
+    "fast-xml-parser": "^5.7.2",
+    "fp-ts": "^2.13.1",
+    "fs-jetpack": "^5.1.0",
+    "html-entities": "^2.3.3",
+    "io-ts": "^2.2.21",
+    "oauth4webapi": "^3.8.6",
+    "ramda": "^0.28.0",
+    "tmp-promise": "^3.0.3",
+    "v8-inspect-profiler": "^0.1.0",
+    "vscode-abap-remote-fs-sharedapi": "file:../modules/sharedapi",
+    "vscode-languageclient": "^10.0.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/diff": "^7.0.2",
@@ -53,31 +76,8 @@
     "webpack": "^5.105.4",
     "webpack-cli": "^5.1.4"
   },
-  "dependencies": {
-    "@abaplint/core": "^2.102.65",
-    "@modelcontextprotocol/sdk": "^1.29.0",
-    "@oxc-project/runtime": "^0.134.0",
-    "@types/tmp": "0.2.3",
-    "@vscode/debugadapter": "^1.68.0",
-    "@vscode/debugprotocol": "^1.68.0",
-    "abap_cloud_platform": "^1.1.4",
-    "abap-adt-api": "^8.4.0",
-    "abapfs": "file:../modules/abapfs",
-    "abapobject": "file:../modules/abapObject",
-    "applicationinsights": "^2.9.8",
-    "diff": "^8.0.3",
-    "docx": "^9.5.1",
-    "fast-xml-parser": "^5.7.2",
-    "fp-ts": "^2.13.1",
-    "fs-jetpack": "^5.1.0",
-    "html-entities": "^2.3.3",
-    "io-ts": "^2.2.21",
-    "oauth4webapi": "^3.8.6",
-    "ramda": "^0.28.0",
-    "tmp-promise": "^3.0.3",
-    "v8-inspect-profiler": "^0.1.0",
-    "vscode-abap-remote-fs-sharedapi": "file:../modules/sharedapi",
-    "vscode-languageclient": "^10.0.0",
-    "zod": "^3.25.76"
+  "icon": "images/abapfs_logo.png",
+  "engines": {
+    "vscode": "^1.50.0"
   }
 }

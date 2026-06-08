@@ -1,66 +1,84 @@
 // Tests for fs/FsProvider.ts
-vi.mock("vscode", () => {
-  const EventEmitter = class {
-    event = vi.fn()
-    fire = vi.fn()
-  }
-  const FileChangeType = { Created: 1, Changed: 2, Deleted: 3 }
-  const FileType = { Unknown: 0, File: 1, Directory: 2 }
-  const Disposable = class { constructor(public fn?: () => void) { this.dispose = fn ?? (() => {}) }; dispose: () => void }
-  const FileSystemError = {
-    FileNotFound: vi.fn(msg => Object.assign(new Error(msg), { name: "FileNotFound (FileSystemError)" })),
-    NoPermissions: vi.fn(msg => new Error(msg)),
-    Unavailable: vi.fn(msg => new Error(msg))
-  }
-  const TextDocumentSaveReason = { Manual: 1, AfterDelay: 2, FocusOut: 3 }
-  const workspace = {
-    textDocuments: [],
-    getConfiguration: vi.fn(() => ({
-      get: vi.fn(() => true),
-      update: vi.fn()
-    }))
-  }
-  const commands = { executeCommand: vi.fn() }
-  const Uri = {
-    parse: vi.fn((s: string) => ({
-      scheme: s.split("://")[0] || "file",
-      authority: "",
-      path: "/" + (s.split("://")[1] || s),
-      toString: () => s
-    }))
-  }
-  return {
-    EventEmitter, FileChangeType, FileType, Disposable, FileSystemError,
-    TextDocumentSaveReason, workspace, commands, Uri,
-    ExtensionContext: class {}
-  }
-}, { virtual: true })
+vi.mock(
+  "vscode",
+  () => {
+    const EventEmitter = class {
+      event = vi.fn();
+      fire = vi.fn();
+    };
+    const FileChangeType = { Created: 1, Changed: 2, Deleted: 3 };
+    const FileType = { Unknown: 0, File: 1, Directory: 2 };
+    const Disposable = class {
+      constructor(public fn?: () => void) {
+        this.dispose = fn ?? (() => {});
+      }
+      dispose: () => void;
+    };
+    const FileSystemError = {
+      FileNotFound: vi.fn((msg) =>
+        Object.assign(new Error(msg), { name: "FileNotFound (FileSystemError)" }),
+      ),
+      NoPermissions: vi.fn((msg) => new Error(msg)),
+      Unavailable: vi.fn((msg) => new Error(msg)),
+    };
+    const TextDocumentSaveReason = { Manual: 1, AfterDelay: 2, FocusOut: 3 };
+    const workspace = {
+      textDocuments: [],
+      getConfiguration: vi.fn(() => ({
+        get: vi.fn(() => true),
+        update: vi.fn(),
+      })),
+    };
+    const commands = { executeCommand: vi.fn() };
+    const Uri = {
+      parse: vi.fn((s: string) => ({
+        scheme: s.split("://")[0] || "file",
+        authority: "",
+        path: "/" + (s.split("://")[1] || s),
+        toString: () => s,
+      })),
+    };
+    return {
+      EventEmitter,
+      FileChangeType,
+      FileType,
+      Disposable,
+      FileSystemError,
+      TextDocumentSaveReason,
+      workspace,
+      commands,
+      Uri,
+      ExtensionContext: class {},
+    };
+  },
+  { virtual: true },
+);
 
 vi.mock("../adt/conections", () => ({
   getOrCreateRoot: vi.fn(),
-  ADTSCHEME: "adt"
-}))
+  ADTSCHEME: "adt",
+}));
 
 vi.mock("../lib", () => ({
   after: vi.fn(),
-  caughtToString: vi.fn(e => String(e)),
-  log: Object.assign(vi.fn(), { debug: vi.fn() })
-}))
+  caughtToString: vi.fn((e) => String(e)),
+  log: Object.assign(vi.fn(), { debug: vi.fn() }),
+}));
 
 vi.mock("abapfs", () => ({
   isAbapFile: vi.fn(() => false),
   isAbapFolder: vi.fn(() => false),
-  isFolder: vi.fn(() => false)
-}))
+  isFolder: vi.fn(() => false),
+}));
 
 vi.mock("../listeners", () => ({
   getSaveReason: vi.fn(),
-  clearSaveReason: vi.fn()
-}))
+  clearSaveReason: vi.fn(),
+}));
 
 vi.mock("../adt/AdtTransports", () => ({
-  selectTransportIfNeeded: vi.fn()
-}))
+  selectTransportIfNeeded: vi.fn(),
+}));
 
 vi.mock("./LocalFsProvider", () => {
   const LocalFsProvider: any = vi.fn().mockImplementation(() => ({
@@ -72,61 +90,62 @@ vi.mock("./LocalFsProvider", () => {
     writeFile: vi.fn(),
     createDirectory: vi.fn(),
     delete: vi.fn(),
-    rename: vi.fn()
-  }))
-  LocalFsProvider.useLocalStorage = vi.fn(() => false)
-  return { LocalFsProvider }
-})
+    rename: vi.fn(),
+  }));
+  LocalFsProvider.useLocalStorage = vi.fn(() => false);
+  return { LocalFsProvider };
+});
 
-vi.mock("abap-adt-api", () => ({ isHttpError: vi.fn() }))
-vi.mock("abapfs/out/lockManager", () => ({ ReloginError: { isReloginError: vi.fn() } }))
+vi.mock("abap-adt-api", () => ({ isHttpError: vi.fn() }));
+vi.mock("abapfs/out/lockManager", () => ({ ReloginError: { isReloginError: vi.fn() } }));
 vi.mock("../services/funMessenger", () => ({
   funWindow: {
     showInformationMessage: vi.fn(),
     showWarningMessage: vi.fn(),
-    visibleTextEditors: []
-  }
-}))
+    visibleTextEditors: [],
+  },
+}));
 
-import { FsProvider } from "./FsProvider"
-import { LocalFsProvider as _LocalFsProvider } from "./LocalFsProvider"
-const LocalFsProvider = _LocalFsProvider as any
-import * as vscode from "vscode"
+import { FsProvider } from "./FsProvider";
+import { LocalFsProvider as _LocalFsProvider } from "./LocalFsProvider";
+const LocalFsProvider = _LocalFsProvider as any;
+import * as vscode from "vscode";
 
-const makeUri = (path = "/test", scheme = "adt", authority = "host") => ({
-  path,
-  scheme,
-  authority,
-  toString: () => `${scheme}://${authority}${path}`
-} as any)
+const makeUri = (path = "/test", scheme = "adt", authority = "host") =>
+  ({
+    path,
+    scheme,
+    authority,
+    toString: () => `${scheme}://${authority}${path}`,
+  }) as any;
 
 const makeContext = () => {
-  const provider = new (LocalFsProvider as any)()
+  const provider = new (LocalFsProvider as any)();
   return {
     subscriptions: [] as { push: Mock }[],
     _provider: provider,
-    push: vi.fn()
-  } as any
-}
+    push: vi.fn(),
+  } as any;
+};
 
 // Reset singleton between tests
 const resetFsProvider = () => {
   // Access private static field via prototype
-  ;(FsProvider as any).instance = undefined
-}
+  (FsProvider as any).instance = undefined;
+};
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("FsProvider", () => {
-  let context: any
+  let context: any;
 
   beforeEach(() => {
-    vi.clearAllMocks()
-    resetFsProvider()
+    vi.clearAllMocks();
+    resetFsProvider();
     context = {
-      subscriptions: { push: vi.fn() }
-    }
+      subscriptions: { push: vi.fn() },
+    };
     // Mock localProvider.onDidChangeFile to return a function
-    ;(LocalFsProvider as Mock).mockImplementation(() => ({
+    (LocalFsProvider as Mock).mockImplementation(() => ({
       onDidChangeFile: vi.fn(),
       watch: vi.fn(() => ({ dispose: vi.fn() })),
       stat: vi.fn(),
@@ -135,178 +154,178 @@ describe.skip("FsProvider", () => {
       writeFile: vi.fn(),
       createDirectory: vi.fn(),
       delete: vi.fn(),
-      rename: vi.fn()
-    }))
-  })
+      rename: vi.fn(),
+    }));
+  });
 
   describe("FsProvider.get (singleton)", () => {
     it("throws if called without context on first call", () => {
-      expect(() => FsProvider.get()).toThrow("FsProvider not initialized, context is required")
-    })
+      expect(() => FsProvider.get()).toThrow("FsProvider not initialized, context is required");
+    });
 
     it("creates instance when context provided", () => {
-      const instance = FsProvider.get(context)
-      expect(instance).toBeDefined()
-    })
+      const instance = FsProvider.get(context);
+      expect(instance).toBeDefined();
+    });
 
     it("returns same instance on subsequent calls", () => {
-      const a = FsProvider.get(context)
-      const b = FsProvider.get()
-      expect(a).toBe(b)
-    })
+      const a = FsProvider.get(context);
+      const b = FsProvider.get();
+      expect(a).toBe(b);
+    });
 
     it("returns existing instance even if new context provided", () => {
-      const a = FsProvider.get(context)
-      const b = FsProvider.get({ subscriptions: { push: vi.fn() } } as any)
-      expect(a).toBe(b)
-    })
-  })
+      const a = FsProvider.get(context);
+      const b = FsProvider.get({ subscriptions: { push: vi.fn() } } as any);
+      expect(a).toBe(b);
+    });
+  });
 
   describe("onDidChangeFile", () => {
     it("exposes an event", () => {
-      const instance = FsProvider.get(context)
-      expect(instance.onDidChangeFile).toBeDefined()
-    })
-  })
+      const instance = FsProvider.get(context);
+      expect(instance.onDidChangeFile).toBeDefined();
+    });
+  });
 
   describe("watch", () => {
     it("delegates to localProvider when useLocalStorage returns true", () => {
-      ;(LocalFsProvider.useLocalStorage as Mock).mockReturnValue(true)
-      const instance = FsProvider.get(context)
-      const uri = makeUri("/.hidden")
-      const mockWatch = vi.fn(() => ({ dispose: vi.fn() }))
-      ;(instance as any).localProvider.watch = mockWatch
+      (LocalFsProvider.useLocalStorage as Mock).mockReturnValue(true);
+      const instance = FsProvider.get(context);
+      const uri = makeUri("/.hidden");
+      const mockWatch = vi.fn(() => ({ dispose: vi.fn() }));
+      (instance as any).localProvider.watch = mockWatch;
 
-      instance.watch(uri, { recursive: false, excludes: [] })
+      instance.watch(uri, { recursive: false, excludes: [] });
 
-      expect(mockWatch).toHaveBeenCalledWith(uri, { recursive: false, excludes: [] })
-    })
+      expect(mockWatch).toHaveBeenCalledWith(uri, { recursive: false, excludes: [] });
+    });
 
     it("returns a no-op Disposable for remote URIs", () => {
-      ;(LocalFsProvider.useLocalStorage as Mock).mockReturnValue(false)
-      const instance = FsProvider.get(context)
-      const uri = makeUri("/sap/bc/adt/program")
+      (LocalFsProvider.useLocalStorage as Mock).mockReturnValue(false);
+      const instance = FsProvider.get(context);
+      const uri = makeUri("/sap/bc/adt/program");
 
-      const disposable = instance.watch(uri, { recursive: false, excludes: [] })
-      expect(disposable).toBeDefined()
-      expect(() => disposable.dispose()).not.toThrow()
-    })
-  })
+      const disposable = instance.watch(uri, { recursive: false, excludes: [] });
+      expect(disposable).toBeDefined();
+      expect(() => disposable.dispose()).not.toThrow();
+    });
+  });
 
   describe("notifyChanges", () => {
     it("fires the event emitter with changes", () => {
-      const instance = FsProvider.get(context)
-      const spy = vi.spyOn((instance as any).pEventEmitter, "fire")
-      const changes = [{ type: 2, uri: makeUri("/changed") }]
+      const instance = FsProvider.get(context);
+      const spy = vi.spyOn((instance as any).pEventEmitter, "fire");
+      const changes = [{ type: 2, uri: makeUri("/changed") }];
 
-      instance.notifyChanges(changes as any)
+      instance.notifyChanges(changes as any);
 
-      expect(spy).toHaveBeenCalledWith(changes)
-    })
-  })
+      expect(spy).toHaveBeenCalledWith(changes);
+    });
+  });
 
   describe("createDirectory", () => {
     it("delegates to localProvider for local URIs", () => {
-      ;(LocalFsProvider.useLocalStorage as Mock).mockReturnValue(true)
-      const instance = FsProvider.get(context)
-      const mockCreate = vi.fn()
-      ;(instance as any).localProvider.createDirectory = mockCreate
+      (LocalFsProvider.useLocalStorage as Mock).mockReturnValue(true);
+      const instance = FsProvider.get(context);
+      const mockCreate = vi.fn();
+      (instance as any).localProvider.createDirectory = mockCreate;
 
-      const uri = makeUri("/.hidden")
-      instance.createDirectory(uri)
+      const uri = makeUri("/.hidden");
+      instance.createDirectory(uri);
 
-      expect(mockCreate).toHaveBeenCalledWith(uri)
-    })
+      expect(mockCreate).toHaveBeenCalledWith(uri);
+    });
 
     it("throws NoPermissions for remote URIs", () => {
-      ;(LocalFsProvider.useLocalStorage as Mock).mockReturnValue(false)
-      const instance = FsProvider.get(context)
+      (LocalFsProvider.useLocalStorage as Mock).mockReturnValue(false);
+      const instance = FsProvider.get(context);
 
-      const uri = makeUri("/sap/bc/adt/program")
-      expect(() => instance.createDirectory(uri)).toThrow()
-    })
-  })
+      const uri = makeUri("/sap/bc/adt/program");
+      expect(() => instance.createDirectory(uri)).toThrow();
+    });
+  });
 
   describe("rename", () => {
     it("delegates to localProvider for local URIs", () => {
-      ;(LocalFsProvider.useLocalStorage as Mock).mockReturnValue(true)
-      const instance = FsProvider.get(context)
-      const mockRename = vi.fn()
-      ;(instance as any).localProvider.rename = mockRename
+      (LocalFsProvider.useLocalStorage as Mock).mockReturnValue(true);
+      const instance = FsProvider.get(context);
+      const mockRename = vi.fn();
+      (instance as any).localProvider.rename = mockRename;
 
-      const oldUri = makeUri("/.hidden")
-      const newUri = makeUri("/.renamed")
-      instance.rename(oldUri, newUri, { overwrite: false })
+      const oldUri = makeUri("/.hidden");
+      const newUri = makeUri("/.renamed");
+      instance.rename(oldUri, newUri, { overwrite: false });
 
-      expect(mockRename).toHaveBeenCalledWith(oldUri, newUri, { overwrite: false })
-    })
+      expect(mockRename).toHaveBeenCalledWith(oldUri, newUri, { overwrite: false });
+    });
 
     it("throws for remote URIs", () => {
-      ;(LocalFsProvider.useLocalStorage as Mock).mockReturnValue(false)
-      const instance = FsProvider.get(context)
+      (LocalFsProvider.useLocalStorage as Mock).mockReturnValue(false);
+      const instance = FsProvider.get(context);
 
-      const oldUri = makeUri("/old")
-      const newUri = makeUri("/new")
-      expect(() => instance.rename(oldUri, newUri, { overwrite: false })).toThrow()
-    })
-  })
+      const oldUri = makeUri("/old");
+      const newUri = makeUri("/new");
+      expect(() => instance.rename(oldUri, newUri, { overwrite: false })).toThrow();
+    });
+  });
 
   describe("readFile", () => {
     it("delegates to localProvider for local URIs", async () => {
-      ;(LocalFsProvider.useLocalStorage as Mock).mockReturnValue(true)
-      const instance = FsProvider.get(context)
-      const content = new Uint8Array([72, 101, 108, 108, 111])
-      const mockReadFile = vi.fn().mockResolvedValue(content)
-      ;(instance as any).localProvider.readFile = mockReadFile
+      (LocalFsProvider.useLocalStorage as Mock).mockReturnValue(true);
+      const instance = FsProvider.get(context);
+      const content = new Uint8Array([72, 101, 108, 108, 111]);
+      const mockReadFile = vi.fn().mockResolvedValue(content);
+      (instance as any).localProvider.readFile = mockReadFile;
 
-      const uri = makeUri("/.hidden")
-      const result = await instance.readFile(uri)
+      const uri = makeUri("/.hidden");
+      const result = await instance.readFile(uri);
 
-      expect(result).toEqual(content)
-      expect(mockReadFile).toHaveBeenCalledWith(uri)
-    })
+      expect(result).toEqual(content);
+      expect(mockReadFile).toHaveBeenCalledWith(uri);
+    });
 
     it("throws Unavailable when no ABAP file found", async () => {
-      ;(LocalFsProvider.useLocalStorage as Mock).mockReturnValue(false)
-      const { getOrCreateRoot } = require("../adt/conections")
-      const { isAbapFile } = require("abapfs")
-      ;(getOrCreateRoot as Mock).mockResolvedValue({
-        getNodeAsync: vi.fn().mockResolvedValue(null)
-      })
-      ;(isAbapFile as Mock).mockReturnValue(false)
+      (LocalFsProvider.useLocalStorage as Mock).mockReturnValue(false);
+      const { getOrCreateRoot } = require("../adt/conections");
+      const { isAbapFile } = require("abapfs");
+      (getOrCreateRoot as Mock).mockResolvedValue({
+        getNodeAsync: vi.fn().mockResolvedValue(null),
+      });
+      (isAbapFile as Mock).mockReturnValue(false);
 
-      const instance = FsProvider.get(context)
-      const uri = makeUri("/sap/bc/adt/prog")
+      const instance = FsProvider.get(context);
+      const uri = makeUri("/sap/bc/adt/prog");
 
-      await expect(instance.readFile(uri)).rejects.toThrow()
-    })
-  })
+      await expect(instance.readFile(uri)).rejects.toThrow();
+    });
+  });
 
   describe("stat", () => {
     it("delegates to localProvider for local URIs", async () => {
-      ;(LocalFsProvider.useLocalStorage as Mock).mockReturnValue(true)
-      const instance = FsProvider.get(context)
-      const mockStat = { type: 1, ctime: 0, mtime: 0, size: 100 }
-      const mockStatFn = vi.fn().mockResolvedValue(mockStat)
-      ;(instance as any).localProvider.stat = mockStatFn
+      (LocalFsProvider.useLocalStorage as Mock).mockReturnValue(true);
+      const instance = FsProvider.get(context);
+      const mockStat = { type: 1, ctime: 0, mtime: 0, size: 100 };
+      const mockStatFn = vi.fn().mockResolvedValue(mockStat);
+      (instance as any).localProvider.stat = mockStatFn;
 
-      const uri = makeUri("/.hidden")
-      const result = await instance.stat(uri)
+      const uri = makeUri("/.hidden");
+      const result = await instance.stat(uri);
 
-      expect(result).toEqual(mockStat)
-    })
+      expect(result).toEqual(mockStat);
+    });
 
     it("throws FileNotFound when node not found", async () => {
-      ;(LocalFsProvider.useLocalStorage as Mock).mockReturnValue(false)
-      const { getOrCreateRoot } = require("../adt/conections")
-      ;(getOrCreateRoot as Mock).mockResolvedValue({
-        getNodeAsync: vi.fn().mockResolvedValue(null)
-      })
+      (LocalFsProvider.useLocalStorage as Mock).mockReturnValue(false);
+      const { getOrCreateRoot } = require("../adt/conections");
+      (getOrCreateRoot as Mock).mockResolvedValue({
+        getNodeAsync: vi.fn().mockResolvedValue(null),
+      });
 
-      const instance = FsProvider.get(context)
-      const uri = makeUri("/sap/bc/adt/missing")
+      const instance = FsProvider.get(context);
+      const uri = makeUri("/sap/bc/adt/missing");
 
-      await expect(instance.stat(uri)).rejects.toBeDefined()
-    })
-  })
-})
+      await expect(instance.stat(uri)).rejects.toBeDefined();
+    });
+  });
+});

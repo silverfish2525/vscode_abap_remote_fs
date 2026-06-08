@@ -1,2 +1,2 @@
-export * from "./types"
-export * from "./rapGeneratorApi"
+export * from "./types";
+export * from "./rapGeneratorApi";

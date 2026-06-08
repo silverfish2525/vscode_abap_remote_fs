@@ -1,9 +1,9 @@
-import { AbapObjectCreator, AbapObjectBase, AbapObject, AbapObjectService } from ".."
-const tag = Symbol("AbapSimple")
+import { AbapObjectCreator, AbapObjectBase, AbapObject, AbapObjectService } from "..";
+const tag = Symbol("AbapSimple");
 
 @AbapObjectCreator("TABL/DT", "TABL/DS", "SRFC", "TRAN/T", "PARA/R")
 export class AbapSimple extends AbapObjectBase {
-  [tag] = true
+  [tag] = true;
   constructor(
     type: string,
     name: string,
@@ -12,10 +12,10 @@ export class AbapSimple extends AbapObjectBase {
     techName: string,
     parent: AbapObject | undefined,
     sapGuiUri: string,
-    client: AbapObjectService
+    client: AbapObjectService,
   ) {
-    super(type, name, path, false, techName, parent, sapGuiUri, client)
+    super(type, name, path, false, techName, parent, sapGuiUri, client);
   }
 }
 
-export const isAbapSimple = (x: any): x is AbapSimple => !!x?.[tag]
+export const isAbapSimple = (x: any): x is AbapSimple => !!x?.[tag];

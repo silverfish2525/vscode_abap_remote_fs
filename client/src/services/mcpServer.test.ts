@@ -10,123 +10,131 @@ vi.mock(
     workspace: {
       getConfiguration: vi.fn().mockReturnValue({
         get: vi.fn((key: string, defaultVal: any) => defaultVal),
-        update: vi.fn()
+        update: vi.fn(),
       }),
-      workspaceFolders: []
+      workspaceFolders: [],
     },
     lm: { tools: [], invokeTool: vi.fn() },
     window: {
       showInformationMessage: vi.fn(),
       showErrorMessage: vi.fn(),
-      showWarningMessage: vi.fn()
+      showWarningMessage: vi.fn(),
     },
     CancellationTokenSource: vi.fn().mockImplementation(() => ({ token: {} })),
     LanguageModelTextPart: class {
       constructor(public value: string) {}
-    }
+    },
   }),
-  { virtual: true }
-)
+  { virtual: true },
+);
 
 vi.mock("./funMessenger", () => ({
   funWindow: {
     showInformationMessage: vi.fn(),
     showErrorMessage: vi.fn(),
-    showWarningMessage: vi.fn()
-  }
-}))
+    showWarningMessage: vi.fn(),
+  },
+}));
 
 vi.mock("../lib", () => ({
-  log: vi.fn()
-}))
+  log: vi.fn(),
+}));
 
 vi.mock("./lm-tools/toolRegistry", () => ({
-  toolRegistry: { get: vi.fn().mockReturnValue(undefined) }
-}))
+  toolRegistry: { get: vi.fn().mockReturnValue(undefined) },
+}));
 
 // Mock MCP SDK modules
 vi.mock(
   "@modelcontextprotocol/sdk/server/mcp.js",
-  () => ({ McpServer: vi.fn().mockImplementation(() => ({ registerTool: vi.fn(), connect: vi.fn() })) }),
-  { virtual: true }
-)
+  () => ({
+    McpServer: vi.fn().mockImplementation(() => ({ registerTool: vi.fn(), connect: vi.fn() })),
+  }),
+  { virtual: true },
+);
 vi.mock(
   "@modelcontextprotocol/sdk/server/streamableHttp.js",
   () => ({ StreamableHTTPServerTransport: vi.fn() }),
-  { virtual: true }
-)
+  { virtual: true },
+);
 vi.mock(
   "@modelcontextprotocol/sdk/types.js",
   () => ({ isInitializeRequest: vi.fn().mockReturnValue(false) }),
-  { virtual: true }
-)
+  { virtual: true },
+);
 
-import * as vscode from "vscode"
-import { initializeMcpServer, getMcpServerStatus, jsonSchemaPropertyToZod, jsonSchemaToZod, validateApiKey } from "./mcpServer"
+import * as vscode from "vscode";
+import {
+  initializeMcpServer,
+  getMcpServerStatus,
+  jsonSchemaPropertyToZod,
+  jsonSchemaToZod,
+  validateApiKey,
+} from "./mcpServer";
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("mcpServer", () => {
   const mockContext = {
     subscriptions: [] as any[],
     globalState: { get: vi.fn(), update: vi.fn() },
-    extensionPath: "/fake/path"
-  } as any
+    extensionPath: "/fake/path",
+  } as any;
 
   beforeEach(() => {
-    vi.clearAllMocks()
-    mockContext.subscriptions = []
-    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue({
+    vi.clearAllMocks();
+    mockContext.subscriptions = [];
+    (vscode.workspace.getConfiguration as Mock).mockReturnValue({
       get: vi.fn((key: string, defaultVal: any) => defaultVal),
-      update: vi.fn()
-    })
-  })
+      update: vi.fn(),
+    });
+  });
 
   describe("getMcpServerStatus", () => {
     it("returns isRunning=false initially", () => {
-      const status = getMcpServerStatus()
-      expect(status.isRunning).toBe(false)
-    })
+      const status = getMcpServerStatus();
+      expect(status.isRunning).toBe(false);
+    });
 
     it("returns a port number", () => {
-      const status = getMcpServerStatus()
-      expect(typeof status.port).toBe("number")
-    })
+      const status = getMcpServerStatus();
+      expect(typeof status.port).toBe("number");
+    });
 
     it("returns a url string", () => {
-      const status = getMcpServerStatus()
-      expect(typeof status.url).toBe("string")
-    })
+      const status = getMcpServerStatus();
+      expect(typeof status.url).toBe("string");
+    });
 
     it("returns empty url when not running", () => {
-      const status = getMcpServerStatus()
-      expect(status.url).toBe("")
-    })
-  })
+      const status = getMcpServerStatus();
+      expect(status.url).toBe("");
+    });
+  });
 
   describe("initializeMcpServer", () => {
     it("resolves without throwing when autoStart=false", async () => {
-      ;(vscode.workspace.getConfiguration as Mock).mockReturnValue({
+      (vscode.workspace.getConfiguration as Mock).mockReturnValue({
         get: vi.fn((key: string, def: any) => {
-          if (key === "autoStart") return false
-          return def
-        })
-      })
-      await expect(initializeMcpServer(mockContext)).resolves.not.toThrow()
-    })
+          if (key === "autoStart") return false;
+          return def;
+        }),
+      });
+      await expect(initializeMcpServer(mockContext)).resolves.not.toThrow();
+    });
 
     it("does not start server when autoStart=false", async () => {
-      ;(vscode.workspace.getConfiguration as Mock).mockReturnValue({
+      (vscode.workspace.getConfiguration as Mock).mockReturnValue({
         get: vi.fn((key: string, def: any) => {
-          if (key === "autoStart") return false
-          return def
-        })
-      })
-      await initializeMcpServer(mockContext)
-      const status = getMcpServerStatus()
-      expect(status.isRunning).toBe(false)
-    })
-  })
-})
+          if (key === "autoStart") return false;
+          return def;
+        }),
+      });
+      await initializeMcpServer(mockContext);
+      const status = getMcpServerStatus();
+      expect(status.isRunning).toBe(false);
+    });
+  });
+});
 
 // ============================================================================
 // Internal function tests via barrel module pattern (test the logic directly)
@@ -139,9 +147,9 @@ describe.skip("mcpServer internals - jsonSchemaToZod converter", () => {
   // importing the module and checking it handles edge cases.
 
   it("module loads without error", () => {
-    expect(() => require("./mcpServer")).not.toThrow()
-  })
-})
+    expect(() => require("./mcpServer")).not.toThrow();
+  });
+});
 
 // ============================================================================
 // API key validation - test the logic directly via black-box HTTP testing
@@ -150,18 +158,21 @@ describe.skip("mcpServer internals - jsonSchemaToZod converter", () => {
 describe.skip("mcpServer - API key validation logic", () => {
   it("allows access when no API key configured (backwards compat)", async () => {
     // When apiKey is empty string, validateApiKey should return true
-    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue({
+    (vscode.workspace.getConfiguration as Mock).mockReturnValue({
       get: vi.fn((key: string, def: any) => {
-        if (key === "apiKey") return ""
-        return def
-      })
-    })
+        if (key === "apiKey") return "";
+        return def;
+      }),
+    });
     // The module-level warning flag resets would require server restart
     // Verify indirectly via initializeMcpServer with autoStart=false not throwing
-    const ctx = { subscriptions: [] as any[], globalState: { get: vi.fn(), update: vi.fn() } } as any
-    await expect(initializeMcpServer(ctx)).resolves.not.toThrow()
-  })
-})
+    const ctx = {
+      subscriptions: [] as any[],
+      globalState: { get: vi.fn(), update: vi.fn() },
+    } as any;
+    await expect(initializeMcpServer(ctx)).resolves.not.toThrow();
+  });
+});
 
 // ============================================================================
 // JSON Schema to Zod converter tests
@@ -170,49 +181,46 @@ describe.skip("mcpServer - API key validation logic", () => {
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("jsonSchemaPropertyToZod", () => {
   it("converts string type (required)", () => {
-    const zodType = jsonSchemaPropertyToZod({ type: "string" }, true)
-    expect(zodType.parse("hello")).toBe("hello")
-    expect(() => zodType.parse(123)).toThrow()
-  })
+    const zodType = jsonSchemaPropertyToZod({ type: "string" }, true);
+    expect(zodType.parse("hello")).toBe("hello");
+    expect(() => zodType.parse(123)).toThrow();
+  });
 
   it("converts string type (optional)", () => {
-    const zodType = jsonSchemaPropertyToZod({ type: "string" }, false)
-    expect(zodType.parse(undefined)).toBeUndefined()
-    expect(zodType.parse("hello")).toBe("hello")
-  })
+    const zodType = jsonSchemaPropertyToZod({ type: "string" }, false);
+    expect(zodType.parse(undefined)).toBeUndefined();
+    expect(zodType.parse("hello")).toBe("hello");
+  });
 
   it("converts number type", () => {
-    const zodType = jsonSchemaPropertyToZod({ type: "number" }, true)
-    expect(zodType.parse(42)).toBe(42)
-    expect(() => zodType.parse("not a number")).toThrow()
-  })
+    const zodType = jsonSchemaPropertyToZod({ type: "number" }, true);
+    expect(zodType.parse(42)).toBe(42);
+    expect(() => zodType.parse("not a number")).toThrow();
+  });
 
   it("converts integer type (same as number in zod)", () => {
-    const zodType = jsonSchemaPropertyToZod({ type: "integer" }, true)
-    expect(zodType.parse(7)).toBe(7)
-    expect(() => zodType.parse("nope")).toThrow()
-  })
+    const zodType = jsonSchemaPropertyToZod({ type: "integer" }, true);
+    expect(zodType.parse(7)).toBe(7);
+    expect(() => zodType.parse("nope")).toThrow();
+  });
 
   it("converts boolean type", () => {
-    const zodType = jsonSchemaPropertyToZod({ type: "boolean" }, true)
-    expect(zodType.parse(true)).toBe(true)
-    expect(zodType.parse(false)).toBe(false)
-    expect(() => zodType.parse("true")).toThrow()
-  })
+    const zodType = jsonSchemaPropertyToZod({ type: "boolean" }, true);
+    expect(zodType.parse(true)).toBe(true);
+    expect(zodType.parse(false)).toBe(false);
+    expect(() => zodType.parse("true")).toThrow();
+  });
 
   it("converts array of strings", () => {
-    const zodType = jsonSchemaPropertyToZod(
-      { type: "array", items: { type: "string" } },
-      true
-    )
-    expect(zodType.parse(["a", "b"])).toEqual(["a", "b"])
-    expect(() => zodType.parse([1, 2])).toThrow()
-  })
+    const zodType = jsonSchemaPropertyToZod({ type: "array", items: { type: "string" } }, true);
+    expect(zodType.parse(["a", "b"])).toEqual(["a", "b"]);
+    expect(() => zodType.parse([1, 2])).toThrow();
+  });
 
   it("converts array with no items schema to array of unknown", () => {
-    const zodType = jsonSchemaPropertyToZod({ type: "array" }, true)
-    expect(zodType.parse([1, "two", true])).toEqual([1, "two", true])
-  })
+    const zodType = jsonSchemaPropertyToZod({ type: "array" }, true);
+    expect(zodType.parse([1, "two", true])).toEqual([1, "two", true]);
+  });
 
   it("converts object with properties", () => {
     const zodType = jsonSchemaPropertyToZod(
@@ -220,52 +228,49 @@ describe.skip("jsonSchemaPropertyToZod", () => {
         type: "object",
         properties: {
           name: { type: "string" },
-          age: { type: "number" }
+          age: { type: "number" },
         },
-        required: ["name"]
+        required: ["name"],
       },
-      true
-    )
+      true,
+    );
     // name is required, age is optional
-    expect(zodType.parse({ name: "Alice" })).toEqual({ name: "Alice" })
-    expect(zodType.parse({ name: "Bob", age: 30 })).toEqual({ name: "Bob", age: 30 })
-    expect(() => zodType.parse({ age: 25 })).toThrow() // name missing
-  })
+    expect(zodType.parse({ name: "Alice" })).toEqual({ name: "Alice" });
+    expect(zodType.parse({ name: "Bob", age: 30 })).toEqual({ name: "Bob", age: 30 });
+    expect(() => zodType.parse({ age: 25 })).toThrow(); // name missing
+  });
 
   it("converts object without properties to record", () => {
-    const zodType = jsonSchemaPropertyToZod({ type: "object" }, true)
-    expect(zodType.parse({ any: "thing" })).toEqual({ any: "thing" })
-  })
+    const zodType = jsonSchemaPropertyToZod({ type: "object" }, true);
+    expect(zodType.parse({ any: "thing" })).toEqual({ any: "thing" });
+  });
 
   it("converts enum strings", () => {
     const zodType = jsonSchemaPropertyToZod(
       { type: "string", enum: ["red", "green", "blue"] },
-      true
-    )
-    expect(zodType.parse("red")).toBe("red")
-    expect(() => zodType.parse("yellow")).toThrow()
-  })
+      true,
+    );
+    expect(zodType.parse("red")).toBe("red");
+    expect(() => zodType.parse("yellow")).toThrow();
+  });
 
   it("handles unknown type by accepting anything", () => {
-    const zodType = jsonSchemaPropertyToZod({ type: "foobar" }, true)
-    expect(zodType.parse("anything")).toBe("anything")
-    expect(zodType.parse(123)).toBe(123)
-    expect(zodType.parse(null)).toBe(null)
-  })
+    const zodType = jsonSchemaPropertyToZod({ type: "foobar" }, true);
+    expect(zodType.parse("anything")).toBe("anything");
+    expect(zodType.parse(123)).toBe(123);
+    expect(zodType.parse(null)).toBe(null);
+  });
 
   it("handles missing type by accepting anything", () => {
-    const zodType = jsonSchemaPropertyToZod({}, true)
-    expect(zodType.parse("anything")).toBe("anything")
-    expect(zodType.parse(42)).toBe(42)
-  })
+    const zodType = jsonSchemaPropertyToZod({}, true);
+    expect(zodType.parse("anything")).toBe("anything");
+    expect(zodType.parse(42)).toBe(42);
+  });
 
   it("attaches description when present", () => {
-    const zodType = jsonSchemaPropertyToZod(
-      { type: "string", description: "A name field" },
-      true
-    )
-    expect(zodType.description).toBe("A name field")
-  })
+    const zodType = jsonSchemaPropertyToZod({ type: "string", description: "A name field" }, true);
+    expect(zodType.description).toBe("A name field");
+  });
 
   it("handles nested objects", () => {
     const zodType = jsonSchemaPropertyToZod(
@@ -276,20 +281,20 @@ describe.skip("jsonSchemaPropertyToZod", () => {
             type: "object",
             properties: {
               city: { type: "string" },
-              zip: { type: "string" }
+              zip: { type: "string" },
             },
-            required: ["city"]
-          }
+            required: ["city"],
+          },
         },
-        required: ["address"]
+        required: ["address"],
       },
-      true
-    )
+      true,
+    );
     expect(zodType.parse({ address: { city: "Berlin" } })).toEqual({
-      address: { city: "Berlin" }
-    })
-    expect(() => zodType.parse({ address: {} })).toThrow() // city missing
-  })
+      address: { city: "Berlin" },
+    });
+    expect(() => zodType.parse({ address: {} })).toThrow(); // city missing
+  });
 
   it("handles array of objects", () => {
     const zodType = jsonSchemaPropertyToZod(
@@ -298,27 +303,27 @@ describe.skip("jsonSchemaPropertyToZod", () => {
         items: {
           type: "object",
           properties: { id: { type: "number" } },
-          required: ["id"]
-        }
+          required: ["id"],
+        },
       },
-      true
-    )
-    expect(zodType.parse([{ id: 1 }, { id: 2 }])).toEqual([{ id: 1 }, { id: 2 }])
-    expect(() => zodType.parse([{}])).toThrow() // id missing
-  })
-})
+      true,
+    );
+    expect(zodType.parse([{ id: 1 }, { id: 2 }])).toEqual([{ id: 1 }, { id: 2 }]);
+    expect(() => zodType.parse([{}])).toThrow(); // id missing
+  });
+});
 
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("jsonSchemaToZod", () => {
   it("returns empty object for undefined schema", () => {
-    const result = jsonSchemaToZod(undefined)
-    expect(result).toEqual({})
-  })
+    const result = jsonSchemaToZod(undefined);
+    expect(result).toEqual({});
+  });
 
   it("returns empty object for schema with no properties", () => {
-    const result = jsonSchemaToZod({ type: "object" })
-    expect(result).toEqual({})
-  })
+    const result = jsonSchemaToZod({ type: "object" });
+    expect(result).toEqual({});
+  });
 
   it("converts a schema with mixed required and optional fields", () => {
     const result = jsonSchemaToZod({
@@ -326,33 +331,33 @@ describe.skip("jsonSchemaToZod", () => {
       properties: {
         name: { type: "string" },
         count: { type: "number" },
-        active: { type: "boolean" }
+        active: { type: "boolean" },
       },
-      required: ["name"]
-    })
+      required: ["name"],
+    });
 
-    expect(Object.keys(result)).toEqual(["name", "count", "active"])
+    expect(Object.keys(result)).toEqual(["name", "count", "active"]);
     // name is required — should reject undefined
-    expect(result.name.parse("test")).toBe("test")
-    expect(() => result.name.parse(undefined)).toThrow()
+    expect(result.name.parse("test")).toBe("test");
+    expect(() => result.name.parse(undefined)).toThrow();
     // count is optional — should accept undefined
-    expect(result.count.parse(undefined)).toBeUndefined()
-    expect(result.count.parse(5)).toBe(5)
-  })
+    expect(result.count.parse(undefined)).toBeUndefined();
+    expect(result.count.parse(5)).toBe(5);
+  });
 
   it("converts a schema with no required array (all optional)", () => {
     const result = jsonSchemaToZod({
       type: "object",
       properties: {
         foo: { type: "string" },
-        bar: { type: "number" }
-      }
-    })
+        bar: { type: "number" },
+      },
+    });
 
-    expect(result.foo.parse(undefined)).toBeUndefined()
-    expect(result.bar.parse(undefined)).toBeUndefined()
-  })
-})
+    expect(result.foo.parse(undefined)).toBeUndefined();
+    expect(result.bar.parse(undefined)).toBeUndefined();
+  });
+});
 
 // ============================================================================
 // API key validation - direct function tests
@@ -361,79 +366,81 @@ describe.skip("jsonSchemaToZod", () => {
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("validateApiKey", () => {
   function makeRequest(headers: Record<string, string> = {}): any {
-    return { headers } as any
+    return { headers } as any;
   }
 
   it("returns true when no API key is configured (empty string)", () => {
-    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue({
+    (vscode.workspace.getConfiguration as Mock).mockReturnValue({
       get: vi.fn((key: string, def: any) => {
-        if (key === "apiKey") return ""
-        return def
-      })
-    })
-    expect(validateApiKey(makeRequest())).toBe(true)
-  })
+        if (key === "apiKey") return "";
+        return def;
+      }),
+    });
+    expect(validateApiKey(makeRequest())).toBe(true);
+  });
 
   it("returns false when API key is configured but no Authorization header", () => {
-    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue({
+    (vscode.workspace.getConfiguration as Mock).mockReturnValue({
       get: vi.fn((key: string, def: any) => {
-        if (key === "apiKey") return "my-secret-key"
-        return def
-      })
-    })
-    expect(validateApiKey(makeRequest())).toBe(false)
-  })
+        if (key === "apiKey") return "my-secret-key";
+        return def;
+      }),
+    });
+    expect(validateApiKey(makeRequest())).toBe(false);
+  });
 
   it("returns true for valid Bearer token", () => {
-    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue({
+    (vscode.workspace.getConfiguration as Mock).mockReturnValue({
       get: vi.fn((key: string, def: any) => {
-        if (key === "apiKey") return "my-secret-key"
-        return def
-      })
-    })
-    expect(validateApiKey(makeRequest({ authorization: "Bearer my-secret-key" }))).toBe(true)
-  })
+        if (key === "apiKey") return "my-secret-key";
+        return def;
+      }),
+    });
+    expect(validateApiKey(makeRequest({ authorization: "Bearer my-secret-key" }))).toBe(true);
+  });
 
   it("returns true for valid plain token (no Bearer prefix)", () => {
-    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue({
+    (vscode.workspace.getConfiguration as Mock).mockReturnValue({
       get: vi.fn((key: string, def: any) => {
-        if (key === "apiKey") return "my-secret-key"
-        return def
-      })
-    })
-    expect(validateApiKey(makeRequest({ authorization: "my-secret-key" }))).toBe(true)
-  })
+        if (key === "apiKey") return "my-secret-key";
+        return def;
+      }),
+    });
+    expect(validateApiKey(makeRequest({ authorization: "my-secret-key" }))).toBe(true);
+  });
 
   it("returns false for wrong API key", () => {
-    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue({
+    (vscode.workspace.getConfiguration as Mock).mockReturnValue({
       get: vi.fn((key: string, def: any) => {
-        if (key === "apiKey") return "correct-key"
-        return def
-      })
-    })
-    expect(validateApiKey(makeRequest({ authorization: "Bearer wrong-key!!" }))).toBe(false)
-  })
+        if (key === "apiKey") return "correct-key";
+        return def;
+      }),
+    });
+    expect(validateApiKey(makeRequest({ authorization: "Bearer wrong-key!!" }))).toBe(false);
+  });
 
   it("returns false when token length differs from configured key", () => {
-    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue({
+    (vscode.workspace.getConfiguration as Mock).mockReturnValue({
       get: vi.fn((key: string, def: any) => {
-        if (key === "apiKey") return "short"
-        return def
-      })
-    })
-    expect(validateApiKey(makeRequest({ authorization: "Bearer a-much-longer-token" }))).toBe(false)
-  })
+        if (key === "apiKey") return "short";
+        return def;
+      }),
+    });
+    expect(validateApiKey(makeRequest({ authorization: "Bearer a-much-longer-token" }))).toBe(
+      false,
+    );
+  });
 
   it("uses constant-time comparison (same-length wrong key still rejected)", () => {
-    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue({
+    (vscode.workspace.getConfiguration as Mock).mockReturnValue({
       get: vi.fn((key: string, def: any) => {
-        if (key === "apiKey") return "abcde"
-        return def
-      })
-    })
+        if (key === "apiKey") return "abcde";
+        return def;
+      }),
+    });
     // Same length, different content
-    expect(validateApiKey(makeRequest({ authorization: "Bearer xyzwv" }))).toBe(false)
+    expect(validateApiKey(makeRequest({ authorization: "Bearer xyzwv" }))).toBe(false);
     // Correct
-    expect(validateApiKey(makeRequest({ authorization: "Bearer abcde" }))).toBe(true)
-  })
-})
+    expect(validateApiKey(makeRequest({ authorization: "Bearer abcde" }))).toBe(true);
+  });
+});

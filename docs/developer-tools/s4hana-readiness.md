@@ -11,11 +11,11 @@ Visualize custom code compatibility with S/4HANA using data from SAP's Custom Co
 
 Three ways to load it:
 
-| Method | Steps |
-|--------|-------|
-| Activity Bar | **ABAP FS** panel → **S/4HANA Readiness** section → click **Load Dashboard** |
-| Command Palette | `Ctrl+Shift+P` → `ABAP FS: S/4HANA Readiness - Load` |
-| Copilot Chat | Ask: *"Load the S/4HANA readiness dashboard"* |
+| Method          | Steps                                                                        |
+| --------------- | ---------------------------------------------------------------------------- |
+| Activity Bar    | **ABAP FS** panel → **S/4HANA Readiness** section → click **Load Dashboard** |
+| Command Palette | `Ctrl+Shift+P` → `ABAP FS: S/4HANA Readiness - Load`                         |
+| Copilot Chat    | Ask: _"Load the S/4HANA readiness dashboard"_                                |
 
 ## Reading the Results
 

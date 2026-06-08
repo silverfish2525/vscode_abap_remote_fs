@@ -7,14 +7,14 @@
 // glob-to-regex (only `*` and `?` are honoured, no brace/extglob). This makes
 // patterns like `*.vsix` work uniformly on POSIX shells and Windows cmd.exe,
 // the latter of which does NOT expand globs before invoking node.
-import { rm } from "node:fs/promises"
-import { readdirSync } from "node:fs"
-import { dirname, basename, join } from "node:path"
+import { rm } from "node:fs/promises";
+import { readdirSync } from "node:fs";
+import { dirname, basename, join } from "node:path";
 
-const args = process.argv.slice(2)
+const args = process.argv.slice(2);
 if (args.length === 0) {
-  console.error("rmrf.mjs: no paths supplied")
-  process.exit(1)
+  console.error("rmrf.mjs: no paths supplied");
+  process.exit(1);
 }
 
 const globToRegex = (glob) => {
@@ -22,28 +22,28 @@ const globToRegex = (glob) => {
   const re = glob
     .replace(/[.+^${}()|[\]\\]/g, "\\$&")
     .replace(/\*/g, ".*")
-    .replace(/\?/g, ".")
-  return new RegExp(`^${re}$`)
-}
+    .replace(/\?/g, ".");
+  return new RegExp(`^${re}$`);
+};
 
 const expand = (pattern) => {
-  if (!/[*?[]/.test(pattern)) return [pattern]
-  const dir = dirname(pattern) || "."
-  const base = basename(pattern)
-  const re = globToRegex(base)
-  let entries
+  if (!/[*?[]/.test(pattern)) return [pattern];
+  const dir = dirname(pattern) || ".";
+  const base = basename(pattern);
+  const re = globToRegex(base);
+  let entries;
   try {
-    entries = readdirSync(dir)
+    entries = readdirSync(dir);
   } catch {
-    return [] // directory missing — same semantics as `rm -rf` on a missing path
+    return []; // directory missing — same semantics as `rm -rf` on a missing path
   }
-  return entries.filter(e => re.test(e)).map(e => (dir === "." ? e : join(dir, e)))
-}
+  return entries.filter((e) => re.test(e)).map((e) => (dir === "." ? e : join(dir, e)));
+};
 
-const targets = args.flatMap(expand)
+const targets = args.flatMap(expand);
 
 await Promise.all(
   // maxRetries softens Windows EBUSY/EPERM during `clean` (close to rimraf's behaviour
   // for cases that matter to npm-script cleanup; not a 1:1 equivalent for live trees).
-  targets.map(p => rm(p, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 }))
-)
+  targets.map((p) => rm(p, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 })),
+);

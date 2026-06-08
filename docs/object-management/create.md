@@ -20,24 +20,24 @@ Create new ABAP development objects directly from VS Code without opening SAP GU
 
 Ask Copilot in natural language, for example:
 
-> *"Create a new class ZCL_MY_CLASS with description 'My class'"*
+> _"Create a new class ZCL_MY_CLASS with description 'My class'"_
 
 Copilot fills in the object details automatically. You will still be prompted to select a transport request.
 
 ## Supported Object Types
 
-| Object type | Type code |
-|---|---|
-| Report / Program | `PROG/P` |
-| Class | `CLAS/OC` |
-| Interface | `INTF/OI` |
-| Function Group | `FUGR/F` |
-| Data Element | `DTEL/DE` |
-| Domain | `DOMA` |
-| Database Table | `TABL/DT` |
-| CDS View | `DDLS` |
-| Message Class | `MSAG/N` |
-| Package | `DEVC/K` |
+| Object type      | Type code |
+| ---------------- | --------- |
+| Report / Program | `PROG/P`  |
+| Class            | `CLAS/OC` |
+| Interface        | `INTF/OI` |
+| Function Group   | `FUGR/F`  |
+| Data Element     | `DTEL/DE` |
+| Domain           | `DOMA`    |
+| Database Table   | `TABL/DT` |
+| CDS View         | `DDLS`    |
+| Message Class    | `MSAG/N`  |
+| Package          | `DEVC/K`  |
 
 Many additional types are supported. If the object type you need is not listed, try the wizard — it shows all types available in your connected system.
 

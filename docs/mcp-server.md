@@ -42,10 +42,10 @@ If you need to change the port or secure the server with an API key:
 
 Open VS Code Settings (`Ctrl+,`) and search for `abapfs.mcpServer`:
 
-| Setting                      | Description                                                                 |
-| ---------------------------- | --------------------------------------------------------------------------- |
-| `abapfs.mcpServer.port`      | Default `4847` — change if there's a port conflict                          |
-| `abapfs.mcpServer.apiKey`    | Optional. Recommended on shared machines to prevent unauthorized SAP access |
+| Setting                   | Description                                                                 |
+| ------------------------- | --------------------------------------------------------------------------- |
+| `abapfs.mcpServer.port`   | Default `4847` — change if there's a port conflict                          |
+| `abapfs.mcpServer.apiKey` | Optional. Recommended on shared machines to prevent unauthorized SAP access |
 
 Or add directly to your `settings.json`:
 
@@ -111,18 +111,18 @@ In your AI tool, ask something SAP-related, for example:
 
 All 40 ABAP FS tools are exposed, including:
 
-| Tool                        | What It Does                       |
-| --------------------------- | ---------------------------------- |
-| `search_abap_objects`       | Search for objects by name pattern |
-| `get_abap_object_lines`     | Read source code                   |
-| `find_where_used`           | Where-used analysis                |
-| `run_unit_tests`            | Execute ABAP unit tests            |
-| `run_atc_analysis`          | Run ATC code checks                |
-| `execute_data_query`        | Run SQL queries against SAP tables |
-| `manage_transport_requests` | Read transport data                |
-| `abap_activate`             | Activate ABAP objects              |
+| Tool                            | What It Does                           |
+| ------------------------------- | -------------------------------------- |
+| `search_abap_objects`           | Search for objects by name pattern     |
+| `get_abap_object_lines`         | Read source code                       |
+| `find_where_used`               | Where-used analysis                    |
+| `run_unit_tests`                | Execute ABAP unit tests                |
+| `run_atc_analysis`              | Run ATC code checks                    |
+| `execute_data_query`            | Run SQL queries against SAP tables     |
+| `manage_transport_requests`     | Read transport data                    |
+| `abap_activate`                 | Activate ABAP objects                  |
 | `replace_string_in_abap_object` | Edit ABAP source code (find & replace) |
-| `get_abap_diagnostics`      | Get syntax errors/warnings for a file  |
+| `get_abap_diagnostics`          | Get syntax errors/warnings for a file  |
 
 ## Write Support
 
@@ -134,7 +134,6 @@ MCP clients can now edit ABAP source code directly. The workflow:
 4. **Verify** — call `get_abap_diagnostics` with the same URI to check for syntax errors
 
 Edits are immediately synced to SAP (ABAP FS handles locking, saving, and unlocking automatically). There is no keep/undo UI — changes are applied directly.
-
 
 ## Limitations
 

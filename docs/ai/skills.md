@@ -15,16 +15,16 @@ Copilot only loads a skill's full content when relevant, so having many skills d
 
 ## Available Skills
 
-| Skill | Slash command | When it loads |
-|---|---|---|
-| [Clean ABAP](#clean-abap) | `/clean-abap` | Writing or reviewing ABAP code |
-| [Code Writing Process](#code-writing-process) | `/abap-code-writing` | Building any ABAP solution |
-| [Performance (ECC)](#performance-ecc) | `/abap-performance-ecc` | Non-HANA systems (Oracle, DB2, MSSQL) |
-| [Performance (HANA)](#performance-hana) | `/abap-performance-hana` | S/4HANA / HANA DB systems |
-| [SAP Research](#sap-research) | `/abap-research` | Searching for objects, transactions, messages |
-| [System Personality Report](#system-personality-report) | `/sap-system-personality-report` | Analyzing a system's custom code landscape |
-| [SAP Customizing](#sap-customizing) | `/sap-customizing` | SPRO/IMG settings and configuration tables |
-| [SAP Data Workbook](#sap-data-workbook) | `/sap-data-workbook` | Multi-step SAP data analysis |
+| Skill                                                   | Slash command                    | When it loads                                 |
+| ------------------------------------------------------- | -------------------------------- | --------------------------------------------- |
+| [Clean ABAP](#clean-abap)                               | `/clean-abap`                    | Writing or reviewing ABAP code                |
+| [Code Writing Process](#code-writing-process)           | `/abap-code-writing`             | Building any ABAP solution                    |
+| [Performance (ECC)](#performance-ecc)                   | `/abap-performance-ecc`          | Non-HANA systems (Oracle, DB2, MSSQL)         |
+| [Performance (HANA)](#performance-hana)                 | `/abap-performance-hana`         | S/4HANA / HANA DB systems                     |
+| [SAP Research](#sap-research)                           | `/abap-research`                 | Searching for objects, transactions, messages |
+| [System Personality Report](#system-personality-report) | `/sap-system-personality-report` | Analyzing a system's custom code landscape    |
+| [SAP Customizing](#sap-customizing)                     | `/sap-customizing`               | SPRO/IMG settings and configuration tables    |
+| [SAP Data Workbook](#sap-data-workbook)                 | `/sap-data-workbook`             | Multi-step SAP data analysis                  |
 
 ---
 

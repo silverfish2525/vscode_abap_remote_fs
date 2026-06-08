@@ -1,4 +1,4 @@
-import { commands } from "vscode"
+import { commands } from "vscode";
 
 export type AbapFsContexts =
   | "abapfs:showActivate"
@@ -15,7 +15,7 @@ export type AbapFsContexts =
   | "abapfs:blameActive"
   | "abapfs:blameAvailable"
   | "abapfs:activeEditorIsTable"
-  | "abapfs:noSapConnected"
+  | "abapfs:noSapConnected";
 
 export const setContext = (key: AbapFsContexts, value: unknown) =>
-  commands.executeCommand("setContext", key, value)
+  commands.executeCommand("setContext", key, value);

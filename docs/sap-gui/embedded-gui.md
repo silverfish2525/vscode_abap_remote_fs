@@ -6,11 +6,11 @@ Run SAP GUI transactions directly inside VS Code — no need to switch between w
 
 Three ways to open it:
 
-| Method | Action |
-|--------|--------|
-| Keyboard shortcut | **Ctrl+Shift+F7** (with an ABAP file open) |
-| Editor toolbar | Click the **Embedded GUI** button in the editor toolbar |
-| Command Palette | `ABAP FS: Open SAP GUI in embedded WebView` |
+| Method            | Action                                                  |
+| ----------------- | ------------------------------------------------------- |
+| Keyboard shortcut | **Ctrl+Shift+F7** (with an ABAP file open)              |
+| Editor toolbar    | Click the **Embedded GUI** button in the editor toolbar |
+| Command Palette   | `ABAP FS: Open SAP GUI in embedded WebView`             |
 
 ## Requirements
 

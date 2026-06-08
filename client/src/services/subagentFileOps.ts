@@ -8,8 +8,8 @@
  * - Validating agent files
  */
 
-import * as vscode from "vscode"
-import * as path from "path"
+import * as vscode from "vscode";
+import * as path from "path";
 import {
   AgentMeta,
   AGENT_REGISTRY,
@@ -18,9 +18,9 @@ import {
   getSubagentSettings,
   getWorkspaceFolder,
   getExtensionId,
-  buildFullToolName
-} from "./subagentRegistry"
-import { funWindow as window } from "./funMessenger"
+  buildFullToolName,
+} from "./subagentRegistry";
+import { funWindow as window } from "./funMessenger";
 
 // ============================================================================
 // TEMPLATE OPERATIONS
@@ -30,14 +30,14 @@ import { funWindow as window } from "./funMessenger"
  * Get the templates directory path
  */
 function getTemplatesDir(context: vscode.ExtensionContext): string {
-  return path.join(context.extensionPath, "client", "media", "subagent-templates")
+  return path.join(context.extensionPath, "client", "media", "subagent-templates");
 }
 
 /**
  * Get the dist templates directory path (for webpack bundled version)
  */
 function getDistTemplatesDir(context: vscode.ExtensionContext): string {
-  return path.join(context.extensionPath, "client", "dist", "media", "subagent-templates")
+  return path.join(context.extensionPath, "client", "dist", "media", "subagent-templates");
 }
 
 /**
@@ -45,22 +45,22 @@ function getDistTemplatesDir(context: vscode.ExtensionContext): string {
  */
 export async function loadTemplate(
   context: vscode.ExtensionContext,
-  templateFile: string
+  templateFile: string,
 ): Promise<string> {
-  const distPath = path.join(getDistTemplatesDir(context), templateFile)
-  const devPath = path.join(getTemplatesDir(context), templateFile)
+  const distPath = path.join(getDistTemplatesDir(context), templateFile);
+  const devPath = path.join(getTemplatesDir(context), templateFile);
 
   try {
-    const distUri = vscode.Uri.file(distPath)
-    const content = await vscode.workspace.fs.readFile(distUri)
-    return Buffer.from(content).toString("utf8")
+    const distUri = vscode.Uri.file(distPath);
+    const content = await vscode.workspace.fs.readFile(distUri);
+    return Buffer.from(content).toString("utf8");
   } catch {
     try {
-      const devUri = vscode.Uri.file(devPath)
-      const content = await vscode.workspace.fs.readFile(devUri)
-      return Buffer.from(content).toString("utf8")
+      const devUri = vscode.Uri.file(devPath);
+      const content = await vscode.workspace.fs.readFile(devUri);
+      return Buffer.from(content).toString("utf8");
     } catch (error) {
-      throw new Error(`Could not load template ${templateFile}: ${error}`)
+      throw new Error(`Could not load template ${templateFile}: ${error}`);
     }
   }
 }
@@ -72,26 +72,26 @@ export function processTemplate(
   templateContent: string,
   model: string,
   tools: string[] | null,
-  extensionId: string
+  extensionId: string,
 ): string {
-  let content = templateContent
+  let content = templateContent;
 
   // Replace model placeholder
   if (model) {
-    content = content.replace(/\{\{MODEL\}\}/g, model)
+    content = content.replace(/\{\{MODEL\}\}/g, model);
   } else {
-    content = content.replace(/^model:\s*['"]?\{\{MODEL\}\}['"]?\n?/m, "")
+    content = content.replace(/^model:\s*['"]?\{\{MODEL\}\}['"]?\n?/m, "");
   }
 
   // Replace tools placeholder if present
   if (tools) {
-    const fullToolNames = tools.map(t => `'${buildFullToolName(extensionId, t)}'`)
-    content = content.replace(/\{\{TOOLS\}\}/g, fullToolNames.join(", "))
+    const fullToolNames = tools.map((t) => `'${buildFullToolName(extensionId, t)}'`);
+    content = content.replace(/\{\{TOOLS\}\}/g, fullToolNames.join(", "));
   } else {
-    content = content.replace(/^tools:\s*\[\{\{TOOLS\}\}\]\n?/m, "")
+    content = content.replace(/^tools:\s*\[\{\{TOOLS\}\}\]\n?/m, "");
   }
 
-  return content
+  return content;
 }
 
 // ============================================================================
@@ -105,36 +105,36 @@ export function processTemplate(
  * so that validation does not reject the files.
  */
 async function migrateInvokableSpelling(workspaceUri: vscode.Uri): Promise<number> {
-  let fixed = 0
+  let fixed = 0;
   const folders = [
     vscode.Uri.joinPath(workspaceUri, ".github", "agents"),
-    vscode.Uri.joinPath(workspaceUri, ".github", "agents_disabled")
-  ]
+    vscode.Uri.joinPath(workspaceUri, ".github", "agents_disabled"),
+  ];
 
   for (const dir of folders) {
-    let entries: [string, vscode.FileType][]
+    let entries: [string, vscode.FileType][];
     try {
-      entries = await vscode.workspace.fs.readDirectory(dir)
+      entries = await vscode.workspace.fs.readDirectory(dir);
     } catch {
-      continue // folder doesn't exist
+      continue; // folder doesn't exist
     }
 
     for (const [name, type] of entries) {
-      if (type !== vscode.FileType.File || !name.endsWith(".agent.md")) continue
-      const fileUri = vscode.Uri.joinPath(dir, name)
+      if (type !== vscode.FileType.File || !name.endsWith(".agent.md")) continue;
+      const fileUri = vscode.Uri.joinPath(dir, name);
       try {
-        const raw = Buffer.from(await vscode.workspace.fs.readFile(fileUri)).toString("utf8")
+        const raw = Buffer.from(await vscode.workspace.fs.readFile(fileUri)).toString("utf8");
         if (raw.includes("user-invokable")) {
-          const updated = raw.replace(/user-invokable/g, "user-invocable")
-          await vscode.workspace.fs.writeFile(fileUri, Buffer.from(updated, "utf8"))
-          fixed++
+          const updated = raw.replace(/user-invokable/g, "user-invocable");
+          await vscode.workspace.fs.writeFile(fileUri, Buffer.from(updated, "utf8"));
+          fixed++;
         }
       } catch {
         // skip unreadable files
       }
     }
   }
-  return fixed
+  return fixed;
 }
 
 // ============================================================================
@@ -146,8 +146,8 @@ async function migrateInvokableSpelling(workspaceUri: vscode.Uri): Promise<numbe
  */
 export async function refreshExplorer(): Promise<void> {
   try {
-    await new Promise(resolve => setTimeout(resolve, 500))
-    await vscode.commands.executeCommand("workbench.files.action.refreshFilesExplorer")
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    await vscode.commands.executeCommand("workbench.files.action.refreshFilesExplorer");
   } catch {
     // Command might not be available
   }
@@ -160,8 +160,8 @@ export async function closeAgentEditors(workspaceUri: vscode.Uri): Promise<void>
   for (const tabGroup of window.tabGroups.all) {
     for (const tab of tabGroup.tabs) {
       if (tab.input instanceof vscode.TabInputText) {
-        const uri = tab.input.uri
-        const filePath = uri.fsPath
+        const uri = tab.input.uri;
+        const filePath = uri.fsPath;
         if (
           filePath.includes(".github\\agents\\") ||
           filePath.includes(".github/agents/") ||
@@ -169,7 +169,7 @@ export async function closeAgentEditors(workspaceUri: vscode.Uri): Promise<void>
           filePath.includes(".github/agents_disabled/")
         ) {
           try {
-            await window.tabGroups.close(tab)
+            await window.tabGroups.close(tab);
           } catch {
             // Tab might already be closed
           }
@@ -188,68 +188,68 @@ export async function writeAgentFile(
   workspaceUri: vscode.Uri,
   agent: AgentMeta,
   model: string,
-  extensionId: string
+  extensionId: string,
 ): Promise<{ created: boolean; updated: boolean; path: string }> {
-  const agentsDir = vscode.Uri.joinPath(workspaceUri, ".github", "agents")
-  const filePath = vscode.Uri.joinPath(agentsDir, `${agent.id}.agent.md`)
+  const agentsDir = vscode.Uri.joinPath(workspaceUri, ".github", "agents");
+  const filePath = vscode.Uri.joinPath(agentsDir, `${agent.id}.agent.md`);
 
   try {
-    await vscode.workspace.fs.createDirectory(agentsDir)
+    await vscode.workspace.fs.createDirectory(agentsDir);
   } catch {
     // Directory might already exist
   }
 
-  let created = false
-  let updated = false
+  let created = false;
+  let updated = false;
 
   try {
-    const existingContent = await vscode.workspace.fs.readFile(filePath)
-    const existingText = Buffer.from(existingContent).toString("utf8")
+    const existingContent = await vscode.workspace.fs.readFile(filePath);
+    const existingText = Buffer.from(existingContent).toString("utf8");
 
     // Only update model line (preserve user's tool customizations)
-    let newContent = existingText
-    const modelRegex = /^model:\s*['"]?[^'"}\n]+['"]?$/m
+    let newContent = existingText;
+    const modelRegex = /^model:\s*['"]?[^'"}\n]+['"]?$/m;
     if (modelRegex.test(newContent)) {
-      newContent = newContent.replace(modelRegex, `model: '${model}'`)
+      newContent = newContent.replace(modelRegex, `model: '${model}'`);
     }
 
     if (newContent !== existingText) {
-      await vscode.workspace.fs.writeFile(filePath, Buffer.from(newContent, "utf8"))
-      updated = true
+      await vscode.workspace.fs.writeFile(filePath, Buffer.from(newContent, "utf8"));
+      updated = true;
     }
   } catch {
     // File doesn't exist - create from template
-    const templateContent = await loadTemplate(context, agent.templateFile)
-    const content = processTemplate(templateContent, model, agent.tools, extensionId)
-    await vscode.workspace.fs.writeFile(filePath, Buffer.from(content, "utf8"))
-    created = true
+    const templateContent = await loadTemplate(context, agent.templateFile);
+    const content = processTemplate(templateContent, model, agent.tools, extensionId);
+    await vscode.workspace.fs.writeFile(filePath, Buffer.from(content, "utf8"));
+    created = true;
   }
 
-  return { created, updated, path: filePath.fsPath }
+  return { created, updated, path: filePath.fsPath };
 }
 
 /**
  * Disable agent files by renaming agents folder to agents_disabled
  */
 export async function disableAgentFiles(workspaceUri: vscode.Uri): Promise<boolean> {
-  const agentsDir = vscode.Uri.joinPath(workspaceUri, ".github", "agents")
-  const disabledDir = vscode.Uri.joinPath(workspaceUri, ".github", "agents_disabled")
+  const agentsDir = vscode.Uri.joinPath(workspaceUri, ".github", "agents");
+  const disabledDir = vscode.Uri.joinPath(workspaceUri, ".github", "agents_disabled");
 
   try {
-    await vscode.workspace.fs.stat(agentsDir)
-    await closeAgentEditors(workspaceUri)
+    await vscode.workspace.fs.stat(agentsDir);
+    await closeAgentEditors(workspaceUri);
 
     try {
-      await vscode.workspace.fs.delete(disabledDir, { recursive: true })
+      await vscode.workspace.fs.delete(disabledDir, { recursive: true });
     } catch {
       // Doesn't exist, that's fine
     }
 
-    await vscode.workspace.fs.rename(agentsDir, disabledDir)
-    await refreshExplorer()
-    return true
+    await vscode.workspace.fs.rename(agentsDir, disabledDir);
+    await refreshExplorer();
+    return true;
   } catch {
-    return false
+    return false;
   }
 }
 
@@ -257,12 +257,12 @@ export async function disableAgentFiles(workspaceUri: vscode.Uri): Promise<boole
  * Check if disabled agents folder exists
  */
 export async function hasDisabledAgentFiles(workspaceUri: vscode.Uri): Promise<boolean> {
-  const disabledDir = vscode.Uri.joinPath(workspaceUri, ".github", "agents_disabled")
+  const disabledDir = vscode.Uri.joinPath(workspaceUri, ".github", "agents_disabled");
   try {
-    await vscode.workspace.fs.stat(disabledDir)
-    return true
+    await vscode.workspace.fs.stat(disabledDir);
+    return true;
   } catch {
-    return false
+    return false;
   }
 }
 
@@ -272,25 +272,25 @@ export async function hasDisabledAgentFiles(workspaceUri: vscode.Uri): Promise<b
 export async function restoreAgentFiles(
   context: vscode.ExtensionContext,
   workspaceUri: vscode.Uri,
-  settings: { models: Record<string, string> }
+  settings: { models: Record<string, string> },
 ): Promise<{ restored: number; created: number }> {
-  const agentsDir = vscode.Uri.joinPath(workspaceUri, ".github", "agents")
-  const disabledDir = vscode.Uri.joinPath(workspaceUri, ".github", "agents_disabled")
-  const extensionId = getExtensionId(context)
+  const agentsDir = vscode.Uri.joinPath(workspaceUri, ".github", "agents");
+  const disabledDir = vscode.Uri.joinPath(workspaceUri, ".github", "agents_disabled");
+  const extensionId = getExtensionId(context);
 
-  let restored = 0
-  let created = 0
+  let restored = 0;
+  let created = 0;
 
   try {
-    await vscode.workspace.fs.stat(disabledDir)
-    await vscode.workspace.fs.rename(disabledDir, agentsDir)
-    restored = AGENT_REGISTRY.length
+    await vscode.workspace.fs.stat(disabledDir);
+    await vscode.workspace.fs.rename(disabledDir, agentsDir);
+    restored = AGENT_REGISTRY.length;
 
     for (const agent of AGENT_REGISTRY) {
-      const model = settings.models[agent.id]
+      const model = settings.models[agent.id];
       if (model) {
         try {
-          await writeAgentFile(context, workspaceUri, agent, model, extensionId)
+          await writeAgentFile(context, workspaceUri, agent, model, extensionId);
         } catch {
           // File might be corrupted
         }
@@ -298,11 +298,11 @@ export async function restoreAgentFiles(
     }
   } catch {
     for (const agent of AGENT_REGISTRY) {
-      const model = settings.models[agent.id]
+      const model = settings.models[agent.id];
       if (model) {
         try {
-          const result = await writeAgentFile(context, workspaceUri, agent, model, extensionId)
-          if (result.created) created++
+          const result = await writeAgentFile(context, workspaceUri, agent, model, extensionId);
+          if (result.created) created++;
         } catch {
           // Template might not be available
         }
@@ -310,50 +310,50 @@ export async function restoreAgentFiles(
     }
   }
 
-  await refreshExplorer()
-  return { restored, created }
+  await refreshExplorer();
+  return { restored, created };
 }
 
 /**
  * Validate agent .md files for errors (e.g., unknown model)
  */
 export async function validateAgentFiles(
-  workspaceUri: vscode.Uri
+  workspaceUri: vscode.Uri,
 ): Promise<Array<{ agentId: string; errors: string[] }>> {
-  const agentsDir = vscode.Uri.joinPath(workspaceUri, ".github", "agents")
-  const fileErrors: Array<{ agentId: string; errors: string[] }> = []
+  const agentsDir = vscode.Uri.joinPath(workspaceUri, ".github", "agents");
+  const fileErrors: Array<{ agentId: string; errors: string[] }> = [];
 
   for (const agent of AGENT_REGISTRY) {
-    const filePath = vscode.Uri.joinPath(agentsDir, `${agent.id}.agent.md`)
+    const filePath = vscode.Uri.joinPath(agentsDir, `${agent.id}.agent.md`);
     try {
-      await vscode.workspace.fs.stat(filePath)
-      await vscode.workspace.openTextDocument(filePath)
+      await vscode.workspace.fs.stat(filePath);
+      await vscode.workspace.openTextDocument(filePath);
     } catch {
       // File doesn't exist
     }
   }
 
-  await new Promise(resolve => setTimeout(resolve, 500))
+  await new Promise((resolve) => setTimeout(resolve, 500));
 
   for (const agent of AGENT_REGISTRY) {
-    const filePath = vscode.Uri.joinPath(agentsDir, `${agent.id}.agent.md`)
-    const diagnostics = vscode.languages.getDiagnostics(filePath)
+    const filePath = vscode.Uri.joinPath(agentsDir, `${agent.id}.agent.md`);
+    const diagnostics = vscode.languages.getDiagnostics(filePath);
 
     if (diagnostics.length > 0) {
       const significantIssues = diagnostics.filter(
-        d =>
+        (d) =>
           d.severity === vscode.DiagnosticSeverity.Error ||
-          d.severity === vscode.DiagnosticSeverity.Warning
-      )
+          d.severity === vscode.DiagnosticSeverity.Warning,
+      );
 
       if (significantIssues.length > 0) {
-        const errors = significantIssues.map(d => `Line ${d.range.start.line + 1}: ${d.message}`)
-        fileErrors.push({ agentId: agent.id, errors })
+        const errors = significantIssues.map((d) => `Line ${d.range.start.line + 1}: ${d.message}`);
+        fileErrors.push({ agentId: agent.id, errors });
       }
     }
   }
 
-  return fileErrors
+  return fileErrors;
 }
 
 // ============================================================================
@@ -364,93 +364,93 @@ export async function validateAgentFiles(
  * Core logic for enabling subagents
  */
 export async function enableSubagentsCore(context: vscode.ExtensionContext): Promise<EnableResult> {
-  const workspaceFolder = getWorkspaceFolder()
+  const workspaceFolder = getWorkspaceFolder();
   if (!workspaceFolder) {
-    return { success: false, error: "no_workspace" }
+    return { success: false, error: "no_workspace" };
   }
 
-  const settings = getSubagentSettings()
+  const settings = getSubagentSettings();
 
-  const agentsWithoutModels: string[] = []
+  const agentsWithoutModels: string[] = [];
   for (const agent of AGENT_REGISTRY) {
     if (!settings.models[agent.id]) {
-      agentsWithoutModels.push(agent.id)
+      agentsWithoutModels.push(agent.id);
     }
   }
 
   if (agentsWithoutModels.length > 0) {
-    return { success: false, error: "missing_models", missingModels: agentsWithoutModels }
+    return { success: false, error: "missing_models", missingModels: agentsWithoutModels };
   }
 
-  const config = vscode.workspace.getConfiguration("abapfs.subagents")
-  await config.update("enabled", true, vscode.ConfigurationTarget.Workspace)
+  const config = vscode.workspace.getConfiguration("abapfs.subagents");
+  await config.update("enabled", true, vscode.ConfigurationTarget.Workspace);
 
-  const hasDisabled = await hasDisabledAgentFiles(workspaceFolder)
-  const restoreResult = await restoreAgentFiles(context, workspaceFolder, settings)
+  const hasDisabled = await hasDisabledAgentFiles(workspaceFolder);
+  const restoreResult = await restoreAgentFiles(context, workspaceFolder, settings);
 
-  let fileStatus: string
+  let fileStatus: string;
   if (hasDisabled && restoreResult.restored > 0) {
-    fileStatus = `Restored ${restoreResult.restored} agent files from agents_disabled folder (with updated model configurations).`
+    fileStatus = `Restored ${restoreResult.restored} agent files from agents_disabled folder (with updated model configurations).`;
   } else {
-    fileStatus = `Created ${restoreResult.created} new agent files.`
+    fileStatus = `Created ${restoreResult.created} new agent files.`;
   }
 
   // Fix deprecated "user-invokable" → "user-invocable" before validation
   try {
-    await migrateInvokableSpelling(workspaceFolder)
+    await migrateInvokableSpelling(workspaceFolder);
   } catch {
     // Non-critical
   }
 
-  await new Promise(resolve => setTimeout(resolve, 500))
-  const fileErrors = await validateAgentFiles(workspaceFolder)
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  const fileErrors = await validateAgentFiles(workspaceFolder);
 
   if (fileErrors.length > 0) {
-    await config.update("enabled", false, vscode.ConfigurationTarget.Workspace)
-    await disableAgentFiles(workspaceFolder)
-    return { success: false, error: "validation_failed", fileErrors }
+    await config.update("enabled", false, vscode.ConfigurationTarget.Workspace);
+    await disableAgentFiles(workspaceFolder);
+    return { success: false, error: "validation_failed", fileErrors };
   }
 
   // Check if customAgentInSubagent is enabled
-  const chatConfig = vscode.workspace.getConfiguration("chat")
-  const customAgentEnabled = chatConfig.get<boolean>("customAgentInSubagent.enabled", false)
+  const chatConfig = vscode.workspace.getConfiguration("chat");
+  const customAgentEnabled = chatConfig.get<boolean>("customAgentInSubagent.enabled", false);
 
   if (!customAgentEnabled) {
     const action = await window.showWarningMessage(
       'CRITICAL:Subagents enabled, but "chat.customAgentInSubagent.enabled" is not set. ' +
         "This setting is required for Copilot to use your custom agents when delegating tasks.",
       "Enable Setting",
-      "Dismiss"
-    )
+      "Dismiss",
+    );
 
     if (action === "Enable Setting") {
       await chatConfig.update(
         "customAgentInSubagent.enabled",
         true,
-        vscode.ConfigurationTarget.Global
-      )
+        vscode.ConfigurationTarget.Global,
+      );
       window.showInformationMessage(
-        "Setting enabled! Restart VS Code and then custom agents will be used for task delegation."
-      )
+        "Setting enabled! Restart VS Code and then custom agents will be used for task delegation.",
+      );
     }
   }
 
-  return { success: true, fileStatus }
+  return { success: true, fileStatus };
 }
 
 /**
  * Core logic for disabling subagents
  */
 export async function disableSubagentsCore(): Promise<DisableResult> {
-  const workspaceFolder = getWorkspaceFolder()
+  const workspaceFolder = getWorkspaceFolder();
 
-  const config = vscode.workspace.getConfiguration("abapfs.subagents")
-  await config.update("enabled", false, vscode.ConfigurationTarget.Workspace)
+  const config = vscode.workspace.getConfiguration("abapfs.subagents");
+  await config.update("enabled", false, vscode.ConfigurationTarget.Workspace);
 
-  let preserved = false
+  let preserved = false;
   if (workspaceFolder) {
-    preserved = await disableAgentFiles(workspaceFolder)
+    preserved = await disableAgentFiles(workspaceFolder);
   }
 
-  return { success: true, preserved }
+  return { success: true, preserved };
 }

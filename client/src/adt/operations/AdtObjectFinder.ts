@@ -1,16 +1,16 @@
-import { PACKAGE } from "./AdtObjectCreator"
+import { PACKAGE } from "./AdtObjectCreator";
 import {
   ADTClient,
   CreatableTypeIds,
   FragmentLocation,
   ObjectType,
   SearchResult,
-  UriParts
-} from "abap-adt-api"
-import { QuickPickItem, workspace, commands, Uri, FileStat, Range, ThemeIcon } from "vscode"
+  UriParts,
+} from "abap-adt-api";
+import { QuickPickItem, workspace, commands, Uri, FileStat, Range, ThemeIcon } from "vscode";
 
-import { splitAdtUri, vscPosition, log, caughtToString, promCache } from "../../lib"
-import { getClient, getRoot, uriRoot } from "../conections"
+import { splitAdtUri, vscPosition, log, caughtToString, promCache } from "../../lib";
+import { getClient, getRoot, uriRoot } from "../conections";
 import {
   PathItem,
   isFolder,
@@ -19,147 +19,147 @@ import {
   isAbapStat,
   Root,
   AbapFile,
-  AbapStat
-} from "abapfs"
-import { context } from "../../extension"
-import { funWindow as window } from "../../services/funMessenger"
+  AbapStat,
+} from "abapfs";
+import { context } from "../../extension";
+import { funWindow as window } from "../../services/funMessenger";
 
 interface AdtSearchResult {
-  uri: string
-  type: string
-  name: string
-  packageName?: string
-  description?: string
+  uri: string;
+  type: string;
+  name: string;
+  packageName?: string;
+  description?: string;
 }
 
 export class MySearchResult implements QuickPickItem, AdtSearchResult {
   public static async createResults(results: SearchResult[], client: ADTClient) {
-    const myresults = results.map(r => new MySearchResult(r))
-    if (myresults.find(r => !r.description)) {
-      if (!this.types) this.types = await client.loadTypes()
+    const myresults = results.map((r) => new MySearchResult(r));
+    if (myresults.find((r) => !r.description)) {
+      if (!this.types) this.types = await client.loadTypes();
       myresults
-        .filter(r => !r.description)
-        .forEach(r => {
-          const typ = this.types.find(t => t.OBJECT_TYPE === r.type)
-          r.description = typ ? typ.OBJECT_TYPE_LABEL : r.type
-        })
+        .filter((r) => !r.description)
+        .forEach((r) => {
+          const typ = this.types.find((t) => t.OBJECT_TYPE === r.type);
+          r.description = typ ? typ.OBJECT_TYPE_LABEL : r.type;
+        });
     }
-    myresults.forEach(typ => {
-      if (!typ.packageName) typ.packageName = typ.type === PACKAGE ? typ.name : "unknown"
-    })
-    return myresults
+    myresults.forEach((typ) => {
+      if (!typ.packageName) typ.packageName = typ.type === PACKAGE ? typ.name : "unknown";
+    });
+    return myresults;
   }
-  private static types: ObjectType[]
+  private static types: ObjectType[];
   get label(): string {
-    return `${this.name}(${this.description})`
+    return `${this.name}(${this.description})`;
   }
-  public uri: string
-  public type: string
-  public name: string
-  public packageName?: string
-  public description?: string
+  public uri: string;
+  public type: string;
+  public name: string;
+  public packageName?: string;
+  public description?: string;
   get detail(): string | undefined {
-    return `Package ${this.packageName} type ${this.type}`
+    return `Package ${this.packageName} type ${this.type}`;
   }
-  public picked: boolean = false
+  public picked: boolean = false;
   constructor(r: SearchResult) {
-    this.uri = r["adtcore:uri"]
-    this.type = r["adtcore:type"]
-    this.name = r["adtcore:name"]
-    this.packageName = r["adtcore:packageName"]
-    this.description = r["adtcore:description"]
+    this.uri = r["adtcore:uri"];
+    this.type = r["adtcore:type"];
+    this.name = r["adtcore:name"];
+    this.packageName = r["adtcore:packageName"];
+    this.description = r["adtcore:description"];
   }
 }
 
 export class AdtObjectFinder {
   constructor(public readonly connId: string) {}
-  private fragCache = promCache<FragmentLocation>()
+  private fragCache = promCache<FragmentLocation>();
 
   public async vscodeUriWithFile(uri: string, main = true) {
-    const { path, file } = (await getRoot(this.connId).findByAdtUri(uri, main)) || {}
-    if (!path) throw new Error(`can't find an URL for ${uri}`)
-    const url = createUri(this.connId, path).toString()
-    return { uri: url, file }
+    const { path, file } = (await getRoot(this.connId).findByAdtUri(uri, main)) || {};
+    if (!path) throw new Error(`can't find an URL for ${uri}`);
+    const url = createUri(this.connId, path).toString();
+    return { uri: url, file };
   }
 
   public async vscodeUri(uri: string, main = true) {
-    const uf = await this.vscodeUriWithFile(uri, main)
-    return uf.uri
+    const uf = await this.vscodeUriWithFile(uri, main);
+    return uf.uri;
   }
 
   public async vscodeObject(uri: string, main = true) {
-    const { file } = await this.vscodeUriWithFile(uri, main)
-    if (isAbapStat(file)) return file.object
+    const { file } = await this.vscodeUriWithFile(uri, main);
+    if (isAbapStat(file)) return file.object;
   }
 
   public clearCaches() {
-    this.fragCache = promCache()
+    this.fragCache = promCache();
   }
 
   public async vscodeRange(uri: string | UriParts, useFragCache = false) {
-    const u = splitAdtUri(uri)
-    const rval = { uri: "", start: u.start, file: undefined as AbapFile | undefined }
+    const u = splitAdtUri(uri);
+    const rval = { uri: "", start: u.start, file: undefined as AbapFile | undefined };
     if (u.type && u.name) {
-      const getFrag = () => getClient(this.connId).fragmentMappings(u.path, u.type!, u.name!)
-      const frag = await this.fragCache(`${u.path}_${u.type}_${u.name}`, getFrag, !useFragCache)
-      const uf = await this.vscodeUriWithFile(frag.uri)
-      rval.uri = uf.uri
-      if (isAbapFile(uf.file)) rval.file = uf.file // should always be an abapfile at this point
-      rval.start = vscPosition(frag.line + (u.start?.line || 0), frag.column)
+      const getFrag = () => getClient(this.connId).fragmentMappings(u.path, u.type!, u.name!);
+      const frag = await this.fragCache(`${u.path}_${u.type}_${u.name}`, getFrag, !useFragCache);
+      const uf = await this.vscodeUriWithFile(frag.uri);
+      rval.uri = uf.uri;
+      if (isAbapFile(uf.file)) rval.file = uf.file; // should always be an abapfile at this point
+      rval.start = vscPosition(frag.line + (u.start?.line || 0), frag.column);
     } else {
-      const uf = await this.vscodeUriWithFile(u.path)
-      if (isAbapFile(uf.file)) rval.file = uf.file // should always be an abapfile at this point
-      rval.uri = uf.uri
+      const uf = await this.vscodeUriWithFile(u.path);
+      if (isAbapFile(uf.file)) rval.file = uf.file; // should always be an abapfile at this point
+      rval.uri = uf.uri;
     }
-    return rval
+    return rval;
   }
 
   public async vscodeUriFromAdt(adtUri: string) {
-    const prefixRe = /adt:\/\/[^\/]+\/sap\/bc\/adt/
+    const prefixRe = /adt:\/\/[^\/]+\/sap\/bc\/adt/;
     if (adtUri.match(prefixRe)) {
-      const base = adtUri.replace(prefixRe, "/sap/bc/adt")
-      const { uri, start } = await this.vscodeRange(base)
-      return { uri: Uri.parse(uri), start }
+      const base = adtUri.replace(prefixRe, "/sap/bc/adt");
+      const { uri, start } = await this.vscodeRange(base);
+      return { uri: Uri.parse(uri), start };
     } else {
-      throw new Error(`Unexpected ADT URI format for ${adtUri}`)
+      throw new Error(`Unexpected ADT URI format for ${adtUri}`);
     }
   }
 
   public async displayAdtUri(adtUri: string) {
     try {
-      const { uri, start } = (await this.vscodeUriFromAdt(adtUri)) || {}
+      const { uri, start } = (await this.vscodeUriFromAdt(adtUri)) || {};
       if (uri && start) {
-        const document = await workspace.openTextDocument(uri)
-        const selection = start ? new Range(start, start) : undefined
-        window.showTextDocument(document, { selection })
+        const document = await workspace.openTextDocument(uri);
+        const selection = start ? new Range(start, start) : undefined;
+        window.showTextDocument(document, { selection });
       }
     } catch (error) {
       window.showErrorMessage(
-        `Failed to open document for object ${adtUri}:\n${caughtToString(error)}`
-      )
+        `Failed to open document for object ${adtUri}:\n${caughtToString(error)}`,
+      );
     }
   }
 
   public async displayNode(nodePath: PathItem) {
-    let uri
+    let uri;
     if (isFolder(nodePath.file)) {
       if (isAbapFolder(nodePath.file) && nodePath.file.object.type.match(/DEVC/i)) {
-        window.showInformationMessage(`Can't open object ${nodePath.path}`)
-        return
+        window.showInformationMessage(`Can't open object ${nodePath.path}`);
+        return;
       }
-      const main = await findMainIncludeAsync(nodePath)
+      const main = await findMainIncludeAsync(nodePath);
       if (!main) {
-        window.showInformationMessage(`Can't open object ${nodePath.path}`)
-        return
+        window.showInformationMessage(`Can't open object ${nodePath.path}`);
+        return;
       }
-      uri = main.path
-    } else uri = nodePath.path
+      uri = main.path;
+    } else uri = nodePath.path;
     try {
-      const doc = await workspace.openTextDocument(createUri(this.connId, uri))
-      await window.showTextDocument(doc)
-      commands.executeCommand("workbench.files.action.showActiveFileInExplorer")
+      const doc = await workspace.openTextDocument(createUri(this.connId, uri));
+      await window.showTextDocument(doc);
+      commands.executeCommand("workbench.files.action.showActiveFileInExplorer");
     } catch (e) {
-      window.showErrorMessage(`Error displaying object ${nodePath.path}.Type not supported?`)
+      window.showErrorMessage(`Error displaying object ${nodePath.path}.Type not supported?`);
     }
   }
   EPMTYPACKAGE = {
@@ -167,31 +167,31 @@ export class AdtObjectFinder {
     "adtcore:type": PACKAGE,
     "adtcore:name": "",
     "adtcore:packageName": "",
-    "adtcore:description": "<NONE>"
-  }
+    "adtcore:description": "<NONE>",
+  };
   /**
    * Enhanced search with type selection UI (for manual search command)
    */
   public async findObjectWithTypeFilter(
     prompt: string = "Search an ABAP object",
-    forceTypeSelection: boolean = false
+    forceTypeSelection: boolean = false,
   ): Promise<MySearchResult | undefined> {
-    const skipTypeSelectionKey = "abapfs.searchSkipTypeSelection"
-    const skipTypeSelection = context.globalState.get<boolean>(skipTypeSelectionKey)
-    const savedTypesKey = "abapfs.searchTypeFilter"
-    const savedTypes = context.globalState.get<string[]>(savedTypesKey)
+    const skipTypeSelectionKey = "abapfs.searchSkipTypeSelection";
+    const skipTypeSelection = context.globalState.get<boolean>(skipTypeSelectionKey);
+    const savedTypesKey = "abapfs.searchTypeFilter";
+    const savedTypes = context.globalState.get<string[]>(savedTypesKey);
 
-    let selectedTypes: string[] | undefined
+    let selectedTypes: string[] | undefined;
 
     // Check if we should skip type selection (unless forced to show it)
     if (!forceTypeSelection && skipTypeSelection === true && savedTypes !== undefined) {
       // Use saved types directly, skip type selection
-      selectedTypes = savedTypes
+      selectedTypes = savedTypes;
     } else {
       // Show type selector
-      selectedTypes = await this.selectObjectTypes()
+      selectedTypes = await this.selectObjectTypes();
       if (selectedTypes === undefined) {
-        return undefined // User cancelled
+        return undefined; // User cancelled
       }
 
       // Ask if user wants to skip type selection in future (only if preference not set yet, or if forced)
@@ -201,37 +201,37 @@ export class AdtObjectFinder {
             {
               label: "Yes",
               value: true,
-              description: "Skip type selection and use these types for future searches"
+              description: "Skip type selection and use these types for future searches",
             },
             {
               label: "No",
               value: false,
-              description: "Always ask me to select types before searching"
-            }
+              description: "Always ask me to select types before searching",
+            },
           ],
           {
             placeHolder: "Would you like to save this type preference for future searches?",
-            title: "Save Search Type Preference"
-          }
-        )
+            title: "Save Search Type Preference",
+          },
+        );
 
         if (answer) {
-          await context.globalState.update(skipTypeSelectionKey, answer.value)
+          await context.globalState.update(skipTypeSelectionKey, answer.value);
         }
       }
     }
     // Note: selectedTypes can be [] (empty array) if all types are selected - this is intentional
 
     // Step 2: Search with selected types
-    return this.findObject(prompt, "", undefined, selectedTypes)
+    return this.findObject(prompt, "", undefined, selectedTypes);
   }
 
   /**
    * Select object types to filter search
    */
   private async selectObjectTypes(): Promise<string[] | undefined> {
-    const storageKey = "abapfs.searchTypeFilter"
-    const previousSelection = context.globalState.get<string[]>(storageKey) || []
+    const storageKey = "abapfs.searchTypeFilter";
+    const previousSelection = context.globalState.get<string[]>(storageKey) || [];
 
     // All SAP object types supported by ADT search
     const objectTypes = [
@@ -255,22 +255,22 @@ export class AdtObjectFinder {
       {
         type: "ENQU/DL",
         label: "Lock/Enqueue Objects (ENQU/DL)",
-        picked: previousSelection.includes("ENQU/DL")
+        picked: previousSelection.includes("ENQU/DL"),
       },
       {
         type: "DDLS/DF",
         label: "CDS Data Definitions (DDLS/DF)",
-        picked: previousSelection.includes("DDLS/DF")
+        picked: previousSelection.includes("DDLS/DF"),
       },
       {
         type: "STOB/DO",
         label: "CDS Entities (STOB/DO)",
-        picked: previousSelection.includes("STOB/DO")
+        picked: previousSelection.includes("STOB/DO"),
       },
       {
         type: "VIEW/DV",
         label: "CDS Database Views (VIEW/DV)",
-        picked: previousSelection.includes("VIEW/DV")
+        picked: previousSelection.includes("VIEW/DV"),
       },
 
       // Other Objects
@@ -282,23 +282,23 @@ export class AdtObjectFinder {
       {
         type: "ENHO/XHB",
         label: "Enhancement Implementations",
-        picked: previousSelection.includes("ENHO/XHB")
+        picked: previousSelection.includes("ENHO/XHB"),
       },
       {
         type: "ENHO/XHH",
         label: "Enhancement Implementations",
-        picked: previousSelection.includes("ENHO/XHH")
+        picked: previousSelection.includes("ENHO/XHH"),
       },
       {
         type: "ENHS/XS",
         label: "Enhancement Spots",
-        picked: previousSelection.includes("ENHS/XS")
+        picked: previousSelection.includes("ENHS/XS"),
       },
       { type: "SXSD/XD", label: "BAdI Definitions", picked: previousSelection.includes("SXSD/XD") },
       {
         type: "SXCI/XI",
         label: "BAdI Implementations",
-        picked: previousSelection.includes("SXCI/XI")
+        picked: previousSelection.includes("SXCI/XI"),
       },
 
       // Transformations
@@ -306,222 +306,222 @@ export class AdtObjectFinder {
       {
         type: "STOB/ST",
         label: "Simple Transformations",
-        picked: previousSelection.includes("STOB/ST")
+        picked: previousSelection.includes("STOB/ST"),
       },
 
       // Authorization & Security
       {
         type: "SUSO/SO",
         label: "Authorization Objects",
-        picked: previousSelection.includes("SUSO/SO")
+        picked: previousSelection.includes("SUSO/SO"),
       },
       {
         type: "SUSO/B",
         label: "Authorization Object Sets",
-        picked: previousSelection.includes("SUSO/B")
+        picked: previousSelection.includes("SUSO/B"),
       },
       {
         type: "SUSC/SC",
         label: "Authorization Object Classes",
-        picked: previousSelection.includes("SUSC/SC")
+        picked: previousSelection.includes("SUSC/SC"),
       },
 
       // Advanced Objects
       {
         type: "PINF/PI",
         label: "Package Interfaces",
-        picked: previousSelection.includes("PINF/PI")
+        picked: previousSelection.includes("PINF/PI"),
       },
       {
         type: "NROB/NR",
         label: "Number Range Objects",
-        picked: previousSelection.includes("NROB/NR")
+        picked: previousSelection.includes("NROB/NR"),
       },
       {
         type: "BDEF/BDO",
         label: "Behavior Definitions",
-        picked: previousSelection.includes("BDEF/BDO")
+        picked: previousSelection.includes("BDEF/BDO"),
       },
       {
         type: "SRVB/SVB",
         label: "Service Bindings",
-        picked: previousSelection.includes("SRVB/SVB")
+        picked: previousSelection.includes("SRVB/SVB"),
       },
       {
         type: "SRVD/SRV",
         label: "Service Definitions",
-        picked: previousSelection.includes("SRVD/SRV")
-      }
-    ]
+        picked: previousSelection.includes("SRVD/SRV"),
+      },
+    ];
 
     const selected = await window.showQuickPick(
-      objectTypes.map(ot => ({
+      objectTypes.map((ot) => ({
         label: ot.label,
         description: ot.type,
         picked: ot.picked,
-        type: ot.type
+        type: ot.type,
       })),
       {
         canPickMany: true,
         placeHolder: "⚠️ Type here to FILTER the list below (not to search objects!)",
         title: "1️⃣ Select Object Types → 2️⃣ Then Search Objects",
         matchOnDescription: true,
-        matchOnDetail: true
-      }
-    )
+        matchOnDetail: true,
+      },
+    );
 
     if (!selected || selected.length === 0) {
-      return undefined
+      return undefined;
     }
 
-    const selectedTypeStrings = selected.map(s => (s as any).type)
+    const selectedTypeStrings = selected.map((s) => (s as any).type);
 
     // Save selection for next time
-    await context.globalState.update(storageKey, selectedTypeStrings)
+    await context.globalState.update(storageKey, selectedTypeStrings);
 
     // If all types are selected, return empty array to search all types
     // This ensures we don't miss any object types that might not be in our list
     if (selectedTypeStrings.length === objectTypes.length) {
-      return [] // Empty array will be treated as "search all types"
+      return []; // Empty array will be treated as "search all types"
     }
 
-    return selectedTypeStrings
+    return selectedTypeStrings;
   }
 
   public async findObject(
     prompt: string = "Search an ABAP object",
     objType: string = "",
     forType?: CreatableTypeIds,
-    typeFilter?: string[]
+    typeFilter?: string[],
   ): Promise<MySearchResult | undefined> {
-    const o = await new Promise<MySearchResult>(async resolve => {
-      const empty: MySearchResult[] = []
-      if (forType === PACKAGE) empty.push(new MySearchResult(this.EPMTYPACKAGE))
-      const qp = window.createQuickPick()
-      qp.ignoreFocusOut = true
+    const o = await new Promise<MySearchResult>(async (resolve) => {
+      const empty: MySearchResult[] = [];
+      if (forType === PACKAGE) empty.push(new MySearchResult(this.EPMTYPACKAGE));
+      const qp = window.createQuickPick();
+      qp.ignoreFocusOut = true;
 
       // Add button to change type filter (show always when no specific type is requested)
       if (!objType && !forType) {
         qp.buttons = [
           {
             iconPath: new ThemeIcon("filter"),
-            tooltip: "Change Type Filter (Click to select different object types)"
-          }
-        ]
+            tooltip: "Change Type Filter (Click to select different object types)",
+          },
+        ];
 
         qp.onDidTriggerButton(async () => {
-          qp.hide()
+          qp.hide();
           // Re-run the full flow (force type selection and ask preference again)
-          const result = await this.findObjectWithTypeFilter(prompt, true)
+          const result = await this.findObjectWithTypeFilter(prompt, true);
           if (result) {
-            resolve(result)
+            resolve(result);
           }
-        })
+        });
 
         // Update placeholder to mention the filter button
-        prompt = prompt + " (Use filter button on the top right to change types)"
+        prompt = prompt + " (Use filter button on the top right to change types)";
       }
 
       const searchParent = async (e: string) => {
         qp.items =
-          e.length >= 2 ? await this.search(e, getClient(this.connId), objType, typeFilter) : empty
-      }
+          e.length >= 2 ? await this.search(e, getClient(this.connId), objType, typeFilter) : empty;
+      };
 
-      qp.items = empty
-      qp.items = [...empty]
-      qp.onDidChangeValue(async e => searchParent(e))
-      qp.placeholder = prompt
-      qp.onDidChangeSelection(e => {
+      qp.items = empty;
+      qp.items = [...empty];
+      qp.onDidChangeValue(async (e) => searchParent(e));
+      qp.placeholder = prompt;
+      qp.onDidChangeSelection((e) => {
         if (e[0]) {
-          resolve(e[0] as MySearchResult)
-          qp.hide()
+          resolve(e[0] as MySearchResult);
+          qp.hide();
         }
-      })
-      qp.onDidHide(() => qp.dispose())
-      qp.show()
-    })
-    return o
+      });
+      qp.onDidHide(() => qp.dispose());
+      qp.show();
+    });
+    return o;
   }
 
   private async search(
     prefix: string,
     client: ADTClient,
     objType: string = "",
-    typeFilter?: string[]
+    typeFilter?: string[],
   ): Promise<MySearchResult[]> {
-    const query = prefix.toUpperCase() + "*"
-    const raw = await client.searchObject(query, objType)
+    const query = prefix.toUpperCase() + "*";
+    const raw = await client.searchObject(query, objType);
 
     // Apply type filter if provided
-    let filtered = raw
+    let filtered = raw;
     if (typeFilter && typeFilter.length > 0) {
-      filtered = raw.filter(r => typeFilter.includes(r["adtcore:type"]))
+      filtered = raw.filter((r) => typeFilter.includes(r["adtcore:type"]));
     } else if (objType) {
       // Fallback to original objType filtering
-      filtered = raw.filter(r => objType === r["adtcore:type"])
+      filtered = raw.filter((r) => objType === r["adtcore:type"]);
     }
 
-    return await MySearchResult.createResults(filtered, client)
+    return await MySearchResult.createResults(filtered, client);
   }
 }
 
 const findMainIncludeAsync = async (item: PathItem) => {
-  if (isAbapFile(item.file)) return item
+  if (isAbapFile(item.file)) return item;
   if (isAbapFolder(item.file)) {
-    const main = item.file.mainInclude(item.path)
-    if (main) return main
-    await item.file.refresh()
-    return item.file.mainInclude(item.path)
+    const main = item.file.mainInclude(item.path);
+    if (main) return main;
+    await item.file.refresh();
+    return item.file.mainInclude(item.path);
   }
-}
+};
 
 export function createUri(connId: string, path: string, query: string = "") {
   return Uri.parse("adt://" + connId).with({
     path,
-    query
-  })
+    query,
+  });
 }
 
 export async function findAbapObject(uri: Uri) {
-  const file = await uriRoot(uri).getNodeAsync(uri.path)
-  if (isAbapStat(file)) return file.object
-  throw new Error("Not an ABAP object")
+  const file = await uriRoot(uri).getNodeAsync(uri.path);
+  if (isAbapStat(file)) return file.object;
+  throw new Error("Not an ABAP object");
 }
 
 export const uriAbapFile = (uri?: Uri): AbapStat | undefined => {
   try {
-    if (!uri) return
+    if (!uri) return;
 
     // Only process adt:// URIs - reject output, file, etc.
     if (uri.scheme !== "adt") {
-      return undefined
+      return undefined;
     }
 
-    const root = uriRoot(uri)
-    const file = root.getNode(uri.path)
-    if (isAbapStat(file)) return file
+    const root = uriRoot(uri);
+    const file = root.getNode(uri.path);
+    if (isAbapStat(file)) return file;
   } catch (error) {
     // Log the actual error instead of swallowing it with stack trace
-    throw error // Re-throw so caller can handle it
+    throw error; // Re-throw so caller can handle it
   }
-}
+};
 
 export const pathSequence = (root: Root, uri: Uri | undefined): FileStat[] => {
   if (uri)
     try {
-      const parts = uri.path.split("/")
-      let path = ""
-      const nodes: FileStat[] = []
+      const parts = uri.path.split("/");
+      let path = "";
+      const nodes: FileStat[] = [];
       for (const part of parts) {
-        const sep = path.substr(-1) === "/" ? "" : "/"
-        path = `${path}${sep}${part}`
-        const hit = root.getNode(path)
-        if (!hit) log(`Incomplete path hierarchy for ${uri.path}`)
-        else nodes.unshift(hit)
+        const sep = path.substr(-1) === "/" ? "" : "/";
+        path = `${path}${sep}${part}`;
+        const hit = root.getNode(path);
+        if (!hit) log(`Incomplete path hierarchy for ${uri.path}`);
+        else nodes.unshift(hit);
       }
-      return nodes
+      return nodes;
     } catch (e) {
       // ignore
     }
-  return []
-}
+  return [];
+};
