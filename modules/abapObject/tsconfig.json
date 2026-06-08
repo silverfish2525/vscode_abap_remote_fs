@@ -8,7 +8,7 @@
     "rootDir": "src",
     "outDir": "out",
     "lib": ["es2019"],
-    "types": ["node"],
+    "types": ["node", "jest"],
     "sourceMap": true,
     "strict": true,
     "noUnusedLocals": false,

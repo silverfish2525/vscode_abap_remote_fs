@@ -2,6 +2,9 @@ import {
   ADTClient,
   isAdtError,
   inactiveObjectsInResults,
+  ActivationResult,
+  ActivationResultMessage,
+  InactiveObject,
   InactiveObjectRecord,
   InactiveObjectElement
 } from "abap-adt-api"
@@ -21,6 +24,34 @@ const logError = (message: string) => {
 /** Wrap plain InactiveObject[] into InactiveObjectRecord[] for use with showActivationSelectionDialog */
 const toRecords = (objects: any[]): InactiveObjectRecord[] =>
   objects.map(obj => ({ object: obj } as InactiveObjectRecord))
+
+// TODO(upstream): the abap-adt-api `ActivationResult` types only declare
+//   `messages: ActivationResultMessage[]` (with `shortText`/`objDescr`/`href`)
+//   and `inactive: InactiveObjectRecord[]`, but real ADT activation responses
+//   also carry `longText`/`message`/`msg` keys on each message and may surface
+//   bare `InactiveObject` entries on `inactive`. When the upstream library
+//   tightens these (see https://github.com/marcellourbani/abap-adt-api/pulls)
+//   replace `ActivationFailureResult` with `ActivationResult` directly.
+//
+// We also synthesize a "cancelled by user" message locally; it only carries a
+// `shortText` and we don't want to fabricate empty/zero/false values for the
+// other required fields just to satisfy the upstream type. Hence the local
+// `SyntheticActivationMessage` and a widened `messages` element type below.
+type SyntheticActivationMessage = Pick<ActivationResultMessage, "shortText"> &
+  Partial<Omit<ActivationResultMessage, "shortText">>
+const cancelMsg = {
+  shortText: "Activation cancelled by user"
+} satisfies SyntheticActivationMessage
+type ActivationFailureResult = Omit<ActivationResult, "messages" | "inactive"> & {
+  messages: Array<
+    SyntheticActivationMessage & {
+      longText?: string
+      message?: string
+      msg?: string
+    }
+  >
+  inactive: Array<InactiveObject | InactiveObjectRecord>
+}
 
 export interface ActivationEvent {
   object: AbapObject
@@ -325,45 +356,54 @@ export class AdtObjectActivator {
     return selected ? selected.map((item: any) => item.entry.object) : null
   }
 
-  private summarizeFailure(result: any, defaultObjectName: string) {
+  private summarizeFailure(result: ActivationResult, defaultObjectName: string) {
     const normText = (v: any): string => {
       if (Array.isArray(v)) return v.map(x => normText(x)).join(" ")
       if (v === undefined || v === null) return ""
       return `${v}`
     }
 
-    type Msg = { text: string; href?: string; target: string }
+    type Msg = { text: string; href: string | undefined; target: string }
+    // Real ADT activation responses sometimes carry `longText`/`message`/`msg`
+    // keys on each message even though upstream `ActivationResultMessage` only
+    // declares `shortText`/`objDescr`/`href`. Narrow at the use site instead
+    // of dragging a helper type across the file.
     const msgs: Msg[] = (result?.messages || [])
-      .map((m: any) => {
-        const textRaw = m.shortText || m.longText || m.message || m.msg || ""
-        const text = normText(textRaw).trim()
-        if (!text) return undefined
-        const href: string | undefined = m.href
-        let target = ""
+      .map(
+        (
+          m: ActivationResultMessage &
+            Partial<{ longText: unknown; message: unknown; msg: unknown }>
+        ) => {
+          const textRaw = m.shortText || m.longText || m.message || m.msg || ""
+          const text = normText(textRaw).trim()
+          if (!text) return undefined
+          const href: string | undefined = m.href
+          let target = ""
 
-        if (href) {
-          const parts = href.split("/").filter(Boolean)
-          const sourceIdx = parts.indexOf("source")
-          if (sourceIdx > 0) {
-            target = parts[sourceIdx - 1] || ""
-          } else {
-            const hrefMatch = href.match(
-              /includes\/([^\/\?#]+)|programs\/([^\/\?#]+)|classes\/([^\/\?#]+)/i
-            )
-            if (hrefMatch) target = hrefMatch[1] || hrefMatch[2] || hrefMatch[3] || ""
+          if (href) {
+            const parts = href.split("/").filter(Boolean)
+            const sourceIdx = parts.indexOf("source")
+            if (sourceIdx > 0) {
+              target = parts[sourceIdx - 1] || ""
+            } else {
+              const hrefMatch = href.match(
+                /includes\/([^\/\?#]+)|programs\/([^\/\?#]+)|classes\/([^\/\?#]+)/i
+              )
+              if (hrefMatch) target = hrefMatch[1] || hrefMatch[2] || hrefMatch[3] || ""
+            }
           }
+
+          if (!target && typeof m.objDescr === "string") {
+            const incMatch = m.objDescr.match(/Include\s+([^\s]+)/i)
+            if (incMatch) target = incMatch[1]
+          }
+
+          if (!target) target = defaultObjectName
+
+          return { text, href, target }
         }
-
-        if (!target && typeof m.objDescr === "string") {
-          const incMatch = m.objDescr.match(/Include\s+([^\s]+)/i)
-          if (incMatch) target = incMatch[1]
-        }
-
-        if (!target) target = defaultObjectName
-
-        return { text, href, target }
-      })
-      .filter(Boolean)
+      )
+      .filter((m): m is Msg => m !== undefined)
 
     const grouped = new Map<string, Msg[]>()
     for (const m of msgs) {
@@ -372,10 +412,20 @@ export class AdtObjectActivator {
       grouped.set(m.target, arr)
     }
 
-    const inactiveList = (result?.inactive || [])
-      .map((o: any) =>
-        `${normText(o["adtcore:type"]) || ""} ${normText(o["adtcore:name"]) || ""}`.trim()
-      )
+    // Live payloads sometimes return bare `InactiveObject`s on `inactive`
+    // even though upstream types declare `InactiveObjectRecord[]`; widen at
+    // this single trust boundary so the per-entry `"adtcore:type" in o`
+    // narrowing below works without dragging the union into the param type.
+    const inactiveEntries = (result?.inactive || []) as Array<
+      InactiveObject | InactiveObjectRecord
+    >
+    const inactiveList = inactiveEntries
+      .map(o => {
+        const flat: InactiveObject | InactiveObjectElement | undefined =
+          "adtcore:type" in o ? o : o.object
+        if (!flat) return ""
+        return `${normText(flat["adtcore:type"]) || ""} ${normText(flat["adtcore:name"]) || ""}`.trim()
+      })
       .filter(Boolean)
 
     const errorCount = msgs.length
@@ -505,7 +555,7 @@ export class AdtObjectActivator {
         // User cancelled - don't activate anything, return a cancelled result
         return {
           success: false,
-          messages: [{ shortText: "Activation cancelled by user" }],
+          messages: [cancelMsg],
           inactive: relatedObjects
         }
       }

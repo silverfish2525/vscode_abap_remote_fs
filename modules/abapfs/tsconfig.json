@@ -11,7 +11,8 @@
       "es2019"
     ],
     "types": [
-      "node"
+      "node",
+      "jest"
     ],
     "sourceMap": true,
     "strict": true,
