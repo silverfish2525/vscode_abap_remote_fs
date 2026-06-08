@@ -194,7 +194,7 @@ export class SapGui {
       // delete after opening sapgui, only in windows
       if (win32) setTimeout(() => shortcut.cleanup(), 50000)
     } catch (e) {
-      log("Error executing file", shortcut.path)
+      log("Error opening SAP GUI shortcut", shortcut.path, e instanceof Error ? e.message : String(e))
     }
   }
 
