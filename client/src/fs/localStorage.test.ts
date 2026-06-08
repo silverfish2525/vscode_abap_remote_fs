@@ -34,22 +34,6 @@ jest.mock("../adt/conections", () => ({
   ADTSCHEME: "adt"
 }))
 
-jest.mock("io-ts", () => {
-  const t = {
-    type: jest.fn((fields: any) => ({
-      decode: jest.fn()
-    })),
-    boolean: { _tag: "BooleanType" },
-    record: jest.fn(() => ({ _tag: "RecordType" })),
-    string: { _tag: "StringType" }
-  }
-  return t
-})
-
-jest.mock("fp-ts/lib/Either", () => ({
-  isLeft: jest.fn()
-}))
-
 import { createFolderIfMissing, initializeMainStorage } from "./localStorage"
 import * as vscode from "vscode"
 
