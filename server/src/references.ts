@@ -341,6 +341,6 @@ export async function findReferences(params: ReferenceParams, token: Cancellatio
   } catch (e) {
     warn("Exception in reference search:", caughtToString(e)) // ignore
   }
-  cancelSearch() // just for cleanup
+  await cancelSearch() // just for cleanup
   return locations
 }
