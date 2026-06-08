@@ -25,6 +25,34 @@ const logError = (message: string) => {
 const toRecords = (objects: any[]): InactiveObjectRecord[] =>
   objects.map(obj => ({ object: obj } as InactiveObjectRecord))
 
+// TODO(upstream): the abap-adt-api `ActivationResult` types only declare
+//   `messages: ActivationResultMessage[]` (with `shortText`/`objDescr`/`href`)
+//   and `inactive: InactiveObjectRecord[]`, but real ADT activation responses
+//   also carry `longText`/`message`/`msg` keys on each message and may surface
+//   bare `InactiveObject` entries on `inactive`. When the upstream library
+//   tightens these (see https://github.com/marcellourbani/abap-adt-api/pulls)
+//   replace `ActivationFailureResult` with `ActivationResult` directly.
+//
+// We also synthesize a "cancelled by user" message locally; it only carries a
+// `shortText` and we don't want to fabricate empty/zero/false values for the
+// other required fields just to satisfy the upstream type. Hence the local
+// `SyntheticActivationMessage` and a widened `messages` element type below.
+type SyntheticActivationMessage = Pick<ActivationResultMessage, "shortText"> &
+  Partial<Omit<ActivationResultMessage, "shortText">>
+const cancelMsg = {
+  shortText: "Activation cancelled by user"
+} satisfies SyntheticActivationMessage
+type ActivationFailureResult = Omit<ActivationResult, "messages" | "inactive"> & {
+  messages: Array<
+    SyntheticActivationMessage & {
+      longText?: string
+      message?: string
+      msg?: string
+    }
+  >
+  inactive: Array<InactiveObject | InactiveObjectRecord>
+}
+
 export interface ActivationEvent {
   object: AbapObject
   uri: Uri
@@ -527,16 +555,7 @@ export class AdtObjectActivator {
         // User cancelled - don't activate anything, return a cancelled result
         return {
           success: false,
-          messages: [
-            {
-              shortText: "Activation cancelled by user",
-              objDescr: "",
-              type: "",
-              line: 0,
-              href: "",
-              forceSupported: false
-            }
-          ],
+          messages: [cancelMsg],
           inactive: relatedObjects
         }
       }
