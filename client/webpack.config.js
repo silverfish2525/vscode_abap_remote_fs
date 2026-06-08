@@ -64,14 +64,18 @@ const config = {
       {
         test: /\.ts$/,
         exclude: [/node_modules/, /.*\.test\.(d\.)[tj]s/, /media/],
-        use: [
-          {
-            loader: "ts-loader",
-            options: {
-              transpileOnly: true
-            }
+        use: {
+          loader: "oxc-loader",
+          options: {
+            // experimentalDecorators is enabled in tsconfig.json — oxc-loader
+            // does not auto-detect this from tsconfig, so opt in explicitly.
+            decorator: { legacy: true },
+            // Match tsc's `useDefineForClassFields: false` (TS 4.x default with
+            // target ES2021): emit direct property assignments instead of
+            // requiring the `@oxc-project/runtime/helpers/defineProperty` import.
+            assumptions: { setPublicClassFields: true }
           }
-        ]
+        }
       }, {
         test: /\.(node)$/i,
         use: [
