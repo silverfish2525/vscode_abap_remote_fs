@@ -72,7 +72,7 @@
   },
   "devDependencies": {
     "@types/mocha": "^7.0.2",
-    "@types/node": "^22.0.0",
+    "@types/node": "^22.19.20",
     "@vscode/vsce": "^3.3.0",
     "concurrently": "^6.3.0",
     "ovsx": "^0.10.1",
