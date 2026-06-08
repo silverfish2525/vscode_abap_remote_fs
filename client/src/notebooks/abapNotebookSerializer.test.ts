@@ -15,7 +15,6 @@ vi.mock(
       })),
     },
   }),
-  { virtual: false },
 );
 vi.mock(
   "../lib",
@@ -28,7 +27,6 @@ vi.mock(
       trace: vi.fn(),
     }),
   }),
-  { virtual: false },
 );
 
 vi.mock(
@@ -59,7 +57,6 @@ vi.mock(
       },
     };
   },
-  { virtual: true },
 );
 
 import { AbapNotebookSerializer, registerNotebookSerializer } from "./abapNotebookSerializer";

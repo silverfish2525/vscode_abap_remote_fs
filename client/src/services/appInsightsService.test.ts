@@ -7,7 +7,6 @@ vi.mock(
     version: "1.85.0",
     Disposable: vi.fn().mockImplementation((fn: () => void) => ({ dispose: fn })),
   }),
-  { virtual: true },
 );
 
 vi.mock("../lib", () => ({ log: vi.fn() }));

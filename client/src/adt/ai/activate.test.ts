@@ -19,7 +19,6 @@ vi.mock(
       withProgress: vi.fn(),
     },
   }),
-  { virtual: true },
 );
 
 vi.mock("../conections", () => ({

@@ -9,7 +9,6 @@ vi.mock(
     },
     lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) },
   }),
-  { virtual: true },
 );
 
 vi.mock("../../adt/conections", () => ({}));

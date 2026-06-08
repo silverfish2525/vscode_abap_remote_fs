@@ -34,7 +34,6 @@ vi.mock(
     Range: vi.fn().mockImplementation((s: any, e: any) => ({ start: s, end: e })),
     QuickPickItem: vi.fn(),
   }),
-  { virtual: true },
 );
 
 vi.mock("../../lib", () => ({

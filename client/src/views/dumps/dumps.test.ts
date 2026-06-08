@@ -18,7 +18,6 @@ vi.mock(
     const ViewColumn = { Active: 1, Beside: 2 };
     return { EventEmitter, TreeItem, TreeItemCollapsibleState, ViewColumn };
   },
-  { virtual: true },
 );
 
 vi.mock("../../services/funMessenger", () => ({

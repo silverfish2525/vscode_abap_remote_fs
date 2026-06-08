@@ -3,7 +3,6 @@ vi.mock(
   () => ({
     Memento: vi.fn(),
   }),
-  { virtual: true },
 );
 
 vi.mock("../../lib", () => ({

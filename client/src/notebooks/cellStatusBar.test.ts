@@ -15,7 +15,6 @@ vi.mock(
       })),
     },
   }),
-  { virtual: false },
 );
 vi.mock(
   "vscode",
@@ -48,7 +47,6 @@ vi.mock(
       },
     };
   },
-  { virtual: true },
 );
 
 import { SqlCellStatusBarProvider, registerCellStatusBar } from "./cellStatusBar";

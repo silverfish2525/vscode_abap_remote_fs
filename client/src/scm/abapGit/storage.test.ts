@@ -1,4 +1,4 @@
-vi.mock("vscode", () => ({}), { virtual: true });
+vi.mock("vscode", () => ({}));
 vi.mock("../../lib", () => ({
   mapGet: vi.fn(async (map: Map<any, any>, key: any, fn: () => any) => {
     if (!map.has(key)) map.set(key, await fn());

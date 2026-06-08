@@ -48,7 +48,6 @@ vi.mock(
       Disposable: { from: vi.fn() },
     };
   },
-  { virtual: true },
 );
 
 vi.mock(
@@ -58,7 +57,6 @@ vi.mock(
     MainInclude: {},
     Revision: {},
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -66,7 +64,6 @@ vi.mock(
   () => ({
     isAbapStat: vi.fn(),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -74,7 +71,6 @@ vi.mock(
   () => ({
     LockStatus: {},
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -82,7 +78,6 @@ vi.mock(
   () => ({
     AbapObject: {},
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -92,7 +87,6 @@ vi.mock(
       transportOpenGui: "abapfs.transportOpenGui",
     },
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -102,7 +96,6 @@ vi.mock(
     uriRoot: vi.fn(),
     abapUri: vi.fn((uri: any) => uri?.scheme === "adt"),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -111,7 +104,6 @@ vi.mock(
     caughtToString: vi.fn((e: any) => String(e)),
     log: vi.fn(),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -120,7 +112,6 @@ vi.mock(
     AbapRevisionService: { get: vi.fn() },
     revLabel: vi.fn((rev: any, fallback: string) => rev.versionTitle || fallback),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -128,7 +119,6 @@ vi.mock(
   () => ({
     revisionUri: vi.fn((uri: any, rev: any) => uri),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -136,7 +126,6 @@ vi.mock(
   () => ({
     readTransports: vi.fn(),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -149,7 +138,6 @@ vi.mock(
       onDidChangeActiveTextEditor: vi.fn(() => ({ dispose: vi.fn() })),
     },
   }),
-  { virtual: true },
 );
 
 // Import after mocks
@@ -264,7 +252,7 @@ describe.skip("ObjectPropertyProvider", () => {
     expect(() => provider.scheduleRefresh(true)).not.toThrow();
   });
 
-  it("scheduleRefresh with visible view triggers refresh", (done) => {
+  it("scheduleRefresh with visible view triggers refresh", (done: () => void) => {
     const provider = ObjectPropertyProvider.get();
     const mockView = {
       visible: true,

@@ -5,7 +5,6 @@ vi.mock(
       getExtension: vi.fn(),
     },
   }),
-  { virtual: true },
 );
 
 import { getWinRegistryReader } from "./winregistry";

@@ -31,7 +31,6 @@ vi.mock(
       },
     };
   },
-  { virtual: true },
 );
 
 import { S4HItemNode, S4HProvider, S4HRefNode, S4HRoot, S4HSummaryNode } from "./view";

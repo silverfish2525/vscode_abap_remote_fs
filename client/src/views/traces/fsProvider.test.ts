@@ -27,7 +27,6 @@ vi.mock(
       workspace: { registerFileSystemProvider: vi.fn() },
     };
   },
-  { virtual: true },
 );
 
 vi.mock("../../adt/conections", () => ({

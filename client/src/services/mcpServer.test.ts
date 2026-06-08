@@ -25,7 +25,6 @@ vi.mock(
       constructor(public value: string) {}
     },
   }),
-  { virtual: true },
 );
 
 vi.mock("./funMessenger", () => ({
@@ -50,17 +49,14 @@ vi.mock(
   () => ({
     McpServer: vi.fn().mockImplementation(() => ({ registerTool: vi.fn(), connect: vi.fn() })),
   }),
-  { virtual: true },
 );
 vi.mock(
   "@modelcontextprotocol/sdk/server/streamableHttp.js",
   () => ({ StreamableHTTPServerTransport: vi.fn() }),
-  { virtual: true },
 );
 vi.mock(
   "@modelcontextprotocol/sdk/types.js",
   () => ({ isInitializeRequest: vi.fn().mockReturnValue(false) }),
-  { virtual: true },
 );
 
 import * as vscode from "vscode";

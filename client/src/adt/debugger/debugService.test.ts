@@ -24,7 +24,6 @@ vi.mock(
       return { dispose: fn };
     }),
   }),
-  { virtual: true },
 );
 vi.mock("@vscode/debugadapter", () => ({
   ContinuedEvent: vi.fn(function (threadId: number) {

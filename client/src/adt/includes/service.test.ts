@@ -1,4 +1,4 @@
-vi.mock("vscode", () => ({}), { virtual: true });
+vi.mock("vscode", () => ({}));
 vi.mock("abapfs", () => ({
   isAbapFile: vi.fn(),
   isAbapStat: vi.fn(),

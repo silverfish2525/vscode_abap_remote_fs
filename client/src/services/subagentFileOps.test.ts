@@ -47,7 +47,6 @@ vi.mock(
     },
     ConfigurationTarget: { Global: 1, Workspace: 2 },
   }),
-  { virtual: true },
 );
 
 vi.mock("./funMessenger", () => ({

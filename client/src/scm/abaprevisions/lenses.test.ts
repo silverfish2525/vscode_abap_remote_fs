@@ -24,7 +24,6 @@ vi.mock(
     }
     return { CodeLensProvider: class {}, EventEmitter, Range, CodeLens, Uri: {} };
   },
-  { virtual: true },
 );
 
 const mockGetCurrentRev = vi.fn();

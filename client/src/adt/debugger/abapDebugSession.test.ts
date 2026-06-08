@@ -11,7 +11,6 @@ vi.mock(
     DebugConfiguration: {},
     DebugSession: {},
   }),
-  { virtual: true },
 );
 vi.mock("@vscode/debugadapter", () => ({
   LoggingDebugSession: vi.fn().mockImplementation(function (this: any) {

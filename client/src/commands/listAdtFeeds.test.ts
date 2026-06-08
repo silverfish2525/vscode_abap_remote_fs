@@ -6,7 +6,6 @@ vi.mock(
       openTextDocument: vi.fn(),
     },
   }),
-  { virtual: true },
 );
 
 vi.mock("../services/funMessenger", () => ({

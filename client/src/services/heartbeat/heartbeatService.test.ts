@@ -57,7 +57,6 @@ vi.mock(
       },
     };
   },
-  { virtual: true },
 );
 
 vi.mock("../../lib", () => ({ log: vi.fn() }));

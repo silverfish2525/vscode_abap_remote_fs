@@ -11,7 +11,6 @@ vi.mock(
       },
     },
   }),
-  { virtual: true },
 );
 
 vi.mock("./funMessenger", () => ({

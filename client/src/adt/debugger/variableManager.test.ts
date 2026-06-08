@@ -30,7 +30,6 @@ vi.mock(
     env: { clipboard: { writeText: vi.fn() } },
     ProgressLocation: { Notification: 1 },
   }),
-  { virtual: true },
 );
 vi.mock("../../services/funMessenger", () => ({
   funWindow: {

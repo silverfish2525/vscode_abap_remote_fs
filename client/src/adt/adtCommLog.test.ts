@@ -1,4 +1,4 @@
-vi.mock("vscode", () => ({}), { virtual: true });
+vi.mock("vscode", () => ({}));
 vi.mock("../extension", () => ({ context: { extensionPath: "/fake/ext" } }));
 vi.mock("../langClient", () => ({
   client: { sendNotification: vi.fn().mockResolvedValue(undefined) },

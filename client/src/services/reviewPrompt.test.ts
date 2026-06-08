@@ -11,7 +11,6 @@ vi.mock(
     Uri: { parse: vi.fn((url) => ({ toString: () => url })) },
     commands: { registerCommand: vi.fn().mockReturnValue({ dispose: vi.fn() }) },
   }),
-  { virtual: true },
 );
 
 import * as vscode from "vscode";
@@ -67,7 +66,6 @@ beforeEach(() => {
       Uri: { parse: vi.fn((url) => ({ toString: () => url })) },
       commands: { registerCommand: vi.fn().mockReturnValue({ dispose: vi.fn() }) },
     }),
-    { virtual: true },
   );
 });
 

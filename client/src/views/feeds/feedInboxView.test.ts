@@ -31,7 +31,6 @@ vi.mock(
       Uri: { file: (p: string) => ({ fsPath: p }) },
     };
   },
-  { virtual: true },
 );
 
 vi.mock("../../lib", () => ({ log: () => {} }));

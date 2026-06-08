@@ -1,4 +1,4 @@
-vi.mock("vscode", () => ({ Uri: {} }), { virtual: true });
+vi.mock("vscode", () => ({ Uri: {} }));
 vi.mock("../../adt/conections", () => ({}));
 vi.mock("../../config", () => ({ RemoteManager: { get: () => ({ byId: () => ({}) }) } }));
 vi.mock("../../lib", () => ({ parseAbapFile: () => null }));

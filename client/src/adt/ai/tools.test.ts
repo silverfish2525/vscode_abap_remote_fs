@@ -3,7 +3,6 @@ vi.mock(
   () => ({
     ExtensionContext: vi.fn(),
   }),
-  { virtual: true },
 );
 
 vi.mock("./search", () => ({

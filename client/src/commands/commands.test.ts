@@ -32,7 +32,6 @@ vi.mock(
       SourceBreakpoint: class {},
     };
   },
-  { virtual: true },
 );
 
 vi.mock("../services/funMessenger", () => ({

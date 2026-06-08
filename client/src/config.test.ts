@@ -323,7 +323,9 @@ describe.skip("createClient", () => {
       password: "normalpass",
     } as any;
     createClient(conf);
-    const [, , password] = (ADTClient as Mock).mock.calls.at(-1);
+    const lastCall = (ADTClient as Mock).mock.calls.at(-1);
+    expect(lastCall).toBeDefined();
+    const [, , password] = lastCall!;
     expect(password).toBe("oauth-token");
   });
 
@@ -338,7 +340,9 @@ describe.skip("createClient", () => {
       password: "mypass",
     } as any;
     createClient(conf);
-    const [, , password] = (ADTClient as Mock).mock.calls.at(-1);
+    const lastCall = (ADTClient as Mock).mock.calls.at(-1);
+    expect(lastCall).toBeDefined();
+    const [, , password] = lastCall!;
     expect(password).toBe("mypass");
   });
 });

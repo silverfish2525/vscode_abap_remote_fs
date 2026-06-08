@@ -1,4 +1,4 @@
-vi.mock("vscode", () => ({ ProgressLocation: { Notification: 15 } }), { virtual: true });
+vi.mock("vscode", () => ({ ProgressLocation: { Notification: 15 } }));
 vi.mock("../services/funMessenger", () => ({
   funWindow: {
     showQuickPick: vi.fn(),
@@ -93,7 +93,11 @@ describe.skip("transportValidators array", () => {
 // TODO(vitest): re-enable after virtual-mock support / migration debt resolved (see PR-11 follow-up)
 describe.skip("selectTransport", () => {
   let mockClient: any;
-  const { selectTransport } = vi.importActual("./AdtTransports");
+  let selectTransport: typeof import("./AdtTransports").selectTransport;
+
+  beforeAll(async () => {
+    ({ selectTransport } = await vi.importActual("./AdtTransports"));
+  });
 
   beforeEach(() => {
     vi.clearAllMocks();

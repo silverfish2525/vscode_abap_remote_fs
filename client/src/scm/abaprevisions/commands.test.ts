@@ -21,7 +21,6 @@ vi.mock(
       TabInputTextDiff,
     };
   },
-  { virtual: true },
 );
 
 vi.mock("../../services/funMessenger", () => ({

@@ -36,7 +36,6 @@ vi.mock(
       env: { openExternal: vi.fn() },
     };
   },
-  { virtual: true },
 );
 
 vi.mock(
@@ -44,7 +43,6 @@ vi.mock(
   () => ({
     PACKAGE: "DEVC/K",
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -59,7 +57,6 @@ vi.mock(
       transportOpenGui: "abapfs.transportOpenGui",
     },
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -71,7 +68,6 @@ vi.mock(
       showInformationMessage: vi.fn(),
     },
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -80,7 +76,6 @@ vi.mock(
     caughtToString: vi.fn((e: any) => String(e)),
     withp: vi.fn((_: string, fn: () => Promise<any>) => fn()),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -91,7 +86,6 @@ vi.mock(
     getOrCreateClient: vi.fn(),
     getRoot: vi.fn(),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -102,7 +96,6 @@ vi.mock(
     isAbapFolder: vi.fn(),
     PathItem: {},
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -110,7 +103,6 @@ vi.mock(
   () => ({
     createUri: vi.fn(),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -119,7 +111,6 @@ vi.mock(
     AbapScm: {},
     displayRevDiff: vi.fn(),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -127,7 +118,6 @@ vi.mock(
   () => ({
     AbapRevisionService: { get: vi.fn() },
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -136,7 +126,6 @@ vi.mock(
     runInSapGui: vi.fn(),
     showInGuiCb: vi.fn(),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -144,7 +133,6 @@ vi.mock(
   () => ({
     atcProvider: {},
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -152,7 +140,6 @@ vi.mock(
   () => ({
     pickUser: vi.fn(),
   }),
-  { virtual: true },
 );
 
 import { readTransports, TransportsProvider } from "./transports";

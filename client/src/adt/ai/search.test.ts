@@ -19,7 +19,6 @@ vi.mock(
       return { content };
     }),
   }),
-  { virtual: true },
 );
 
 vi.mock("../conections", () => ({

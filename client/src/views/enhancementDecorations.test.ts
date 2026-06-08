@@ -12,9 +12,9 @@ vi.mock(
         start: { line: sl, character: sc },
         end: { line: el, character: ec },
       })),
-      MarkdownString: vi.fn(function (value: string) {
-        (this as any).value = value;
-        (this as any).isTrusted = false;
+      MarkdownString: vi.fn(function (this: { value: string; isTrusted: boolean }, value: string) {
+        this.value = value;
+        this.isTrusted = false;
       }),
       Uri: {
         parse: vi.fn((s: string) => ({ toString: () => s })),
@@ -24,7 +24,6 @@ vi.mock(
       },
     };
   },
-  { virtual: true },
 );
 
 vi.mock(
@@ -39,7 +38,6 @@ vi.mock(
       visibleTextEditors: [],
     },
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -47,7 +45,6 @@ vi.mock(
   () => ({
     logCommands: { warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -55,7 +52,6 @@ vi.mock(
   () => ({
     uriAbapFile: vi.fn(),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -63,7 +59,6 @@ vi.mock(
   () => ({
     getObjectEnhancements: vi.fn(),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -71,7 +66,6 @@ vi.mock(
   () => ({
     getOrCreateRoot: vi.fn(),
   }),
-  { virtual: true },
 );
 
 import {

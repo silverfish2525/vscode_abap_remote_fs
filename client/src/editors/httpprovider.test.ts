@@ -7,7 +7,6 @@ vi.mock(
     },
     ExtensionContext: class {},
   }),
-  { virtual: true },
 );
 
 vi.mock("../services/funMessenger", () => ({

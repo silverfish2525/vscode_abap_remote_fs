@@ -29,7 +29,6 @@ vi.mock(
     };
     return { MarkdownString, ThemeIcon, TreeItem, TreeItemCollapsibleState, EventEmitter, Uri };
   },
-  { virtual: true },
 );
 
 vi.mock("../../config", () => ({

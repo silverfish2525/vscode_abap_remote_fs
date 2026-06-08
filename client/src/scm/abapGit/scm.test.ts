@@ -25,7 +25,6 @@ vi.mock(
     SourceControlResourceGroup: vi.fn(),
     SourceControlResourceState: vi.fn(),
   }),
-  { virtual: true },
 );
 
 vi.mock("../../lib", () => ({

@@ -11,7 +11,6 @@ vi.mock(
     WebviewView: {},
     WebviewViewResolveContext: {},
   }),
-  { virtual: true },
 );
 
 vi.mock("../../adt/conections", () => ({

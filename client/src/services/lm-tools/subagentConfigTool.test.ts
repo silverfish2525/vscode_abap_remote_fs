@@ -31,7 +31,6 @@ vi.mock(
     },
     debug: { activeDebugSession: undefined },
   }),
-  { virtual: true },
 );
 
 vi.mock("../../adt/conections", () => ({

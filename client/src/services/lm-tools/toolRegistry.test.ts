@@ -5,7 +5,6 @@ vi.mock(
       registerTool: vi.fn(() => ({ dispose: vi.fn() })),
     },
   }),
-  { virtual: true },
 );
 
 import { toolRegistry, registerToolWithRegistry } from "./toolRegistry";

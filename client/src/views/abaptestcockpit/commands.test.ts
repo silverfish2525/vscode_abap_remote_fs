@@ -9,7 +9,6 @@ vi.mock(
     WorkspaceEdit: vi.fn().mockImplementation(() => ({ insert: vi.fn() })),
     Position: vi.fn((line: number, character: number) => ({ line, character })),
   }),
-  { virtual: true },
 );
 
 vi.mock("../../services/funMessenger", () => ({

@@ -41,7 +41,6 @@ vi.mock(
     },
     env: { openExternal: vi.fn() },
   }),
-  { virtual: true },
 );
 
 vi.mock("./funMessenger", () => ({

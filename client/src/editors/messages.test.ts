@@ -25,7 +25,6 @@ vi.mock(
       delete = vi.fn();
     },
   }),
-  { virtual: true },
 );
 
 vi.mock("../adt/conections", () => ({ getClient: vi.fn() }));

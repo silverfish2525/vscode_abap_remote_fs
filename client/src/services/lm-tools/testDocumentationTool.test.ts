@@ -25,7 +25,6 @@ vi.mock(
     env: { openExternal: vi.fn() },
     debug: { activeDebugSession: undefined },
   }),
-  { virtual: true },
 );
 
 vi.mock("../../adt/conections", () => ({

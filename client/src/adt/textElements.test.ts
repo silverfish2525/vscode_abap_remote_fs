@@ -1,4 +1,4 @@
-vi.mock("vscode", () => ({}), { virtual: true });
+vi.mock("vscode", () => ({}));
 vi.mock("../lib", () => ({ log: vi.fn() }));
 vi.mock("./AdtTransports", () => ({ selectTransport: vi.fn() }));
 vi.mock("abap-adt-api", () => ({

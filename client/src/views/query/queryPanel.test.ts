@@ -24,7 +24,6 @@ vi.mock(
       },
     };
   },
-  { virtual: true },
 );
 
 vi.mock(
@@ -37,7 +36,6 @@ vi.mock(
       showErrorMessage: vi.fn(),
     },
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -45,7 +43,6 @@ vi.mock(
   () => ({
     log: vi.fn(),
   }),
-  { virtual: true },
 );
 
 // We need to be able to test SQLValidator. It's not exported, so we test via

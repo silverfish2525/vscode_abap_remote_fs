@@ -37,7 +37,6 @@ vi.mock(
       getExtension: vi.fn(),
     },
   }),
-  { virtual: true },
 );
 
 vi.mock("../../config", () => ({

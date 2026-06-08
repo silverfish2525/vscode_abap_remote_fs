@@ -14,7 +14,6 @@ vi.mock(
       })),
     },
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -22,7 +21,6 @@ vi.mock(
   () => ({
     funWindow: {},
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -32,7 +30,6 @@ vi.mock(
     abapUri: vi.fn(),
     getClient: vi.fn(),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -40,7 +37,6 @@ vi.mock(
   () => ({
     findAbapObject: vi.fn(),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -48,7 +44,6 @@ vi.mock(
   () => ({
     context: { extensionUri: { fsPath: "/ext" } },
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -58,7 +53,6 @@ vi.mock(
       createOrShow: vi.fn(),
     },
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -66,7 +60,6 @@ vi.mock(
   () => ({
     viewableObjecttypes: new Set(["TABL", "VIEW", "DDLS"]),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -74,7 +67,6 @@ vi.mock(
   () => ({
     currentUri: vi.fn(),
   }),
-  { virtual: true },
 );
 
 import { showQuery } from "./query";

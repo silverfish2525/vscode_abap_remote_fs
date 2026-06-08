@@ -41,7 +41,6 @@ vi.mock(
       FileStat: {},
     };
   },
-  { virtual: true },
 );
 
 vi.mock(
@@ -51,7 +50,6 @@ vi.mock(
     fileAsync: vi.fn(),
     readAsync: vi.fn().mockResolvedValue(null),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -60,7 +58,6 @@ vi.mock(
     NSSLASH: "/",
     isString: (v: any) => typeof v === "string",
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -72,7 +69,6 @@ vi.mock(
     getRoot: vi.fn(),
     ADTSCHEME: "adt",
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -82,7 +78,6 @@ vi.mock(
     isAbapStat: vi.fn(),
     isFolder: vi.fn(),
   }),
-  { virtual: true },
 );
 
 import { FavItem, FavouritesProvider, Favourite } from "./favourites";

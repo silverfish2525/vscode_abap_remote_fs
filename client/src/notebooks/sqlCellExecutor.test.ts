@@ -3,7 +3,6 @@ vi.mock(
   () => ({
     interpolateSql: vi.fn((sql: string) => sql),
   }),
-  { virtual: false },
 );
 
 import { executeSqlCell } from "./sqlCellExecutor";

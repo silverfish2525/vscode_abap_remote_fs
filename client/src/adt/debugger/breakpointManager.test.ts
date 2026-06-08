@@ -15,7 +15,6 @@ vi.mock(
       })),
     },
   }),
-  { virtual: true },
 );
 vi.mock("@vscode/debugadapter", () => ({
   Breakpoint: vi.fn(function (verified: boolean, line?: number) {

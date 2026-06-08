@@ -8,7 +8,6 @@ vi.mock(
   () => ({
     isRight: vi.fn((v: any) => v && v._tag === "Right"),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -18,7 +17,6 @@ vi.mock(
     none: { _tag: "None" },
     isSome: vi.fn((v: any) => v && v._tag === "Some"),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -52,7 +50,6 @@ vi.mock(
     commands: { executeCommand: vi.fn() },
     env: { openExternal: vi.fn() },
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -65,7 +62,6 @@ vi.mock(
       addScm: "abapfs.addScm",
     },
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -73,7 +69,6 @@ vi.mock(
   () => ({
     PACKAGE: "DEVC/K",
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -81,7 +76,6 @@ vi.mock(
   () => ({
     selectTransport: vi.fn(),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -94,7 +88,6 @@ vi.mock(
     caughtToString: vi.fn((e: any) => String(e)),
     quickPick: vi.fn(),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -106,7 +99,6 @@ vi.mock(
       withProgress: vi.fn(),
     },
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -115,7 +107,6 @@ vi.mock(
     addRepo: vi.fn(),
     repoCredentials: vi.fn(),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -125,7 +116,6 @@ vi.mock(
     ADTSCHEME: "adt",
     getOrCreateClient: vi.fn(),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -138,10 +128,9 @@ vi.mock(
     }),
     createUri: vi.fn(),
   }),
-  { virtual: true },
 );
 
-vi.mock("uuid", () => ({ v1: vi.fn(() => "test-uuid") }), { virtual: true });
+vi.mock("uuid", () => ({ v1: vi.fn(() => "test-uuid") }));
 
 import { confirmPull, packageUri } from "./abapgit";
 import { funWindow as window } from "../services/funMessenger";

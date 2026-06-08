@@ -13,7 +13,6 @@ vi.mock(
       registerTextDocumentContentProvider: vi.fn(),
     },
   }),
-  { virtual: true },
 );
 
 vi.mock("./scm", () => ({

@@ -10,7 +10,6 @@ vi.mock(
     commands: { executeCommand: vi.fn() },
     lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) },
   }),
-  { virtual: true },
 );
 
 vi.mock("../../adt/conections", () => ({

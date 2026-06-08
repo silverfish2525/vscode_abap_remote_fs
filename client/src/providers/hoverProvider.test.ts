@@ -47,7 +47,6 @@ vi.mock(
       window: { visibleTextEditors: [] },
     };
   },
-  { virtual: true },
 );
 
 vi.mock("../services/funMessenger", () => ({

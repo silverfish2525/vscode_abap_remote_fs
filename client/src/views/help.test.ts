@@ -16,7 +16,6 @@ vi.mock(
       })),
     },
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -28,7 +27,6 @@ vi.mock(
       showErrorMessage: vi.fn(),
     },
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -37,7 +35,6 @@ vi.mock(
     ADTSCHEME: "adt",
     getClient: vi.fn(),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -48,7 +45,6 @@ vi.mock(
     })),
     findAbapObject: vi.fn(),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -56,7 +52,6 @@ vi.mock(
   () => ({
     injectUrlHandler: vi.fn((html: string) => html + "<!-- injected -->"),
   }),
-  { virtual: true },
 );
 
 import { showAbapDoc } from "./help";

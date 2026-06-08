@@ -25,7 +25,6 @@ vi.mock(
       }),
     },
   }),
-  { virtual: true },
 );
 
 import * as vscode from "vscode";

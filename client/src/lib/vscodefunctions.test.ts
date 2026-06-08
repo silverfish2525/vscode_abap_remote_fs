@@ -20,7 +20,6 @@ vi.mock(
     };
     return { Position, Range, Uri, ProgressLocation: { Window: 10, Notification: 15 } };
   },
-  { virtual: true },
 );
 
 vi.mock("../services/funMessenger", () => ({

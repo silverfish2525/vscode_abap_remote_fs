@@ -18,7 +18,6 @@ vi.mock(
       return { range, command: cmd };
     }),
   }),
-  { virtual: true },
 );
 
 vi.mock("../commands", () => ({

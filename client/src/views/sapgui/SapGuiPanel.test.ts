@@ -19,7 +19,6 @@ vi.mock(
     },
     commands: { executeCommand: vi.fn() },
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -32,7 +31,6 @@ vi.mock(
       showWarningMessage: vi.fn(),
     },
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -40,7 +38,6 @@ vi.mock(
   () => ({
     log: vi.fn(),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -52,7 +49,6 @@ vi.mock(
       })),
     },
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -60,7 +56,6 @@ vi.mock(
   () => ({
     runInSapGui: vi.fn(),
   }),
-  { virtual: true },
 );
 
 import { SapGuiPanel } from "./SapGuiPanel";

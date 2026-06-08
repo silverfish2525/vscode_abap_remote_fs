@@ -13,7 +13,6 @@ vi.mock(
       getConfiguration: vi.fn(),
     },
   }),
-  { virtual: true },
 );
 
 vi.mock("abap_cloud_platform", () => ({

@@ -6,7 +6,6 @@ vi.mock(
     MarkdownString: vi.fn().mockImplementation((text: string) => ({ text })),
     lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) },
   }),
-  { virtual: true },
 );
 
 vi.mock("../../adt/conections", () => ({}));

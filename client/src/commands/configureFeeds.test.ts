@@ -6,7 +6,6 @@ vi.mock(
       getConfiguration: vi.fn(),
     },
   }),
-  { virtual: true },
 );
 
 vi.mock("../services/funMessenger", () => ({

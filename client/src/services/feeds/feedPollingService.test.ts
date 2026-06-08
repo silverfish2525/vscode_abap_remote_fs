@@ -11,7 +11,6 @@ vi.mock(
       executeCommand: vi.fn(),
     },
   }),
-  { virtual: true },
 );
 
 // Mock modules that have vscode deps

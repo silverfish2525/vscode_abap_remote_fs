@@ -18,7 +18,6 @@ vi.mock(
       NotebookCellOutputItem: mockCellOutputItem,
     };
   },
-  { virtual: true },
 );
 
 import { renderSqlOutput, renderJsOutput, renderErrorOutput } from "./outputRenderer";

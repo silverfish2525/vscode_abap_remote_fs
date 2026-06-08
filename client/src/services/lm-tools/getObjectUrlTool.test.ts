@@ -7,7 +7,6 @@ vi.mock(
     lm: { registerTool: vi.fn(() => ({ dispose: vi.fn() })) },
     Uri: { file: vi.fn((p: string) => ({ fsPath: p })) },
   }),
-  { virtual: true },
 );
 
 vi.mock("../../adt/conections", () => ({

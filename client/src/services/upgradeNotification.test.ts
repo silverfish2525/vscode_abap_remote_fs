@@ -6,7 +6,6 @@ vi.mock(
     StatusBarAlignment: { Left: 1, Right: 2 },
     commands: { registerCommand: vi.fn().mockReturnValue({ dispose: vi.fn() }) },
   }),
-  { virtual: true },
 );
 
 vi.mock("./funMessenger", () => {

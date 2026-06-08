@@ -7,7 +7,6 @@ vi.mock(
       parse: vi.fn((s: string) => ({ toString: () => s, scheme: "adt", authority: "sys" })),
     },
   }),
-  { virtual: true },
 );
 
 vi.mock("../../adt/conections", () => ({

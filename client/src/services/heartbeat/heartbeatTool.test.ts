@@ -24,7 +24,6 @@ vi.mock(
       CancellationTokenSource: vi.fn(() => ({ token: {}, cancel: vi.fn() })),
     };
   },
-  { virtual: true },
 );
 
 vi.mock("../../lib", () => ({ log: vi.fn() }));

@@ -28,7 +28,6 @@ vi.mock(
       commands: { executeCommand: vi.fn() },
     };
   },
-  { virtual: true },
 );
 
 vi.mock("../../services/funMessenger", () => ({

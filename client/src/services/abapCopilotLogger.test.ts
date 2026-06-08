@@ -5,7 +5,6 @@ vi.mock(
       createOutputChannel: vi.fn(),
     },
   }),
-  { virtual: true },
 );
 
 vi.mock("../lib/logger", () => {

@@ -7,7 +7,6 @@ vi.mock(
     Disposable: vi.fn().mockImplementation((fn: () => void) => ({ dispose: fn })),
     commands: { executeCommand: vi.fn() },
   }),
-  { virtual: true },
 );
 
 vi.mock("./appInsightsService", () => ({

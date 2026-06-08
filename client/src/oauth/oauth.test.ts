@@ -1,4 +1,4 @@
-vi.mock("vscode", () => ({}), { virtual: true });
+vi.mock("vscode", () => ({}));
 
 const mockGetToken = vi.fn();
 const mockSetToken = vi.fn();

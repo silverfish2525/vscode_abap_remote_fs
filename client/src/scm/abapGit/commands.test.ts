@@ -17,7 +17,6 @@ vi.mock(
     Memento: vi.fn(),
     QuickPickItem: vi.fn(),
   }),
-  { virtual: true },
 );
 
 vi.mock("../../services/funMessenger", () => ({

@@ -9,7 +9,6 @@ vi.mock(
     },
     StatusBarAlignment: { Left: 1, Right: 2 },
   }),
-  { virtual: true },
 );
 
 vi.mock("./funMessenger", () => ({
@@ -56,7 +55,6 @@ function getValidator() {
       },
       StatusBarAlignment: { Left: 1, Right: 2 },
     }),
-    { virtual: true },
   );
   vi.doMock("./funMessenger", () => ({
     funWindow: {

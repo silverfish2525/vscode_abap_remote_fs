@@ -19,7 +19,6 @@ vi.mock(
     ViewColumn: { One: 1, Active: -1 },
     Uri: { joinPath: vi.fn(), file: vi.fn() },
   }),
-  { virtual: true },
 );
 
 // Mock internal dependencies

@@ -38,7 +38,6 @@ vi.mock(
       },
     };
   },
-  { virtual: true },
 );
 
 vi.mock("../../adt/conections", () => ({ getClient: vi.fn() }));

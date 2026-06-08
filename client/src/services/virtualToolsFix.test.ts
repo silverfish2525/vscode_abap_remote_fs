@@ -21,7 +21,6 @@ vi.mock(
     },
     ProgressLocation: { Notification: 15 },
   }),
-  { virtual: true },
 );
 
 vi.mock("./funMessenger", () => ({

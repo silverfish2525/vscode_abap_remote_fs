@@ -47,7 +47,6 @@ vi.mock(
     };
     return { EventEmitter, FileChangeType, FileType, Disposable, Uri, RelativePattern, workspace };
   },
-  { virtual: true },
 );
 
 vi.mock("./localStorage", () => ({

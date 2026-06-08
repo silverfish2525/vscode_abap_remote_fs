@@ -16,9 +16,9 @@ vi.mock(
         end: { line: el, character: ec },
       })),
       ThemeColor: vi.fn((id: string) => ({ id })),
-      MarkdownString: vi.fn(function (value: string) {
-        (this as any).value = value;
-        (this as any).isTrusted = false;
+      MarkdownString: vi.fn(function (this: { value: string; isTrusted: boolean }, value: string) {
+        this.value = value;
+        this.isTrusted = false;
       }),
       commands: { registerCommand: vi.fn(() => mockDisposable) },
       workspace: {
@@ -28,7 +28,6 @@ vi.mock(
       },
     };
   },
-  { virtual: true },
 );
 
 vi.mock(
@@ -38,7 +37,6 @@ vi.mock(
     ADTSCHEME: "adt",
     abapUri: vi.fn(() => true),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -46,7 +44,6 @@ vi.mock(
   () => ({
     AbapRevisionService: { get: vi.fn() },
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -54,7 +51,6 @@ vi.mock(
   () => ({
     setContext: vi.fn(),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -62,7 +58,6 @@ vi.mock(
   () => ({
     log: vi.fn(),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -70,7 +65,6 @@ vi.mock(
   () => ({
     logTelemetry: vi.fn(),
   }),
-  { virtual: true },
 );
 
 vi.mock(
@@ -87,7 +81,6 @@ vi.mock(
       createTextEditorDecorationType: vi.fn(() => ({ dispose: vi.fn() })),
     },
   }),
-  { virtual: true },
 );
 
 import {
@@ -193,9 +186,9 @@ describe.skip("showBlame", () => {
         call[1][0].renderOptions.before.contentText.includes("KD1K900123"),
     );
     expect(leaderCall).toBeDefined();
-    expect(leaderCall[1][0].renderOptions.before.contentText).toContain("Fix pricing logic");
-    expect(leaderCall[1][0].renderOptions.before.borderColor).toContain("rgba(");
-    expect(leaderCall[1][0].renderOptions.after.textDecoration).toContain("background:url");
+    expect(leaderCall![1][0].renderOptions.before.contentText).toContain("Fix pricing logic");
+    expect(leaderCall![1][0].renderOptions.before.borderColor).toContain("rgba(");
+    expect(leaderCall![1][0].renderOptions.after.textDecoration).toContain("background:url");
   });
 
   it("keeps classic annotations and also shows selected-line details", async () => {
@@ -242,9 +235,9 @@ describe.skip("showBlame", () => {
     );
 
     expect(classicCall).toBeDefined();
-    expect(classicCall[1][0].renderOptions.after.contentText).toContain("KD1K900123");
+    expect(classicCall![1][0].renderOptions.after.contentText).toContain("KD1K900123");
     expect(selectedLineCall).toBeDefined();
-    expect(selectedLineCall[1][0].renderOptions.after.contentText).toContain("KD1K900123");
+    expect(selectedLineCall![1][0].renderOptions.after.contentText).toContain("KD1K900123");
   });
 });
 

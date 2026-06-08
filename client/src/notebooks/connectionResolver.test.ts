@@ -1,5 +1,5 @@
-vi.mock("../config", () => ({ connectedRoots: vi.fn() }), { virtual: false });
-vi.mock("../adt/conections", () => ({ getClient: vi.fn() }), { virtual: false });
+vi.mock("../config", () => ({ connectedRoots: vi.fn() }));
+vi.mock("../adt/conections", () => ({ getClient: vi.fn() }));
 vi.mock(
   "../services/funMessenger",
   () => ({
@@ -17,9 +17,8 @@ vi.mock(
       })),
     },
   }),
-  { virtual: false },
 );
-vi.mock("vscode", () => ({}), { virtual: true });
+vi.mock("vscode", () => ({}));
 
 import { resolveConnection, NotebookConnectionError } from "./connectionResolver";
 import { connectedRoots } from "../config";

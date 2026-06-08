@@ -9,7 +9,6 @@ vi.mock(
     commands: { executeCommand: vi.fn().mockResolvedValue(undefined) },
     Disposable: vi.fn().mockImplementation((fn: () => void) => ({ dispose: fn })),
   }),
-  { virtual: true },
 );
 
 vi.mock("../lib", () => ({ log: vi.fn() }));

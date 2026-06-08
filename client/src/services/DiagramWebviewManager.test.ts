@@ -33,7 +33,6 @@ vi.mock(
       file: vi.fn((p: string) => ({ fsPath: p })),
     },
   }),
-  { virtual: true },
 );
 
 vi.mock("./funMessenger", () => ({

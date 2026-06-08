@@ -6,7 +6,6 @@ vi.mock(
     },
     FileStat: vi.fn(),
   }),
-  { virtual: true },
 );
 
 vi.mock("../../services/funMessenger", () => ({

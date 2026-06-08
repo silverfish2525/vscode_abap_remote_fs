@@ -48,7 +48,6 @@ vi.mock(
     TestRun: vi.fn(),
     Range: vi.fn().mockImplementation((s: any, e: any) => ({ start: s, end: e })),
   }),
-  { virtual: true },
 );
 
 vi.mock("../conections", () => ({
