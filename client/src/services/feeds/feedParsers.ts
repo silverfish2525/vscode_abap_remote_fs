@@ -213,6 +213,11 @@ export function parseFeedResponse(
 ): FeedEntry[] {
   const entries: FeedEntry[] = []
 
+  // Local predicate so we don't repeat the `feedData && typeof === "object"`
+  // guard on every branch below.
+  const isObjectShape = (v: unknown): v is Record<string, unknown> =>
+    !!v && typeof v === "object"
+
   try {
     // Handle different response structures
     let rawEntries: any[] = []
@@ -220,13 +225,18 @@ export function parseFeedResponse(
     // Check for direct array FIRST (before checking .entries property, which exists on arrays!)
     if (Array.isArray(feedData)) {
       rawEntries = feedData
-    } else if (feedData && typeof feedData === "object" && "dumps" in feedData) {
-      rawEntries = (feedData as { dumps: any[] }).dumps
-    } else if (feedData && typeof feedData === "object" && "entries" in feedData) {
-      rawEntries = (feedData as { entries: any[] }).entries
-    } else if (feedData && typeof feedData === "object" && "entry" in feedData) {
-      const entry = (feedData as { entry: unknown }).entry
-      rawEntries = Array.isArray(entry) ? entry : [entry]
+    } else if (isObjectShape(feedData)) {
+      if ("dumps" in feedData) {
+        rawEntries = (feedData as { dumps: any[] }).dumps
+      } else if ("entries" in feedData) {
+        rawEntries = (feedData as { entries: any[] }).entries
+      } else if ("entry" in feedData) {
+        const entry = (feedData as { entry: unknown }).entry
+        rawEntries = Array.isArray(entry) ? entry : [entry]
+      } else {
+        // Unknown object shape
+        return entries
+      }
     } else {
       // Unknown structure
       return entries
