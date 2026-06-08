@@ -268,11 +268,11 @@ const fullname = (usageReference: UsageReference) => {
 }
 
 let lastSearch: CancellationTokenSource | undefined
-export function cancelSearch() {
+export async function cancelSearch() {
   if (lastSearch) {
     lastSearch.cancel()
     lastSearch = undefined
-    return setSearchProgress({ ended: true, hits: 0, progress: 100 }).catch(() => {})
+    await setSearchProgress({ ended: true, hits: 0, progress: 100 }).catch(() => {})
   }
 }
 
@@ -341,6 +341,6 @@ export async function findReferences(params: ReferenceParams, token: Cancellatio
   } catch (e) {
     warn("Exception in reference search:", caughtToString(e)) // ignore
   }
-  cancelSearch() // just for cleanup
+  await cancelSearch() // just for cleanup
   return locations
 }

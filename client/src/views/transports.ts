@@ -18,7 +18,8 @@ import {
   TransportReleaseReport,
   SAPRC,
   ADTClient,
-  TransportConfigurationEntry
+  TransportConfigurationEntry,
+  TransportsOfUser
 } from "abap-adt-api"
 import { command, AbapFsCommands } from "../commands"
 import { funWindow as window } from "../services/funMessenger"
@@ -69,6 +70,14 @@ class CollectionItem extends TreeItem {
   }
 }
 
+// Upstream `TransportsOfUser` only declares the `workbench` and `customizing`
+// buckets, but live ADT responses also include a `transportofcopies` bucket of
+// the same shape. This local extension lets us iterate the three categories
+// without an `as any` cast.
+export type TransportsOfUserExt = TransportsOfUser & {
+  transportofcopies?: TransportTarget[]
+}
+
 class ConnectionItem extends CollectionItem {
   private get user() {
     const client = getClient(this.uri.authority)
@@ -91,10 +100,13 @@ class ConnectionItem extends CollectionItem {
 
   public async getChildren() {
     if (this.children.length === 0 && !!this.uri) {
-      const transports = await readTransports(this.uri.authority, this.user)
+      const transports = (await readTransports(
+        this.uri.authority,
+        this.user
+      )) as TransportsOfUserExt
 
-      for (const cat of ["workbench", "customizing", "transportofcopies"]) {
-        const targets = (transports as any)[cat] as TransportTarget[]
+      for (const cat of ["workbench", "customizing", "transportofcopies"] as const) {
+        const targets = transports[cat]
         if (!targets?.length) continue
         const coll = new CollectionItem(cat)
         for (const target of targets) coll.addChild(new TargetItem(target, this.uri.authority))
@@ -109,8 +121,8 @@ class TargetItem extends CollectionItem {
   constructor(target: TransportTarget, connId: string) {
     super(`${target["tm:name"]} ${target["tm:desc"]}`)
 
-    for (const cat of ["modifiable", "released"]) {
-      const transports = (target as any)[cat] as TransportRequest[]
+    for (const cat of ["modifiable", "released"] as const) {
+      const transports = target[cat]
       if (!transports.length) continue
       const coll = new CollectionItem(cat)
       for (const transport of transports) coll.addChild(new TransportItem(transport, connId))

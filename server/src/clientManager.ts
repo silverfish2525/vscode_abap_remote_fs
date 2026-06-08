@@ -1,5 +1,5 @@
 import { ADTClient, createSSLConfig, LogData, session_types } from "abap-adt-api"
-import { createConnection, ProposedFeatures } from "vscode-languageserver"
+import { createConnection, ProposedFeatures } from "vscode-languageserver/node"
 import { types } from "util"
 import { readConfiguration } from "./clientapis"
 import {

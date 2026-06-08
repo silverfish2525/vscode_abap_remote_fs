@@ -205,13 +205,18 @@ function determineSeverity(rawEntry: any, feedType: FeedType): "error" | "warnin
  * Parse feed response based on feed type
  */
 export function parseFeedResponse(
-  feedData: any,
+  feedData: unknown,
   systemId: string,
   feedTitle: string,
   feedPath: string,
   feedType: FeedType
 ): FeedEntry[] {
   const entries: FeedEntry[] = []
+
+  // Local predicate so we don't repeat the `feedData && typeof === "object"`
+  // guard on every branch below.
+  const isObjectShape = (v: unknown): v is Record<string, unknown> =>
+    !!v && typeof v === "object"
 
   try {
     // Handle different response structures
@@ -220,12 +225,18 @@ export function parseFeedResponse(
     // Check for direct array FIRST (before checking .entries property, which exists on arrays!)
     if (Array.isArray(feedData)) {
       rawEntries = feedData
-    } else if (feedData.dumps) {
-      rawEntries = feedData.dumps
-    } else if (feedData.entries) {
-      rawEntries = feedData.entries
-    } else if (feedData.entry) {
-      rawEntries = Array.isArray(feedData.entry) ? feedData.entry : [feedData.entry]
+    } else if (isObjectShape(feedData)) {
+      if ("dumps" in feedData) {
+        rawEntries = (feedData as { dumps: any[] }).dumps
+      } else if ("entries" in feedData) {
+        rawEntries = (feedData as { entries: any[] }).entries
+      } else if ("entry" in feedData) {
+        const entry = (feedData as { entry: unknown }).entry
+        rawEntries = Array.isArray(entry) ? entry : [entry]
+      } else {
+        // Unknown object shape
+        return entries
+      }
     } else {
       // Unknown structure
       return entries

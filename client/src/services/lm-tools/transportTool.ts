@@ -4,11 +4,12 @@
  */
 
 import * as vscode from "vscode"
+import { ADTClient } from "abap-adt-api"
 import { registerToolWithRegistry } from "./toolRegistry"
 import { funWindow as window } from "../funMessenger"
 import { abapUri, getClient } from "../../adt/conections"
 import { logTelemetry } from "../telemetry"
-import { readTransports } from "../../views/transports"
+import { readTransports, TransportsOfUserExt } from "../../views/transports"
 import { assertToolInvocationAuthorized } from "./toolGuard"
 
 // ============================================================================
@@ -151,22 +152,22 @@ export class ManageTransportRequestsTool implements vscode.LanguageModelTool<IMa
   }
 
   private async getUserTransports(
-    client: any,
+    client: ADTClient,
     connectionId: string,
     user?: string
   ): Promise<vscode.LanguageModelToolResult> {
     try {
       const targetUser = user || client.username
 
-      const transports = await readTransports(connectionId, targetUser)
+      const transports = (await readTransports(connectionId, targetUser)) as TransportsOfUserExt
 
       let result = `Transport Requests for User: ${targetUser.toUpperCase()}\n`
       result += `${"=".repeat(60)}\n\n`
 
       let totalCount = 0
 
-      for (const category of ["workbench", "customizing", "transportofcopies"]) {
-        const targets = (transports as any)[category]
+      for (const category of ["workbench", "customizing", "transportofcopies"] as const) {
+        const targets = transports[category]
         if (!targets?.length) continue
 
         result += `📦 **${category.toUpperCase()}**\n`
@@ -174,8 +175,8 @@ export class ManageTransportRequestsTool implements vscode.LanguageModelTool<IMa
         for (const target of targets) {
           result += `  Target: ${target["tm:name"]} - ${target["tm:desc"]}\n`
 
-          for (const status of ["modifiable", "released"]) {
-            const transportList = (target as any)[status]
+          for (const status of ["modifiable", "released"] as const) {
+            const transportList = target[status]
             if (!transportList?.length) continue
 
             result += `    ${status === "modifiable" ? "🔓" : "🔒"} **${status.toUpperCase()}**:\n`
@@ -199,7 +200,7 @@ export class ManageTransportRequestsTool implements vscode.LanguageModelTool<IMa
   }
 
   private async getTransportDetails(
-    client: any,
+    client: ADTClient,
     transportNumber: string
   ): Promise<vscode.LanguageModelToolResult> {
     try {
@@ -244,7 +245,7 @@ export class ManageTransportRequestsTool implements vscode.LanguageModelTool<IMa
   }
 
   private async getTransportObjects(
-    client: any,
+    client: ADTClient,
     transportNumber: string
   ): Promise<vscode.LanguageModelToolResult> {
     try {
@@ -335,7 +336,7 @@ export class ManageTransportRequestsTool implements vscode.LanguageModelTool<IMa
   }
 
   private async compareTransports(
-    client: any,
+    client: ADTClient,
     transportNumbers: string[]
   ): Promise<vscode.LanguageModelToolResult> {
     try {
