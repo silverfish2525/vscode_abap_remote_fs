@@ -46,7 +46,6 @@
     "copy-webpack-plugin": "^14.0.0",
     "oxc-loader": "0.0.2",
     "terser-webpack-plugin": "^5.3.6",
-    "ts-loader": "^9.4.2",
     "ts-node": "^10.9.1",
     "tsconfig-paths": "^4.1.2",
     "typescript": "^6.0.0",

@@ -29,7 +29,6 @@
     "@types/lodash": "^4.14.191",
     "oxc-loader": "0.0.2",
     "terser-webpack-plugin": "^5.3.6",
-    "ts-loader": "^9.5.2",
     "typescript": "^6.0.0",
     "vitest": "^2.1.0",
     "webpack": "^5.101.3",
