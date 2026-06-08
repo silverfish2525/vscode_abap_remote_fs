@@ -8,6 +8,69 @@ import { AdtObjectFinder } from "../adt/operations/AdtObjectFinder"
 import { getSearchService } from "./abapSearchService"
 
 /**
+ * Shape of a column entry that the data-query webview sends back in
+ * `exportCSV` messages. Built from `tabulator` column definitions in
+ * `client/media/dataQuery.js` (`{ title, field }`) and from the dependency
+ * graph webview which forwards similar `{title, field, name}` records.
+ */
+interface ExportCSVColumn {
+  title?: string
+  field?: string
+  name?: string
+}
+
+/**
+ * Discriminated union of every postMessage command sent from the data-query
+ * webview (`client/media/dataQuery.js`) back to the extension host. Keep this
+ * in sync with the `vscode.postMessage(...)` call sites in that file.
+ */
+type DataQueryMessage =
+  | {
+      command: "exportCSV"
+      columns: ExportCSVColumn[]
+      rows: Record<string, unknown>[]
+      defaultName?: string
+    }
+  | { command: "webviewData"; data: QueryResult }
+  | { command: "getWebviewData"; data: { rowRange?: RowRange } }
+
+/**
+ * Discriminated union of every postMessage command sent from the dependency
+ * graph webview (`client/media/dependencyGraph.js`) back to the extension
+ * host. Keep this in sync with the `vscode.postMessage(...)` call sites in
+ * that file.
+ */
+type DependencyGraphMessage =
+  | { command: "ready" }
+  | { command: "log"; log: string }
+  | {
+      command: "openObject"
+      objectName: string
+      objectType: string
+      uri?: string
+      objectUri?: string
+      adtUri?: string
+      line?: number
+      column?: number
+      character?: number
+      objectIdentifier?: string
+      parentUri?: string
+      canExpand?: boolean
+      usageInformation?: string
+      responsible?: string
+      packageUri?: string
+      package?: string
+    }
+  | {
+      command: "expandNode"
+      objectName: string
+      objectType: string
+      uri?: string
+    }
+  | { command: "applyFilters"; filters: ColumnFilter[] }
+  | { command: "exportImage"; imageData: string; format: "svg" | "png" }
+
+/**
  * Webview metadata stored in globalState
  */
 interface WebviewMetadata {
@@ -561,7 +624,10 @@ export class WebviewManager {
   /**
    * Handle messages from webview
    */
-  private async handleWebviewMessage(message: any, webviewId: string): Promise<void> {
+  private async handleWebviewMessage(
+    message: DataQueryMessage,
+    webviewId: string
+  ): Promise<void> {
     const panel = this._activeWebviews.get(webviewId)
     if (!panel) return
 
@@ -569,15 +635,15 @@ export class WebviewManager {
       switch (message.command) {
         case "exportCSV": {
           const { columns, rows, defaultName } = message
-          const headers: string[] = columns.map((c: any) => c.title || c.field || c.name)
-          const fields: string[] = columns.map((c: any) => c.field || c.name)
-          const csvEscape = (v: any) => {
+          const headers: string[] = columns.map(c => c.title || c.field || c.name || "")
+          const fields: string[] = columns.map(c => c.field || c.name || "")
+          const csvEscape = (v: unknown) => {
             const s = v == null ? "" : String(v)
             return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s
           }
           const lines: string[] = []
           lines.push(headers.map(csvEscape).join(","))
-          for (const r of rows) lines.push(fields.map(f => csvEscape((r as any)[f])).join(","))
+          for (const r of rows) lines.push(fields.map(f => csvEscape(r[f])).join(","))
           const data = Buffer.from("\uFEFF" + lines.join("\r\n"), "utf8")
           const uri = await window.showSaveDialog({
             defaultUri: vscode.Uri.file(`${defaultName || "data"}-${webviewId}.csv`),
@@ -771,7 +837,7 @@ export class WebviewManager {
    * Handle messages from dependency graph webview
    */
   private async handleGraphMessage(
-    message: any,
+    message: DependencyGraphMessage,
     connectionId: string,
     panel: vscode.WebviewPanel
   ): Promise<void> {
