@@ -34,24 +34,52 @@ const projectRoot = resolve(fileURLToPath(import.meta.url), "..")
  *
  * Implemented as an inline tsdown plugin (Rolldown plugin shape) so we
  * don't need a third-party copy plugin in the workspace.
+ *
+ * Watch-mode contract: the `buildStart` hook registers the source
+ * directory and the doc file with Rolldown's watcher (`addWatchFile`).
+ * Edits to `client/media/**` or `DOCUMENTATION.md` therefore trigger a
+ * rebuild + recopy in `pnpm exec tsdown --watch`. Without that
+ * registration, the plugin would only fire when a `.ts` source change
+ * coincidentally invalidated the bundle.
+ *
+ * Fail-fast contract: `DOCUMENTATION.md` is read at runtime by
+ * `client/src/services/lm-tools/documentationTool.ts` from
+ * `client/dist/media/DOCUMENTATION.md`. If the source doc is missing the
+ * VSIX would ship a broken tool. We throw at build time instead of
+ * silently skipping the copy.
  */
-const copyClientMedia = () => ({
-  name: "vscode-abap-remote-fs:copy-client-media",
-  buildEnd() {
-    const dest = resolve(projectRoot, "client/dist/media")
-    mkdirSync(dest, { recursive: true })
+const copyClientMedia = () => {
+  const mediaSrc = resolve(projectRoot, "client/media")
+  const docs = resolve(projectRoot, "DOCUMENTATION.md")
+  return {
+    name: "vscode-abap-remote-fs:copy-client-media",
+    // Rolldown plugin context exposes `addWatchFile`; type as a function
+    // we can call to keep watch-mode honest. Strictly typed via the
+    // hook signature instead of an `as` cast.
+    buildStart(this: { addWatchFile(id: string): void }) {
+      // Watch the directory itself so adding/removing files is detected,
+      // and watch the top-level doc explicitly.
+      this.addWatchFile(mediaSrc)
+      this.addWatchFile(docs)
+    },
+    buildEnd() {
+      const dest = resolve(projectRoot, "client/dist/media")
+      mkdirSync(dest, { recursive: true })
 
-    const mediaSrc = resolve(projectRoot, "client/media")
-    if (existsSync(mediaSrc)) {
-      cpSync(mediaSrc, dest, { recursive: true })
-    }
+      if (existsSync(mediaSrc)) {
+        cpSync(mediaSrc, dest, { recursive: true })
+      }
 
-    const docs = resolve(projectRoot, "DOCUMENTATION.md")
-    if (existsSync(docs)) {
+      if (!existsSync(docs)) {
+        throw new Error(
+          `Build asset missing: ${docs}\n` +
+            "DOCUMENTATION.md is required \u2014 documentationTool reads it at runtime."
+        )
+      }
       copyFileSync(docs, resolve(dest, "DOCUMENTATION.md"))
     }
   }
-})
+}
 
 /**
  * VS Code's extension host loads the bundle via require() from a `.js`

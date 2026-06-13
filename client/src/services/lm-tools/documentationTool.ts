@@ -166,7 +166,9 @@ export class ABAPFSDocumentationTool implements vscode.LanguageModelTool<IDocume
     }
     
     const extensionPath = extension.extensionPath
-    // Files are copied by webpack to client/dist/media during build
+    // Files are copied by tsdown's `copyClientMedia` plugin (in tsdown.config.ts)
+    // to client/dist/media during build. The plugin throws if DOCUMENTATION.md
+    // is missing, so the path below is guaranteed to resolve in any shipped VSIX.
     const docsPath = path.join(extensionPath, "client", "dist", "media", "DOCUMENTATION.md")
     const settingsPath = path.join(extensionPath, "client", "dist", "media", "ABAP-FS-SETTINGS.md")
     
