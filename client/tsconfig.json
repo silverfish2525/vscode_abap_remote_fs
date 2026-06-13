@@ -6,12 +6,8 @@
     "target": "ES2021",
     "rootDir": "src",
     "outDir": "out",
-    "lib": [
-      "es2021"
-    ],
-    "types": [
-      "jest"
-    ],
+    "lib": ["es2021"],
+    "types": ["vitest/globals"],
     "sourceMap": true,
     "strict": true,
     "noUnusedLocals": false,
@@ -24,13 +20,6 @@
     "resolveJsonModule": true,
     "noImplicitAny": true
   },
-  "include": [
-    "src"
-  ],
-  "exclude": [
-    "node_modules",
-    ".vscode-test",
-    "*.d.ts",
-    "*.test.ts"
-  ]
+  "include": ["src"],
+  "exclude": ["node_modules", ".vscode-test", "*.d.ts", "*.test.ts"]
 }

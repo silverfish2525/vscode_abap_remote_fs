@@ -4,7 +4,7 @@
     "target": "ES2022",
     "rootDir": "src",
     "moduleResolution": "node16",
-    "types": ["node", "jest"],
+    "types": ["node", "vitest/globals"],
     "outDir": "./out",
     "sourceMap": true,
     "strict": true,
@@ -16,9 +16,7 @@
     "skipLibCheck": true,
     "esModuleInterop": true
   },
-  "include": [
-    "src"
-  ],
+  "include": ["src"],
   "exclude": [
     "node_modules",
     ".vscode-test"

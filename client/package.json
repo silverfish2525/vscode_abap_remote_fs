@@ -31,12 +31,12 @@
     "vscode:prepublish": "fail",
     "clean": "rimraf out dist node_modules server",
     "build": "cd .. && pnpm exec tsdown",
-    "test": "jest",
-    "watch": "cd .. && pnpm exec tsdown --watch"
+    "test": "vitest run",
+    "watch": "cd .. && pnpm exec tsdown --watch",
+    "test:watch": "vitest"
   },
   "devDependencies": {
     "@types/diff": "^7.0.2",
-    "@types/jest": "^29.2.5",
     "@types/mocha": "^10.0.1",
     "@types/node": "^22.19.20",
     "@types/open": "^6.2.1",
@@ -44,12 +44,12 @@
     "@types/uuid": "^9.0.0",
     "@types/vscode": "^1.104.0",
     "@types/vscode-windows-registry": "^1.0.0",
-    "jest": "^29.3.1",
+    "@vitest/coverage-v8": "5.0.0-beta.4",
     "rimraf": "^6.0.1",
-    "ts-jest": "^29.4.7",
     "ts-node": "^10.9.1",
     "tsconfig-paths": "^4.1.2",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "5.0.0-beta.4"
   },
   "dependencies": {
     "@abaplint/core": "^2.102.65",

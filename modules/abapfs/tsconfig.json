@@ -7,13 +7,8 @@
     "target": "ES2019",
     "rootDir": "src",
     "outDir": "out",
-    "lib": [
-      "es2019"
-    ],
-    "types": [
-      "node",
-      "jest"
-    ],
+    "lib": ["es2019"],
+    "types": ["node", "vitest/globals"],
     "sourceMap": true,
     "strict": true,
     "noUnusedLocals": false,
@@ -23,10 +18,7 @@
     "tsBuildInfoFile": ".tsbuildinfo",
     "skipLibCheck": true
   },
-  "include": [
-    "src",
-    "./src/testdata/*.json"
-  ],
+  "include": ["src", "./src/testdata/*.json"],
   "exclude": ["node_modules"],
   "references": [
     {
