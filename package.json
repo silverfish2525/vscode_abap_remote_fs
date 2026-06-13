@@ -16,7 +16,7 @@
   },
   "homepage": "https://marcellourbani.github.io/vscode_abap_remote_fs",
   "engines": {
-    "vscode": "^1.91.0",
+    "vscode": "^1.93.0",
     "node": ">=22",
     "pnpm": ">=11"
   },
@@ -52,11 +52,12 @@
   ],
   "main": "./client/dist/extension",
   "scripts": {
-    "vscode:prepublish": "pnpm run webpack",
-    "webpack": "pnpm run build_modules && pnpm --filter ./server run webpack && pnpm --filter ./client run webpack",
-    "build": "pnpm run webpack",
+    "vscode:prepublish": "pnpm run build",
+    "build": "pnpm run build_modules && pnpm exec tsdown",
+    "bundle": "pnpm exec tsdown",
+    "watch": "pnpm exec tsdown --watch",
     "build_modules": "pnpm --filter ./modules/sharedapi --filter ./modules/abapObject --filter ./modules/abapfs run build",
-    "compile": "pnpm run webpack",
+    "compile": "pnpm run build",
     "test": "pnpm -r --workspace-concurrency=1 run test",
     "test-server": "pnpm --filter ./server run test",
     "test-client": "pnpm --filter ./client run test",
@@ -65,7 +66,7 @@
     "createpackage": "vsce package --no-dependencies",
     "deploy": "vsce publish --no-dependencies",
     "docs": "uv run mkdocs serve --livereload",
-    "clean": "pnpm -r run clean && rimraf out *.vsix node_modules",
+    "clean": "pnpm -r run clean && rimraf out *.vsix node_modules client/dist server/dist",
     "format": "prettier --write \"client/src/**/*.ts\" \"modules/abapfs/src/**/*.ts\" \"modules/abapObject/src/**/*.ts\" \"modules/sharedapi/src/**/*.ts\" \"server/src/**/*.ts\""
   },
   "devDependencies": {
@@ -75,8 +76,8 @@
     "concurrently": "^6.3.0",
     "ovsx": "^0.10.1",
     "rimraf": "^3.0.2",
-    "typescript": "^6.0.3",
-    "webpack-cli": "^5.0.1"
+    "tsdown": "^0.22.2",
+    "typescript": "^6.0.3"
   },
   "contributes": {
     "languages": [
