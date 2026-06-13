@@ -16,7 +16,9 @@
   },
   "homepage": "https://marcellourbani.github.io/vscode_abap_remote_fs",
   "engines": {
-    "vscode": "^1.91.0"
+    "vscode": "^1.91.0",
+    "node": ">=22",
+    "pnpm": ">=11"
   },
   "categories": [
     "Other"
@@ -50,24 +52,20 @@
   ],
   "main": "./client/dist/extension",
   "scripts": {
-    "vscode:prepublish": "cd client && cd .. && npm run webpack",
-    "webpack": "npm run build_modules&&cd server && npm run webpack && cd ../client && npm run webpack",
-    "build": "npm run webpack",
-    "build_modules": "cd modules/abapObject&& npm run build&&cd ../abapfs&& npm run build&&cd ../sharedapi&& npm run build",
-    "compile": "npm run webpack",
-    "test": "npm run test-object && npm run test-abapfs && npm run test-server && npm run test-client",
-    "test-server": "cd server&& npm run test",
-    "test-client": "cd client&& npm run test",
-    "test-object": "cd modules/abapObject&& npm run test",
-    "test-abapfs": "cd modules/abapfs&& npm run test",
-    "createpackage": "vsce package",
-    "deploy": "vsce publish",
+    "vscode:prepublish": "pnpm run webpack",
+    "webpack": "pnpm run build_modules && pnpm --filter ./server run webpack && pnpm --filter ./client run webpack",
+    "build": "pnpm run webpack",
+    "build_modules": "pnpm --filter ./modules/sharedapi --filter ./modules/abapObject --filter ./modules/abapfs run build",
+    "compile": "pnpm run webpack",
+    "test": "pnpm -r --workspace-concurrency=1 run test",
+    "test-server": "pnpm --filter ./server run test",
+    "test-client": "pnpm --filter ./client run test",
+    "test-object": "pnpm --filter ./modules/abapObject run test",
+    "test-abapfs": "pnpm --filter ./modules/abapfs run test",
+    "createpackage": "vsce package --no-dependencies",
+    "deploy": "vsce publish --no-dependencies",
     "docs": "uv run mkdocs serve --livereload",
-    "inst_dep_sharedapi": "cd modules/sharedapi&& npm i && npm run build&& cd ../..",
-    "inst_dep_object": "cd modules/abapObject&& npm i && npm run build&& cd ../..",
-    "inst_dep_abapfs": "cd modules/abapfs&& npm i && npm run build&& cd ../..",
-    "clean": "rimraf out *.vsix node_modules modules/sharedapi/out modules/sharedapi/node_modules&& cd server && npm run clean&& cd ../client &&npm run clean && cd .. ",
-    "postinstall": "npm run inst_dep_sharedapi && npm run inst_dep_object &&npm run inst_dep_abapfs && cd server && npm i && cd ../client && npm i",
+    "clean": "pnpm -r run clean && rimraf out *.vsix node_modules",
     "format": "prettier --write \"client/src/**/*.ts\" \"modules/abapfs/src/**/*.ts\" \"modules/abapObject/src/**/*.ts\" \"modules/sharedapi/src/**/*.ts\" \"server/src/**/*.ts\""
   },
   "devDependencies": {
@@ -5183,5 +5181,6 @@
     "express": "^4.18.2",
     "prettier": "^3.8.1",
     "xml2js": "^0.6.2"
-  }
+  },
+  "packageManager": "pnpm@11.5.3"
 }
