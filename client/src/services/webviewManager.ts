@@ -639,10 +639,7 @@ export class WebviewManager {
   /**
    * Handle messages from webview
    */
-  private async handleWebviewMessage(
-    message: DataQueryMessage,
-    webviewId: string
-  ): Promise<void> {
+  private async handleWebviewMessage(message: DataQueryMessage, webviewId: string): Promise<void> {
     const panel = this._activeWebviews.get(webviewId)
     if (!panel) return
 
