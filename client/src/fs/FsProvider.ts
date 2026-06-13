@@ -20,7 +20,7 @@ import { getSaveReason, clearSaveReason } from "../listeners"
 import { selectTransportIfNeeded } from "../adt/AdtTransports"
 import { LocalFsProvider } from "./LocalFsProvider"
 import { isHttpError } from "abap-adt-api"
-import { ReloginError } from "abapfs/out/lockManager"
+import { ReloginError } from "abapfs"
 import { funWindow as window } from "../services/funMessenger"
 
 const openInGui = (uri: Uri, contents: string) => {

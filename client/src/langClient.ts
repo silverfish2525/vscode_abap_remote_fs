@@ -1,15 +1,16 @@
-import { MainProgram, CommLogEntryData } from "vscode-abap-remote-fs-sharedapi"
+import type { MainProgram, CommLogEntryData } from "vscode-abap-remote-fs-sharedapi"
 import { log, channel, rangeApi2Vsc } from "./lib"
+import { setSyntaxCheckTrigger } from "./services/syntaxCheckTrigger"
 import {
-  AbapObjectDetail,
+  type AbapObjectDetail,
   Methods,
-  StringWrapper,
-  AbapObjectSource,
+  type StringWrapper,
+  type AbapObjectSource,
   urlFromPath,
-  UriRequest,
-  SearchProgress
+  type UriRequest,
+  type SearchProgress
 } from "vscode-abap-remote-fs-sharedapi"
-import { ExtensionContext, Uri, ProgressLocation, workspace, WorkspaceEdit } from "vscode"
+import { type ExtensionContext, Uri, ProgressLocation, workspace, WorkspaceEdit } from "vscode"
 import {
   LanguageClient,
   TransportKind,
@@ -18,14 +19,14 @@ import {
 } from "vscode-languageclient/node"
 export let client: LanguageClient
 import { join } from "path"
-import { FixProposal, Delta, LogData } from "abap-adt-api"
+import type { FixProposal, Delta, LogData } from "abap-adt-api"
 import { command, AbapFsCommands } from "./commands"
 import { RemoteManager, formatKey } from "./config"
 import { futureToken } from "./oauth"
 import { getRoot, ADTSCHEME, uriRoot, getClient } from "./adt/conections"
 import { CallLogger } from "./adt/adtCommLog"
 import { isAbapFile } from "abapfs"
-import { AbapObject } from "abapobject"
+import type { AbapObject } from "abapobject"
 import { IncludeService, IncludeProvider } from "./adt/includes"
 import * as R from "ramda"
 import { funWindow as window } from "./services/funMessenger"
@@ -171,8 +172,12 @@ async function includeChanged(prog: MainProgram) {
   await client.sendRequest(Methods.updateMainProgram, prog)
 }
 
-// Trigger syntax check for a specific URI (used when switching editors)
-export async function triggerSyntaxCheck(uri: string) {
+// Trigger syntax check for a specific URI (used when switching editors).
+// The exported callable lives in `services/syntaxCheckTrigger.ts` so that
+// consumers (e.g. mcpGetDiagnosticsTool, listeners) don't have to import
+// this module — which would drag `vscode-languageclient` into their import
+// graph and break their tests.
+async function triggerSyntaxCheckImpl(uri: string) {
   if (client && client.state === State.Running) {
     await client.sendRequest(Methods.triggerSyntaxCheck, uri)
   }
@@ -223,11 +228,15 @@ export async function startLanguageClient(context: ExtensionContext) {
     }
   })
   client.start()
+  // Wire the registry-side trigger to this client. Consumers that only need
+  // to fire syntax checks import from `services/syntaxCheckTrigger`, not
+  // from this file, keeping `vscode-languageclient` out of their closure.
+  setSyntaxCheckTrigger(triggerSyntaxCheckImpl)
 }
 
 export class LanguageCommands {
   public static start(context: ExtensionContext) {
-    command(AbapFsCommands.quickfix)(this, "applyQuickFix")
+    command(AbapFsCommands.quickfix)(LanguageCommands, "applyQuickFix")
     return startLanguageClient(context)
   }
 

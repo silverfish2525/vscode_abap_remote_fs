@@ -14,7 +14,7 @@ import {
 } from "vscode"
 import { TransportInfo, MainInclude, Revision } from "abap-adt-api"
 import { isAbapStat } from "abapfs"
-import { LockStatus } from "abapfs/out/lockObject"
+import { LockStatus } from "abapfs"
 import { AbapObject } from "abapobject"
 import { AbapFsCommands } from "../commands"
 import { getClient, uriRoot, abapUri } from "../adt/conections"

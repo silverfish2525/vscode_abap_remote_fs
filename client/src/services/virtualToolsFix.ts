@@ -12,7 +12,7 @@
 import * as vscode from "vscode"
 import { log } from "../lib"
 import { funWindow as window } from "./funMessenger"
-import { ADTSCHEME } from "../adt/conections"
+import { ADTSCHEME } from "../lib/adtScheme"
 
 const FULL_SETTING_ID = "github.copilot.chat.virtualTools.threshold"
 const RESET_COMMAND = "github.copilot.debug.resetVirtualToolGroups"
