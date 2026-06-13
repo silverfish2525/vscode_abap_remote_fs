@@ -1,5 +1,5 @@
 import { AbapFsService } from "./AFsService"
-import { create, PACKAGE, PACKAGEBASEPATH, TMPPACKAGE } from "../../abapObject"
+import { create, PACKAGE, PACKAGEBASEPATH, TMPPACKAGE } from "abapobject"
 import { AbapFolder, isAbapFolder } from "./abapFolder"
 import { Folder, PathItem } from "./folder"
 import { PathStep } from "abap-adt-api"

@@ -19,7 +19,7 @@ tslint.json
 tmp/**
 **/tmp/**
 server/**
-!server/dist/server.js
+!server/dist/**
 client/dist/*.map
 client/node_modules/**
 client/out/**
@@ -29,7 +29,6 @@ client/src/**
 client/media/**
 client/tsconfig.json
 client/tsconfig.tsbuildinfo
-client/webpack.config.js
 client/.vscodeignore
 sharedapi/**
 wiki/**
@@ -38,6 +37,7 @@ modules
 **/*.map
 .github
 .vscode
+tsdown.config.ts
 jest.config.js
 abap remote fs.code-workspace
 *.cpuprofile

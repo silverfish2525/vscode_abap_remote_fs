@@ -1,6 +1,6 @@
 import { isFolder, isAbapFile, isAbapStat } from ".."
 import { runTest } from "./connectServer"
-import { convertSlash } from "../../../abapObject/out"
+import { convertSlash } from "abapobject"
 import { mock } from "jest-mock-extended"
 
 test(

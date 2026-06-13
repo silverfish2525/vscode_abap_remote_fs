@@ -1,4 +1,4 @@
-import { AbapObject } from "../../abapObject"
+import { AbapObject } from "abapobject"
 import { AdtLock, isCsrfError } from "abap-adt-api"
 import { AbapFsService } from "./AFsService"
 
