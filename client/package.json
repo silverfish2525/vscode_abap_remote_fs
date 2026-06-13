@@ -38,7 +38,7 @@
     "@types/diff": "^7.0.2",
     "@types/jest": "^29.2.5",
     "@types/mocha": "^10.0.1",
-    "@types/node": "^18.11.18",
+    "@types/node": "^22.19.20",
     "@types/open": "^6.2.1",
     "@types/ramda": "^0.28.20",
     "@types/uuid": "^9.0.0",
@@ -52,7 +52,7 @@
     "ts-loader": "^9.4.2",
     "ts-node": "^10.9.1",
     "tsconfig-paths": "^4.1.2",
-    "typescript": "^6.0.0",
+    "typescript": "^6.0.3",
     "webpack": "^5.105.4",
     "webpack-cli": "^5.1.4"
   },
@@ -84,7 +84,7 @@
     "uuid": "^14.0.0",
     "v8-inspect-profiler": "^0.1.0",
     "vscode-abap-remote-fs-sharedapi": "file:../modules/sharedapi",
-    "vscode-languageclient": "^9.0.1",
+    "vscode-languageclient": "^10.0.0",
     "vscode-test-adapter-api": "^1.9.0",
     "xml2js": "^0.6.2",
     "zod": "^3.25.76"

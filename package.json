@@ -72,12 +72,12 @@
   },
   "devDependencies": {
     "@types/mocha": "^7.0.2",
-    "@types/node": "^18.11.18",
+    "@types/node": "^22.19.20",
     "@vscode/vsce": "^3.3.0",
     "concurrently": "^6.3.0",
     "ovsx": "^0.10.1",
     "rimraf": "^3.0.2",
-    "typescript": "^6.0.0"
+    "typescript": "^6.0.3",
     "webpack-cli": "^5.0.1"
   },
   "contributes": {

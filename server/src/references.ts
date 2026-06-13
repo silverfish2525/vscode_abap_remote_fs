@@ -268,12 +268,13 @@ const fullname = (usageReference: UsageReference) => {
 }
 
 let lastSearch: CancellationTokenSource | undefined
-export function cancelSearch() {
+export function cancelSearch(): Promise<void> {
   if (lastSearch) {
     lastSearch.cancel()
     lastSearch = undefined
     return setSearchProgress({ ended: true, hits: 0, progress: 100 }).catch(() => {})
   }
+  return Promise.resolve()
 }
 
 async function startSearch() {
