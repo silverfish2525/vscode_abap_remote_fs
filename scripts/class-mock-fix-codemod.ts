@@ -23,7 +23,8 @@
 import { Project, SyntaxKind, type Node } from "ts-morph"
 import { writeFileSync } from "node:fs"
 
-const PROJECT_ROOT = "/Users/i584843/SAPDevelop/dev/vscode_abap_remote_fs"
+import { resolveProjectRoot } from "./lib/projectRoot"
+const PROJECT_ROOT = resolveProjectRoot()
 
 const project = new Project({
   skipAddingFilesFromTsConfig: true,

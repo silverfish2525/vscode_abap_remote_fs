@@ -18,10 +18,19 @@
  *   - Wraps the require call in an `await` expression
  */
 
-import { Project, SyntaxKind, type Node } from "ts-morph"
+import {
+  Project,
+  SyntaxKind,
+  Node,
+  type ArrowFunction,
+  type FunctionExpression,
+  type FunctionDeclaration,
+  type MethodDeclaration
+} from "ts-morph"
 import { writeFileSync } from "node:fs"
 
-const PROJECT_ROOT = "/Users/i584843/SAPDevelop/dev/vscode_abap_remote_fs"
+import { resolveProjectRoot } from "./lib/projectRoot"
+const PROJECT_ROOT = resolveProjectRoot()
 
 // External modules that tests `require()` after `vi.mock(...)` - also needs the rewrite
 const KNOWN_MOCKED_EXTERNALS = new Set([
@@ -62,25 +71,25 @@ const stats = {
   skipped: [] as Array<{ file: string; reason: string; line: number }>
 }
 
-// Concrete async-capable node kinds (subset of ts-morph's AsyncableNode mixin)
-const ASYNC_CAPABLE_KINDS = new Set<SyntaxKind>([
-  SyntaxKind.ArrowFunction,
-  SyntaxKind.FunctionExpression,
-  SyntaxKind.FunctionDeclaration,
-  SyntaxKind.MethodDeclaration
-])
+// Concrete async-capable subset of ts-morph's `AsyncableNode` mixin. Listing
+// the real classes (rather than `as unknown as { isAsync; setIsAsync }`) lets
+// the type-checker enforce that we only call those methods on nodes that
+// actually have them.
+type AsyncCapable = ArrowFunction | FunctionExpression | FunctionDeclaration | MethodDeclaration
 
-type AsyncCapable = Node & {
-  isAsync(): boolean
-  setIsAsync(value: boolean): unknown
+function isAsyncCapable(node: Node): node is AsyncCapable {
+  return (
+    Node.isArrowFunction(node) ||
+    Node.isFunctionExpression(node) ||
+    Node.isFunctionDeclaration(node) ||
+    Node.isMethodDeclaration(node)
+  )
 }
 
 function findEnclosingAsyncCapable(node: Node): AsyncCapable | undefined {
   let cur: Node | undefined = node.getParent()
   while (cur) {
-    if (ASYNC_CAPABLE_KINDS.has(cur.getKind())) {
-      return cur as unknown as AsyncCapable
-    }
+    if (isAsyncCapable(cur)) return cur
     cur = cur.getParent()
   }
   return undefined

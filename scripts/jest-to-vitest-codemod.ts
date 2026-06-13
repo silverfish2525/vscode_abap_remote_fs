@@ -41,7 +41,8 @@
 import { Project, SyntaxKind, type Node, type SourceFile } from "ts-morph"
 import { writeFileSync } from "node:fs"
 
-const PROJECT_ROOT = "/Users/i584843/SAPDevelop/dev/vscode_abap_remote_fs"
+import { resolveProjectRoot } from "./lib/projectRoot"
+const PROJECT_ROOT = resolveProjectRoot()
 
 const METHOD_DIRECT_RENAME = new Set([
   "fn",

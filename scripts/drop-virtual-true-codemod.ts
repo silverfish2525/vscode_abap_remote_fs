@@ -8,9 +8,10 @@
  * trying to resolve the original.
  */
 
-import { Project, SyntaxKind } from "ts-morph"
+import { Project, SyntaxKind, type CallExpression } from "ts-morph"
 
-const PROJECT_ROOT = "/Users/i584843/SAPDevelop/dev/vscode_abap_remote_fs"
+import { resolveProjectRoot } from "./lib/projectRoot"
+const PROJECT_ROOT = resolveProjectRoot()
 
 const project = new Project({
   skipAddingFilesFromTsConfig: true,
@@ -32,9 +33,7 @@ for (const sf of project.getSourceFiles()) {
   let changed = false
 
   // Collect call expressions to mutate, walking deepest-first to preserve ranges
-  const targets: Array<
-    ReturnType<typeof project.createSourceFile>["forEachChild"] extends never ? never : any
-  > = []
+  const targets: CallExpression[] = []
   sf.forEachDescendant(node => {
     if (node.getKind() !== SyntaxKind.CallExpression) return
     const call = node.asKindOrThrow(SyntaxKind.CallExpression)

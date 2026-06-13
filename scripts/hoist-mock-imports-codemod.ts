@@ -19,10 +19,19 @@
 //      remaining `await` expressions and drop the async keyword (so unawaited
 //      calls regain their original synchronous behavior).
 
-import { Project, SyntaxKind, type Node } from "ts-morph"
+import {
+  Project,
+  SyntaxKind,
+  Node,
+  type ArrowFunction,
+  type FunctionExpression,
+  type FunctionDeclaration,
+  type MethodDeclaration
+} from "ts-morph"
 import { writeFileSync } from "node:fs"
 
-const PROJECT_ROOT = "/Users/i584843/SAPDevelop/dev/vscode_abap_remote_fs"
+import { resolveProjectRoot } from "./lib/projectRoot"
+const PROJECT_ROOT = resolveProjectRoot()
 
 const project = new Project({
   skipAddingFilesFromTsConfig: true,
@@ -48,32 +57,22 @@ function sanitizeImportSource(src: string): string {
   return src.replace(/[^A-Za-z0-9_]/g, "_").replace(/^_+/, "") || "module"
 }
 
-function findEnclosingAsyncCapable(node: Node): Node | undefined {
-  const KINDS = new Set<SyntaxKind>([
-    SyntaxKind.ArrowFunction,
-    SyntaxKind.FunctionExpression,
-    SyntaxKind.FunctionDeclaration,
-    SyntaxKind.MethodDeclaration
-  ])
-  let cur: Node | undefined = node.getParent()
-  while (cur) {
-    if (KINDS.has(cur.getKind())) return cur
-    cur = cur.getParent()
-  }
-  return undefined
+// Concrete async-capable subset of ts-morph's `AsyncableNode` mixin. Listing
+// the real classes (rather than `as unknown as { isAsync; setIsAsync }`) lets
+// the type-checker enforce that we only call those methods on nodes that
+// actually have them.
+type AsyncCapable = ArrowFunction | FunctionExpression | FunctionDeclaration | MethodDeclaration
+
+function isAsyncCapable(node: Node): node is AsyncCapable {
+  return (
+    Node.isArrowFunction(node) ||
+    Node.isFunctionExpression(node) ||
+    Node.isFunctionDeclaration(node) ||
+    Node.isMethodDeclaration(node)
+  )
 }
 
-function asAsyncCapable(node: Node): {
-  isAsync(): boolean
-  setIsAsync(value: boolean): unknown
-  getBody(): Node | undefined
-} {
-  return node as unknown as {
-    isAsync(): boolean
-    setIsAsync(value: boolean): unknown
-    getBody(): Node | undefined
-  }
-}
+// (unused — superseded by isAsyncCapable + walk that returns AsyncCapable directly)
 
 for (const sf of project.getSourceFiles()) {
   stats.filesScanned++
@@ -159,18 +158,10 @@ for (const sf of project.getSourceFiles()) {
   // 6. Walk async functions whose body now contains no AwaitExpression and
   // drop the async keyword. Skip top-level await callers (they don't have an
   // enclosing async function anyway).
-  const asyncCandidates: Node[] = []
+  const asyncCandidates: AsyncCapable[] = []
   sf.forEachDescendant(node => {
-    const k = node.getKind()
-    if (
-      k !== SyntaxKind.ArrowFunction &&
-      k !== SyntaxKind.FunctionExpression &&
-      k !== SyntaxKind.FunctionDeclaration &&
-      k !== SyntaxKind.MethodDeclaration
-    )
-      return
-    const ac = asAsyncCapable(node)
-    if (!ac.isAsync()) return
+    if (!isAsyncCapable(node)) return
+    if (!node.isAsync()) return
     asyncCandidates.push(node)
   })
 
@@ -190,7 +181,7 @@ for (const sf of project.getSourceFiles()) {
       }
     })
     if (!hasAwait) {
-      asAsyncCapable(fn).setIsAsync(false)
+      fn.setIsAsync(false)
       stats.asyncDropped++
       changed = true
     }
