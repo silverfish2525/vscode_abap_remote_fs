@@ -1,0 +1,36 @@
+# pnpm workspace configuration — defines which directories are workspace
+# packages. The root package.json (the VS Code extension manifest) is the
+# workspace root and is NOT itself a workspace package.
+#
+# Each entry below corresponds to a package.json that gets symlinked into
+# the workspace's hoisted node_modules. Inter-package dependencies use
+# `"<pkg-name>": "workspace:*"` in package.json — pnpm replaces the
+# `workspace:*` specifier with the resolved version at publish time, but
+# during local development it's just a symlink.
+packages:
+  - client
+  - server
+  - modules/*
+
+# pnpm 11+ requires explicit per-package approval before running install
+# scripts (postinstall, install, preinstall). This is a security feature:
+# it forces a human to read each package's source before granting it the
+# right to execute arbitrary code at install time.
+#
+# Decisions for this workspace:
+#   - "@vscode/vsce-sign" : TRUE   — native binary used by `vsce package`
+#                                    and `vsce publish` to sign VSIX bundles.
+#                                    Devtime-only, never reaches end users.
+#   - keytar              : TRUE   — transitive dependency of `@vscode/vsce`
+#                                    and `ovsx`. Used by those publishing
+#                                    tools (NOT by the extension itself —
+#                                    runtime credential storage goes through
+#                                    `vscode.ExtensionContext.secrets` in
+#                                    `client/src/lib/externalmodules.ts`).
+#                                    Native build is required for `vsce` /
+#                                    `ovsx` to work, so allow.
+#   - "@scarf/scarf"      : FALSE  — telemetry beacon shim. No reason to run.
+allowBuilds:
+  "@vscode/vsce-sign": true
+  keytar: true
+  "@scarf/scarf": false

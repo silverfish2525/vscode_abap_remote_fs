@@ -1,4 +1,4 @@
-import { AOService, AbapObjectService } from "../../abapObject/out"
+import { AOService, AbapObjectService } from "abapobject"
 import { PathStep, AdtLock, session_types } from "abap-adt-api"
 
 export interface AbapFsService extends AbapObjectService {

@@ -1,6 +1,6 @@
 // @ts-check
 
-"use strict"
+
 
 const path = require("path")
 const TerserPlugin = require("terser-webpack-plugin")
@@ -30,12 +30,31 @@ const config = {
   },
   devtool: "source-map",
   externals: {
-    vscode: "commonjs vscode", // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
-    "@playwright/mcp": "commonjs @playwright/mcp",
+    vscode: "commonjs vscode" // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
   },
   resolve: {
     // support reading TypeScript and JavaScript files, 📖 -> https://github.com/TypeStrong/ts-loader
-    extensions: [".ts", ".js"]
+    extensions: [".ts", ".js"],
+    // Prefer the `module` (ESM) entry over `main` (often UMD/CJS) when a
+    // package publishes both. Webpack 5 with `target: "node"` defaults to
+    // CJS resolution, which exposes a UMD shim with dynamic `require(...)`
+    // calls in `docx@9.7.1`'s `dist/index.cjs` (line 27991) that webpack
+    // cannot statically analyse — build fails with 1 error.
+    mainFields: ["module", "main"],
+    conditionNames: ["import", "node", "default"],
+    alias: {
+      // Direct alias for `docx` — the conditionNames override above is not
+      // sufficient because docx's `exports` field maps `require` to the
+      // problematic `index.cjs`. Resolve the package's CJS entry first,
+      // then swap to the sibling ESM file. Survives docx version bumps and
+      // works under both pnpm's symlinked layout and npm's hoisted layout.
+      // NOTE: this whole webpack config is being replaced by a faster
+      // bundler in a follow-up PR — these workarounds will go with it.
+      docx: path.join(
+        path.dirname(require.resolve("docx", { paths: [__dirname] })),
+        "index.mjs"
+      )
+    }
   },
   watchOptions: {
     ignored: /node_modules|out/

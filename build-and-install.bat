@@ -3,7 +3,7 @@ echo 🚀 Building and Installing ABAP Intelligence Extension...
 echo ⏰ Build started at %TIME% on %DATE%
 set start_time=%TIME%
 echo 📦 Compiling TypeScript...
-call npm run compile
+call pnpm run compile
 if %errorlevel% neq 0 (
     echo ❌ Compilation failed!
     pause
@@ -12,7 +12,7 @@ if %errorlevel% neq 0 (
 echo ✅ Compilation successful!
 
 echo 📦 Packaging extension...
-call npx vsce package --allow-star-activation --allow-missing-repository --out "abap-fs-v2.0.9.vsix" 
+call pnpm exec vsce package --no-dependencies --allow-star-activation --allow-missing-repository --out "abap-fs-v2.0.9.vsix" 
 if %errorlevel% neq 0 (
     echo ❌ Packaging failed!
     pause

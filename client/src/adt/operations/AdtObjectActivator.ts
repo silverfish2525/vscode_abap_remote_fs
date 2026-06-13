@@ -1,12 +1,15 @@
 import {
-  ADTClient,
+  type ADTClient,
   isAdtError,
   inactiveObjectsInResults,
-  InactiveObjectRecord,
-  InactiveObjectElement
+  type ActivationResult,
+  type ActivationResultMessage,
+  type InactiveObject,
+  type InactiveObjectRecord,
+  type InactiveObjectElement
 } from "abap-adt-api"
-import { Uri, EventEmitter, QuickPickItemKind } from "vscode"
-import { AbapObject } from "abapobject"
+import { type Uri, EventEmitter, QuickPickItemKind } from "vscode"
+import type { AbapObject } from "abapobject"
 import { getClient } from "../conections"
 import { IncludeProvider, IncludeService } from "../includes"
 import { isDefined, channel } from "../../lib"
@@ -17,10 +20,37 @@ const logError = (message: string) => {
   channel.appendLine(message)
 }
 
-
 /** Wrap plain InactiveObject[] into InactiveObjectRecord[] for use with showActivationSelectionDialog */
 const toRecords = (objects: any[]): InactiveObjectRecord[] =>
-  objects.map(obj => ({ object: obj } as InactiveObjectRecord))
+  objects.map(obj => ({ object: obj }) as InactiveObjectRecord)
+
+// TODO(upstream): the abap-adt-api `ActivationResult` types only declare
+//   `messages: ActivationResultMessage[]` (with `shortText`/`objDescr`/`href`)
+//   and `inactive: InactiveObjectRecord[]`, but real ADT activation responses
+//   also carry `longText`/`message`/`msg` keys on each message and may surface
+//   bare `InactiveObject` entries on `inactive`. When the upstream library
+//   tightens these (see https://github.com/marcellourbani/abap-adt-api/pulls)
+//   replace `ActivationFailureResult` with `ActivationResult` directly.
+//
+// We also synthesize a "cancelled by user" message locally; it only carries a
+// `shortText` and we don't want to fabricate empty/zero/false values for the
+// other required fields just to satisfy the upstream type. Hence the local
+// `SyntheticActivationMessage` and a widened `messages` element type below.
+type SyntheticActivationMessage = Pick<ActivationResultMessage, "shortText"> &
+  Partial<Omit<ActivationResultMessage, "shortText">>
+const cancelMsg: SyntheticActivationMessage = {
+  shortText: "Activation cancelled by user"
+}
+type ActivationFailureResult = Omit<ActivationResult, "messages" | "inactive"> & {
+  messages: Array<
+    SyntheticActivationMessage & {
+      longText?: string
+      message?: string
+      msg?: string
+    }
+  >
+  inactive: Array<InactiveObject | InactiveObjectRecord>
+}
 
 export interface ActivationEvent {
   object: AbapObject
@@ -34,12 +64,12 @@ export class AdtObjectActivator {
   private static instances = new Map<string, AdtObjectActivator>()
   private emitter = new EventEmitter<ActivationEvent>()
   public static get(connId: string) {
-    const instance = this.instances.get(connId)
+    const instance = AdtObjectActivator.instances.get(connId)
     if (instance) return instance
     const stateless_client = getClient(connId, false)
     // stateful_client.stateful = session_types.stateful
     const newinstance = new AdtObjectActivator(stateless_client)
-    this.instances.set(connId, newinstance)
+    AdtObjectActivator.instances.set(connId, newinstance)
     return newinstance
   }
 
@@ -162,7 +192,7 @@ export class AdtObjectActivator {
 
           // Helper to extract base URI without /source/main?context=... suffix
           const getBaseUri = (uri: string) => {
-            const match = uri.match(/^(\/sap\/bc\/adt\/programs\/includes\/[^\/]+)/)
+            const match = uri.match(/^(\/sap\/bc\/adt\/programs\/includes\/[^/]+)/)
             return match ? match[1] : uri
           }
 
@@ -325,16 +355,20 @@ export class AdtObjectActivator {
     return selected ? selected.map((item: any) => item.entry.object) : null
   }
 
-  private summarizeFailure(result: any, defaultObjectName: string) {
+  private summarizeFailure(result: ActivationFailureResult, defaultObjectName: string) {
     const normText = (v: any): string => {
       if (Array.isArray(v)) return v.map(x => normText(x)).join(" ")
       if (v === undefined || v === null) return ""
       return `${v}`
     }
 
-    type Msg = { text: string; href?: string; target: string }
+    type Msg = { text: string; href: string | undefined; target: string }
+    // Real ADT activation responses sometimes carry `longText`/`message`/`msg`
+    // keys on each message even though upstream `ActivationResultMessage` only
+    // declares `shortText`/`objDescr`/`href`. Narrow at the use site instead
+    // of dragging a helper type across the file.
     const msgs: Msg[] = (result?.messages || [])
-      .map((m: any) => {
+      .map(m => {
         const textRaw = m.shortText || m.longText || m.message || m.msg || ""
         const text = normText(textRaw).trim()
         if (!text) return undefined
@@ -348,7 +382,7 @@ export class AdtObjectActivator {
             target = parts[sourceIdx - 1] || ""
           } else {
             const hrefMatch = href.match(
-              /includes\/([^\/\?#]+)|programs\/([^\/\?#]+)|classes\/([^\/\?#]+)/i
+              /includes\/([^/?#]+)|programs\/([^/?#]+)|classes\/([^/?#]+)/i
             )
             if (hrefMatch) target = hrefMatch[1] || hrefMatch[2] || hrefMatch[3] || ""
           }
@@ -363,7 +397,7 @@ export class AdtObjectActivator {
 
         return { text, href, target }
       })
-      .filter(Boolean)
+      .filter((m): m is Msg => m !== undefined)
 
     const grouped = new Map<string, Msg[]>()
     for (const m of msgs) {
@@ -372,10 +406,18 @@ export class AdtObjectActivator {
       grouped.set(m.target, arr)
     }
 
-    const inactiveList = (result?.inactive || [])
-      .map((o: any) =>
-        `${normText(o["adtcore:type"]) || ""} ${normText(o["adtcore:name"]) || ""}`.trim()
-      )
+    // Live payloads sometimes return bare `InactiveObject`s on `inactive`
+    // even though upstream types declare `InactiveObjectRecord[]`; widen at
+    // this single trust boundary so the per-entry `"adtcore:type" in o`
+    // narrowing below works without dragging the union into the param type.
+    const inactiveEntries = (result?.inactive || []) as Array<InactiveObject | InactiveObjectRecord>
+    const inactiveList = inactiveEntries
+      .map(o => {
+        const flat: InactiveObject | InactiveObjectElement | undefined =
+          "adtcore:type" in o ? o : o.object
+        if (!flat) return ""
+        return `${normText(flat["adtcore:type"]) || ""} ${normText(flat["adtcore:name"]) || ""}`.trim()
+      })
       .filter(Boolean)
 
     const errorCount = msgs.length
@@ -472,7 +514,11 @@ export class AdtObjectActivator {
     }
   }
 
-  private async tryActivate(object: AbapObject, uri: Uri, interactive: boolean) {
+  private async tryActivate(
+    object: AbapObject,
+    uri: Uri,
+    interactive: boolean
+  ): Promise<ActivationResult | ActivationFailureResult | undefined> {
     const { name, path } = object.lockObject
     let result
     const mainProg = await this.getMain(object, uri)
@@ -503,11 +549,12 @@ export class AdtObjectActivator {
         result = await this.client.activate(selectedObjects)
       } else {
         // User cancelled - don't activate anything, return a cancelled result
-        return {
+        const cancelledResult: ActivationFailureResult = {
           success: false,
-          messages: [{ shortText: "Activation cancelled by user" }],
+          messages: [cancelMsg],
           inactive: relatedObjects
         }
+        return cancelledResult
       }
     } else {
       // No inactive related objects found, or only one object, just activate the main object
@@ -528,8 +575,6 @@ export class AdtObjectActivator {
             fallbackObjects = relatedObjects
           }
         }
-
-
 
         if (fallbackObjects.length > 1) {
           // Show user selection dialog for which objects to activate
@@ -567,7 +612,12 @@ export class AdtObjectActivator {
         await inactive.loadStructure(true)
         return { ok: true }
       } else {
-        return this.summarizeFailure(result, object.name)
+        const failure: ActivationFailureResult = result ?? {
+          success: false,
+          messages: [],
+          inactive: []
+        }
+        return this.summarizeFailure(failure, object.name)
       }
     } catch (error) {
       // Enhanced error handling: surface ADT response body/status when present
