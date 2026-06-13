@@ -3,71 +3,70 @@
  * Tests template processing, file operations, and agent enable/disable logic.
  */
 
-jest.mock(
+vi.mock(
   "vscode",
   () => ({
     workspace: {
-      getConfiguration: jest.fn().mockReturnValue({
-        get: jest.fn((key: string, def: any) => def),
-        update: jest.fn().mockResolvedValue(undefined)
+      getConfiguration: vi.fn().mockReturnValue({
+        get: vi.fn(function (key: string, def: any) { return def }),
+        update: vi.fn().mockResolvedValue(undefined)
       }),
       fs: {
-        readFile: jest.fn(),
-        writeFile: jest.fn().mockResolvedValue(undefined),
-        createDirectory: jest.fn().mockResolvedValue(undefined),
-        stat: jest.fn(),
-        rename: jest.fn().mockResolvedValue(undefined),
-        delete: jest.fn().mockResolvedValue(undefined),
-        readDirectory: jest.fn().mockResolvedValue([])
+        readFile: vi.fn(),
+        writeFile: vi.fn().mockResolvedValue(undefined),
+        createDirectory: vi.fn().mockResolvedValue(undefined),
+        stat: vi.fn(),
+        rename: vi.fn().mockResolvedValue(undefined),
+        delete: vi.fn().mockResolvedValue(undefined),
+        readDirectory: vi.fn().mockResolvedValue([])
       },
-      openTextDocument: jest.fn().mockResolvedValue({})
+      openTextDocument: vi.fn().mockResolvedValue({})
     },
     commands: {
-      executeCommand: jest.fn().mockResolvedValue(undefined)
+      executeCommand: vi.fn().mockResolvedValue(undefined)
     },
     window: {
-      showWarningMessage: jest.fn(),
-      showInformationMessage: jest.fn(),
+      showWarningMessage: vi.fn(),
+      showInformationMessage: vi.fn(),
       tabGroups: { all: [] }
     },
     Uri: {
-      file: jest.fn((p: string) => ({ fsPath: p, toString: () => p })),
-      joinPath: jest.fn((base: any, ...segs: string[]) => {
-        const joined = [base?.fsPath || String(base), ...segs].join("/")
-        return { fsPath: joined, toString: () => joined }
-      })
+      file: vi.fn(function (p: string) { return ({ fsPath: p, toString: () => p }) }),
+      joinPath: vi.fn(function (base: any, ...segs: string[]) {
+              const joined = [base?.fsPath || String(base), ...segs].join("/")
+              return { fsPath: joined, toString: () => joined }
+            })
     },
     FileType: { File: 1, Directory: 2 },
     DiagnosticSeverity: { Error: 0, Warning: 1, Information: 2, Hint: 3 },
     languages: {
-      getDiagnostics: jest.fn().mockReturnValue([])
+      getDiagnostics: vi.fn().mockReturnValue([])
     },
     TabInputText: class {
       constructor(public uri: any) {}
     },
     ConfigurationTarget: { Global: 1, Workspace: 2 }
-  }),
-  { virtual: true }
+  })
 )
 
-jest.mock("./funMessenger", () => ({
+vi.mock("./funMessenger", () => ({
   funWindow: {
-    showInformationMessage: jest.fn(),
-    showErrorMessage: jest.fn(),
-    showWarningMessage: jest.fn(),
-    tabGroups: { all: [], close: jest.fn() }
+    showInformationMessage: vi.fn(),
+    showErrorMessage: vi.fn(),
+    showWarningMessage: vi.fn(),
+    tabGroups: { all: [], close: vi.fn() }
   }
 }))
 
-jest.mock("./subagentRegistry", () => ({
+vi.mock("./subagentRegistry", () => ({
   AGENT_REGISTRY: [
     { id: "abap-reader", templateFile: "abap-reader.agent.md", tools: ["tool1"] },
     { id: "abap-discoverer", templateFile: "abap-discoverer.agent.md", tools: null }
   ],
-  getSubagentSettings: jest.fn().mockReturnValue({ models: { "abap-reader": "gpt-4o", "abap-discoverer": "gpt-4o" } }),
-  getWorkspaceFolder: jest.fn().mockReturnValue({ fsPath: "/workspace", toString: () => "/workspace" }),
-  getExtensionId: jest.fn().mockReturnValue("murbani.vscode-abap-remote-fs"),
-  buildFullToolName: jest.fn((ext: string, t: string) => `${ext}_${t}`)
+  getSubagentSettings: vi.fn().mockReturnValue({ models: { "abap-reader": "gpt-4o", "abap-discoverer": "gpt-4o" } }),
+  getWorkspaceFolder: vi.fn().mockReturnValue({ fsPath: "/workspace", toString: () => "/workspace" }),
+  getExtensionId: vi.fn().mockReturnValue("murbani.vscode-abap-remote-fs"),
+  buildFullToolName: vi.fn(function (ext: string, t: string) { return `${ext}_${t}` })
 }))
 
 import * as vscode from "vscode"
@@ -82,10 +81,11 @@ import {
   disableSubagentsCore
 } from "./subagentFileOps"
 import { getWorkspaceFolder } from "./subagentRegistry"
+import * as __$mock_funMessenger from "./funMessenger";
 
 describe("subagentFileOps", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   // ============================================================================
@@ -140,13 +140,13 @@ describe("subagentFileOps", () => {
 
     it("loads template from dist path first", async () => {
       const content = Buffer.from("template content")
-      ;(vscode.workspace.fs.readFile as jest.Mock).mockResolvedValueOnce(content)
+      ;(vscode.workspace.fs.readFile as Mock).mockResolvedValueOnce(content)
       const result = await loadTemplate(mockContext, "test.agent.md")
       expect(result).toBe("template content")
     })
 
     it("falls back to dev path when dist path fails", async () => {
-      ;(vscode.workspace.fs.readFile as jest.Mock)
+      ;(vscode.workspace.fs.readFile as Mock)
         .mockRejectedValueOnce(new Error("not found"))
         .mockResolvedValueOnce(Buffer.from("dev content"))
       const result = await loadTemplate(mockContext, "test.agent.md")
@@ -154,7 +154,7 @@ describe("subagentFileOps", () => {
     })
 
     it("throws when both paths fail", async () => {
-      ;(vscode.workspace.fs.readFile as jest.Mock)
+      ;(vscode.workspace.fs.readFile as Mock)
         .mockRejectedValueOnce(new Error("not found"))
         .mockRejectedValueOnce(new Error("also not found"))
       await expect(loadTemplate(mockContext, "missing.md")).rejects.toThrow(
@@ -168,23 +168,23 @@ describe("subagentFileOps", () => {
   // ============================================================================
   describe("refreshExplorer", () => {
     it("executes the refreshFilesExplorer command", async () => {
-      jest.useFakeTimers()
+      vi.useFakeTimers()
       const promise = refreshExplorer()
-      await jest.runAllTimersAsync()
+      await vi.runAllTimersAsync()
       await promise
       expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
         "workbench.files.action.refreshFilesExplorer"
       )
-      jest.useRealTimers()
+      vi.useRealTimers()
     })
 
     it("does not throw when command fails", async () => {
-      jest.useFakeTimers()
-      ;(vscode.commands.executeCommand as jest.Mock).mockRejectedValueOnce(new Error("no command"))
+      vi.useFakeTimers()
+      ;(vscode.commands.executeCommand as Mock).mockRejectedValueOnce(new Error("no command"))
       const promise = refreshExplorer()
-      await jest.runAllTimersAsync()
+      await vi.runAllTimersAsync()
       await expect(promise).resolves.not.toThrow()
-      jest.useRealTimers()
+      vi.useRealTimers()
     })
   })
 
@@ -199,9 +199,9 @@ describe("subagentFileOps", () => {
       }
       const mockTabGroups = {
         all: [{ tabs: [mockTab] }],
-        close: jest.fn().mockResolvedValue(undefined)
+        close: vi.fn().mockResolvedValue(undefined)
       }
-      const { funWindow } = require("./funMessenger")
+      const { funWindow } = (__$mock_funMessenger)
       funWindow.tabGroups = mockTabGroups
 
       const workspaceUri = { fsPath: "/workspace" } as any
@@ -216,9 +216,9 @@ describe("subagentFileOps", () => {
       }
       const mockTabGroups = {
         all: [{ tabs: [mockTab] }],
-        close: jest.fn()
+        close: vi.fn()
       }
-      const { funWindow } = require("./funMessenger")
+      const { funWindow } = (__$mock_funMessenger)
       funWindow.tabGroups = mockTabGroups
 
       const workspaceUri = { fsPath: "/workspace" } as any
@@ -232,13 +232,13 @@ describe("subagentFileOps", () => {
   // ============================================================================
   describe("hasDisabledAgentFiles", () => {
     it("returns true when agents_disabled folder exists", async () => {
-      ;(vscode.workspace.fs.stat as jest.Mock).mockResolvedValueOnce({})
+      ;(vscode.workspace.fs.stat as Mock).mockResolvedValueOnce({})
       const result = await hasDisabledAgentFiles({ fsPath: "/workspace" } as any)
       expect(result).toBe(true)
     })
 
     it("returns false when agents_disabled folder does not exist", async () => {
-      ;(vscode.workspace.fs.stat as jest.Mock).mockRejectedValueOnce(new Error("not found"))
+      ;(vscode.workspace.fs.stat as Mock).mockRejectedValueOnce(new Error("not found"))
       const result = await hasDisabledAgentFiles({ fsPath: "/workspace" } as any)
       expect(result).toBe(false)
     })
@@ -249,18 +249,18 @@ describe("subagentFileOps", () => {
   // ============================================================================
   describe("disableAgentFiles", () => {
     it("returns true after successful rename", async () => {
-      ;(vscode.workspace.fs.stat as jest.Mock).mockResolvedValueOnce({}) // agents dir exists
-      ;(vscode.workspace.fs.delete as jest.Mock).mockRejectedValueOnce(new Error("not found")) // disabled dir doesn't exist
-      jest.useFakeTimers()
+      ;(vscode.workspace.fs.stat as Mock).mockResolvedValueOnce({}) // agents dir exists
+      ;(vscode.workspace.fs.delete as Mock).mockRejectedValueOnce(new Error("not found")) // disabled dir doesn't exist
+      vi.useFakeTimers()
       const promise = disableAgentFiles({ fsPath: "/workspace" } as any)
-      await jest.runAllTimersAsync()
+      await vi.runAllTimersAsync()
       const result = await promise
       expect(result).toBe(true)
-      jest.useRealTimers()
+      vi.useRealTimers()
     })
 
     it("returns false when agents folder does not exist", async () => {
-      ;(vscode.workspace.fs.stat as jest.Mock).mockRejectedValueOnce(new Error("not found"))
+      ;(vscode.workspace.fs.stat as Mock).mockRejectedValueOnce(new Error("not found"))
       const result = await disableAgentFiles({ fsPath: "/workspace" } as any)
       expect(result).toBe(false)
     })
@@ -271,18 +271,18 @@ describe("subagentFileOps", () => {
   // ============================================================================
   describe("disableSubagentsCore", () => {
     it("returns success=true", async () => {
-      ;(getWorkspaceFolder as jest.Mock).mockReturnValue({ fsPath: "/workspace" })
-      ;(vscode.workspace.fs.stat as jest.Mock).mockRejectedValue(new Error("not found"))
+      ;(getWorkspaceFolder as Mock).mockReturnValue({ fsPath: "/workspace" })
+      ;(vscode.workspace.fs.stat as Mock).mockRejectedValue(new Error("not found"))
       const result = await disableSubagentsCore()
       expect(result.success).toBe(true)
     })
 
     it("updates abapfs.subagents.enabled to false", async () => {
-      ;(getWorkspaceFolder as jest.Mock).mockReturnValue({ fsPath: "/workspace" })
-      ;(vscode.workspace.fs.stat as jest.Mock).mockRejectedValue(new Error("not found"))
-      const mockUpdate = jest.fn().mockResolvedValue(undefined)
-      ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue({
-        get: jest.fn((k: string, d: any) => d),
+      ;(getWorkspaceFolder as Mock).mockReturnValue({ fsPath: "/workspace" })
+      ;(vscode.workspace.fs.stat as Mock).mockRejectedValue(new Error("not found"))
+      const mockUpdate = vi.fn().mockResolvedValue(undefined)
+      ;(vscode.workspace.getConfiguration as Mock).mockReturnValue({
+        get: vi.fn(function (k: string, d: any) { return d }),
         update: mockUpdate
       })
       await disableSubagentsCore()

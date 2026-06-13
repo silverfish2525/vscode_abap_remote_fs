@@ -1,46 +1,42 @@
-jest.mock(
-  "vscode",
-  () => ({
-    LanguageModelToolResult: jest.fn().mockImplementation((parts: any[]) => ({ parts })),
-    LanguageModelTextPart: jest.fn().mockImplementation((text: string) => ({ text })),
-    MarkdownString: jest.fn().mockImplementation((text: string) => ({ text })),
-    Uri: {
-      parse: jest.fn((s: string) => ({ toString: () => s, authority: "dev100", path: "/test" }))
-    },
-    commands: { executeCommand: jest.fn() },
-    lm: { registerTool: jest.fn(() => ({ dispose: jest.fn() })) }
-  }),
-  { virtual: true }
-)
-
-jest.mock("../../adt/conections", () => ({
-  getClient: jest.fn(),
-  getOrCreateRoot: jest.fn()
-}))
-jest.mock("../telemetry", () => ({ logTelemetry: jest.fn() }))
-jest.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: jest.fn(() => ({ dispose: jest.fn() }))
-}))
-jest.mock("../abapSearchService", () => ({ getSearchService: jest.fn() }))
-jest.mock("abapobject", () => ({ isAbapClass: jest.fn() }))
-jest.mock("abapfs", () => ({ isAbapFile: jest.fn(), isAbapStat: jest.fn() }))
-jest.mock("../../adt/operations/AdtObjectFinder", () => ({
-  createUri: jest.fn(),
-  uriAbapFile: jest.fn()
+vi.mock("vscode", () => ({
+  LanguageModelToolResult: vi.fn().mockImplementation(function (parts: any[]) { return ({ parts }) }),
+  LanguageModelTextPart: vi.fn().mockImplementation(function (text: string) { return ({ text }) }),
+  MarkdownString: vi.fn().mockImplementation(function (text: string) { return ({ text }) }),
+  Uri: { parse: vi.fn(function (s: string) { return ({ toString: () => s, authority: "dev100", path: "/test" }) }) },
+  commands: { executeCommand: vi.fn() },
+  lm: { registerTool: vi.fn(function () { return ({ dispose: vi.fn() }) }) }
 }))
 
-jest.mock("./toolGuard", () => ({
-  assertToolInvocationAuthorized: jest.fn(),
-  isToolInvocationAuthorized: jest.fn(() => true)
+vi.mock("../../adt/conections", () => ({
+  getClient: vi.fn(),
+  getOrCreateRoot: vi.fn()
 }))
-const mockAddResultsWithReturn = jest.fn()
-jest.mock("../../adt/operations/UnitTestRunner", () => ({
-  UnitTestRunner: { get: jest.fn(() => ({ addResultsWithReturn: mockAddResultsWithReturn })) }
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("./toolRegistry", () => ({
+  registerToolWithRegistry: vi.fn(function () { return ({ dispose: vi.fn() }) })
+}))
+vi.mock("../abapSearchService", () => ({ getSearchService: vi.fn() }))
+vi.mock("abapobject", () => ({ isAbapClass: vi.fn() }))
+vi.mock("abapfs", () => ({ isAbapFile: vi.fn(), isAbapStat: vi.fn() }))
+vi.mock("../../adt/operations/AdtObjectFinder", () => ({
+  createUri: vi.fn(),
+  uriAbapFile: vi.fn()
 }))
 
-const mockActivate = jest.fn()
-jest.mock("../../adt/operations/AdtObjectActivator", () => ({
-  AdtObjectActivator: { get: jest.fn(() => ({ activate: mockActivate })) }
+const { mockAddResultsWithReturn } = vi.hoisted(() => {
+  const mockAddResultsWithReturn = vi.fn()
+  return { mockAddResultsWithReturn }
+})
+vi.mock("../../adt/operations/UnitTestRunner", () => ({
+  UnitTestRunner: { get: vi.fn(function () { return ({ addResultsWithReturn: mockAddResultsWithReturn }) }) }
+}))
+
+const { mockActivate } = vi.hoisted(() => {
+  const mockActivate = vi.fn()
+  return { mockActivate }
+})
+vi.mock("../../adt/operations/AdtObjectActivator", () => ({
+  AdtObjectActivator: { get: vi.fn(function () { return ({ activate: mockActivate }) }) }
 }))
 
 import { CreateTestIncludeTool, RunUnitTestsTool } from "./unitTestTools"
@@ -57,17 +53,17 @@ function makeOptions(input: any = {}) {
   return { input } as any
 }
 
-const mockSearcher = { searchObjects: jest.fn() }
-const mockRoot = { findByAdtUri: jest.fn() }
+const mockSearcher = { searchObjects: vi.fn() }
+const mockRoot = { findByAdtUri: vi.fn() }
 
 describe("CreateTestIncludeTool", () => {
   let tool: CreateTestIncludeTool
 
   beforeEach(() => {
     tool = new CreateTestIncludeTool()
-    jest.clearAllMocks()
-    ;(getSearchService as jest.Mock).mockReturnValue(mockSearcher)
-    ;(getOrCreateRoot as jest.Mock).mockResolvedValue(mockRoot)
+    vi.clearAllMocks()
+    ;(getSearchService as Mock).mockReturnValue(mockSearcher)
+    ;(getOrCreateRoot as Mock).mockResolvedValue(mockRoot)
   })
 
   describe("prepareInvocation", () => {
@@ -99,7 +95,10 @@ describe("CreateTestIncludeTool", () => {
   describe("invoke", () => {
     it("logs telemetry", async () => {
       mockSearcher.searchObjects.mockResolvedValue([])
-      await tool.invoke(makeOptions({ className: "ZCL_TEST", connectionId: "dev100" }), mockToken)
+      await tool.invoke(
+        makeOptions({ className: "ZCL_TEST", connectionId: "dev100" }),
+        mockToken
+      )
       expect(logTelemetry).toHaveBeenCalledWith("tool_create_test_include_called", {
         connectionId: "dev100"
       })
@@ -126,13 +125,19 @@ describe("CreateTestIncludeTool", () => {
 
     it("uses lowercase connectionId for search service", async () => {
       mockSearcher.searchObjects.mockResolvedValue([])
-      await tool.invoke(makeOptions({ className: "ZCL_TEST", connectionId: "DEV100" }), mockToken)
+      await tool.invoke(
+        makeOptions({ className: "ZCL_TEST", connectionId: "DEV100" }),
+        mockToken
+      )
       expect(getSearchService).toHaveBeenCalledWith("dev100")
     })
 
     it("searches only for CLAS/OC type", async () => {
       mockSearcher.searchObjects.mockResolvedValue([])
-      await tool.invoke(makeOptions({ className: "ZCL_TEST", connectionId: "dev100" }), mockToken)
+      await tool.invoke(
+        makeOptions({ className: "ZCL_TEST", connectionId: "dev100" }),
+        mockToken
+      )
       expect(mockSearcher.searchObjects).toHaveBeenCalledWith("ZCL_TEST", ["CLAS/OC"], 1)
     })
 
@@ -144,14 +149,14 @@ describe("CreateTestIncludeTool", () => {
 
       const mockParent = {
         structure: true,
-        loadStructure: jest.fn(),
-        findInclude: jest.fn().mockReturnValue({ some: "include" })
+        loadStructure: vi.fn(),
+        findInclude: vi.fn().mockReturnValue({ some: "include" })
       }
       const mockAbapFile = {
         object: { parent: mockParent }
       }
-      ;(uriAbapFile as unknown as jest.Mock).mockReturnValue(mockAbapFile)
-      ;(isAbapClass as unknown as jest.Mock).mockReturnValue(true)
+      ;(uriAbapFile as unknown as Mock).mockReturnValue(mockAbapFile)
+      ;(isAbapClass as unknown as Mock).mockReturnValue(true)
 
       const result: any = await tool.invoke(
         makeOptions({ className: "ZCL_TEST", connectionId: "dev100" }),
@@ -189,7 +194,7 @@ describe("RunUnitTestsTool", () => {
     ])
     const mockFile = {
       object: {
-        loadStructure: jest.fn().mockResolvedValue({
+        loadStructure: vi.fn().mockResolvedValue({
           metaData: { "adtcore:version": opts.version || "active" }
         })
       }
@@ -198,21 +203,19 @@ describe("RunUnitTestsTool", () => {
       path: "/zcl_test/source/main",
       file: mockFile
     })
-    ;(isAbapFile as unknown as jest.Mock).mockReturnValue(true)
+    ;(isAbapFile as unknown as Mock).mockReturnValue(true)
   }
 
   /** Helper to build a UnitTestResults object */
-  function makeTestResults(
-    overrides: Partial<{
-      objectName: string
-      totalTests: number
-      passed: number
-      failed: number
-      totalTime: number
-      allPassed: boolean
-      classes: any[]
-    }> = {}
-  ) {
+  function makeTestResults(overrides: Partial<{
+    objectName: string
+    totalTests: number
+    passed: number
+    failed: number
+    totalTime: number
+    allPassed: boolean
+    classes: any[]
+  }> = {}) {
     return {
       objectName: overrides.objectName ?? "ZCL_TEST",
       totalTests: overrides.totalTests ?? 0,
@@ -226,9 +229,9 @@ describe("RunUnitTestsTool", () => {
 
   beforeEach(() => {
     tool = new RunUnitTestsTool()
-    jest.clearAllMocks()
-    ;(getSearchService as jest.Mock).mockReturnValue(mockSearcher)
-    ;(getOrCreateRoot as jest.Mock).mockResolvedValue(mockRoot)
+    vi.clearAllMocks()
+    ;(getSearchService as Mock).mockReturnValue(mockSearcher)
+    ;(getOrCreateRoot as Mock).mockResolvedValue(mockRoot)
     mockAddResultsWithReturn.mockResolvedValue(makeTestResults())
     mockActivate.mockResolvedValue(undefined)
   })
@@ -254,9 +257,10 @@ describe("RunUnitTestsTool", () => {
   describe("invoke", () => {
     it("logs telemetry", async () => {
       mockSearcher.searchObjects.mockResolvedValue([])
-      await tool
-        .invoke(makeOptions({ objectName: "ZCL_TEST", connectionId: "dev100" }), mockToken)
-        .catch(() => {})
+      await tool.invoke(
+        makeOptions({ objectName: "ZCL_TEST", connectionId: "dev100" }),
+        mockToken
+      ).catch(() => {})
       expect(logTelemetry).toHaveBeenCalledWith("tool_run_unit_tests_called", {
         connectionId: "dev100"
       })
@@ -264,9 +268,10 @@ describe("RunUnitTestsTool", () => {
 
     it("normalizes connectionId to lowercase", async () => {
       mockSearcher.searchObjects.mockResolvedValue([])
-      await tool
-        .invoke(makeOptions({ objectName: "ZCL_TEST", connectionId: "DEV100" }), mockToken)
-        .catch(() => {})
+      await tool.invoke(
+        makeOptions({ objectName: "ZCL_TEST", connectionId: "DEV100" }),
+        mockToken
+      ).catch(() => {})
       expect(getSearchService).toHaveBeenCalledWith("dev100")
     })
 
@@ -311,26 +316,22 @@ describe("RunUnitTestsTool", () => {
       })
 
       it("formats all-passing results with pass/fail counts", async () => {
-        mockAddResultsWithReturn.mockResolvedValue(
-          makeTestResults({
-            totalTests: 5,
-            passed: 5,
-            failed: 0,
-            totalTime: 1.234,
-            allPassed: true,
-            classes: [
-              {
-                name: "LCL_TEST",
-                passed: true,
-                alerts: [],
-                methods: [
-                  { name: "test_method_1", passed: true, executionTime: 0.5, alerts: [] },
-                  { name: "test_method_2", passed: true, executionTime: 0.734, alerts: [] }
-                ]
-              }
+        mockAddResultsWithReturn.mockResolvedValue(makeTestResults({
+          totalTests: 5,
+          passed: 5,
+          failed: 0,
+          totalTime: 1.234,
+          allPassed: true,
+          classes: [{
+            name: "LCL_TEST",
+            passed: true,
+            alerts: [],
+            methods: [
+              { name: "test_method_1", passed: true, executionTime: 0.5, alerts: [] },
+              { name: "test_method_2", passed: true, executionTime: 0.734, alerts: [] }
             ]
-          })
-        )
+          }]
+        }))
 
         const result: any = await tool.invoke(
           makeOptions({ objectName: "ZCL_TEST", connectionId: "dev100" }),
@@ -349,48 +350,28 @@ describe("RunUnitTestsTool", () => {
       })
 
       it("formats all-failing results with failure details", async () => {
-        mockAddResultsWithReturn.mockResolvedValue(
-          makeTestResults({
-            totalTests: 2,
-            passed: 0,
-            failed: 2,
-            totalTime: 0.1,
-            allPassed: false,
-            classes: [
+        mockAddResultsWithReturn.mockResolvedValue(makeTestResults({
+          totalTests: 2,
+          passed: 0,
+          failed: 2,
+          totalTime: 0.1,
+          allPassed: false,
+          classes: [{
+            name: "LCL_TEST",
+            passed: false,
+            alerts: [],
+            methods: [
               {
-                name: "LCL_TEST",
-                passed: false,
-                alerts: [],
-                methods: [
-                  {
-                    name: "test_fail_1",
-                    passed: false,
-                    executionTime: 0.05,
-                    alerts: [
-                      {
-                        kind: "failedAssertion",
-                        title: "Expected 1 but got 2",
-                        details: ["CX_AUNIT_ASSERT"]
-                      }
-                    ]
-                  },
-                  {
-                    name: "test_fail_2",
-                    passed: false,
-                    executionTime: 0.05,
-                    alerts: [
-                      {
-                        kind: "failedAssertion",
-                        title: "Values differ",
-                        details: ["Line 42", "CX_AUNIT_ASSERT"]
-                      }
-                    ]
-                  }
-                ]
+                name: "test_fail_1", passed: false, executionTime: 0.05,
+                alerts: [{ kind: "failedAssertion", title: "Expected 1 but got 2", details: ["CX_AUNIT_ASSERT"] }]
+              },
+              {
+                name: "test_fail_2", passed: false, executionTime: 0.05,
+                alerts: [{ kind: "failedAssertion", title: "Values differ", details: ["Line 42", "CX_AUNIT_ASSERT"] }]
               }
             ]
-          })
-        )
+          }]
+        }))
 
         const result: any = await tool.invoke(
           makeOptions({ objectName: "ZCL_TEST", connectionId: "dev100" }),
@@ -407,16 +388,14 @@ describe("RunUnitTestsTool", () => {
       })
 
       it("shows no-test-classes message when classes array is empty", async () => {
-        mockAddResultsWithReturn.mockResolvedValue(
-          makeTestResults({
-            totalTests: 0,
-            passed: 0,
-            failed: 0,
-            totalTime: 0,
-            allPassed: true,
-            classes: []
-          })
-        )
+        mockAddResultsWithReturn.mockResolvedValue(makeTestResults({
+          totalTests: 0,
+          passed: 0,
+          failed: 0,
+          totalTime: 0,
+          allPassed: true,
+          classes: []
+        }))
 
         const result: any = await tool.invoke(
           makeOptions({ objectName: "ZCL_TEST", connectionId: "dev100" }),
@@ -428,23 +407,21 @@ describe("RunUnitTestsTool", () => {
       })
 
       it("shows class-level alerts when present", async () => {
-        mockAddResultsWithReturn.mockResolvedValue(
-          makeTestResults({
-            totalTests: 1,
-            passed: 1,
-            failed: 0,
-            totalTime: 0.001,
-            allPassed: true,
-            classes: [
-              {
-                name: "LCL_TEST",
-                passed: true,
-                alerts: [{ kind: "warning", title: "Setup method took too long", details: [] }],
-                methods: [{ name: "test_ok", passed: true, executionTime: 0.001, alerts: [] }]
-              }
+        mockAddResultsWithReturn.mockResolvedValue(makeTestResults({
+          totalTests: 1,
+          passed: 1,
+          failed: 0,
+          totalTime: 0.001,
+          allPassed: true,
+          classes: [{
+            name: "LCL_TEST",
+            passed: true,
+            alerts: [{ kind: "warning", title: "Setup method took too long", details: [] }],
+            methods: [
+              { name: "test_ok", passed: true, executionTime: 0.001, alerts: [] }
             ]
-          })
-        )
+          }]
+        }))
 
         const result: any = await tool.invoke(
           makeOptions({ objectName: "ZCL_TEST", connectionId: "dev100" }),
@@ -455,23 +432,21 @@ describe("RunUnitTestsTool", () => {
       })
 
       it("formats execution time with 3 decimal places", async () => {
-        mockAddResultsWithReturn.mockResolvedValue(
-          makeTestResults({
-            totalTests: 1,
-            passed: 1,
-            failed: 0,
-            totalTime: 0.1,
-            allPassed: true,
-            classes: [
-              {
-                name: "LCL_TEST",
-                passed: true,
-                alerts: [],
-                methods: [{ name: "test_fast", passed: true, executionTime: 0.1, alerts: [] }]
-              }
+        mockAddResultsWithReturn.mockResolvedValue(makeTestResults({
+          totalTests: 1,
+          passed: 1,
+          failed: 0,
+          totalTime: 0.1,
+          allPassed: true,
+          classes: [{
+            name: "LCL_TEST",
+            passed: true,
+            alerts: [],
+            methods: [
+              { name: "test_fast", passed: true, executionTime: 0.1, alerts: [] }
             ]
-          })
-        )
+          }]
+        }))
 
         const result: any = await tool.invoke(
           makeOptions({ objectName: "ZCL_TEST", connectionId: "dev100" }),
@@ -484,37 +459,35 @@ describe("RunUnitTestsTool", () => {
       })
 
       it("shows mixed pass/fail correctly with multiple classes", async () => {
-        mockAddResultsWithReturn.mockResolvedValue(
-          makeTestResults({
-            totalTests: 3,
-            passed: 2,
-            failed: 1,
-            totalTime: 0.5,
-            allPassed: false,
-            classes: [
-              {
-                name: "LCL_TEST_GOOD",
-                passed: true,
-                alerts: [],
-                methods: [{ name: "test_ok", passed: true, executionTime: 0.1, alerts: [] }]
-              },
-              {
-                name: "LCL_TEST_BAD",
-                passed: false,
-                alerts: [],
-                methods: [
-                  { name: "test_ok2", passed: true, executionTime: 0.1, alerts: [] },
-                  {
-                    name: "test_fail",
-                    passed: false,
-                    executionTime: 0.3,
-                    alerts: [{ kind: "failedAssertion", title: "Assertion failed", details: [] }]
-                  }
-                ]
-              }
-            ]
-          })
-        )
+        mockAddResultsWithReturn.mockResolvedValue(makeTestResults({
+          totalTests: 3,
+          passed: 2,
+          failed: 1,
+          totalTime: 0.5,
+          allPassed: false,
+          classes: [
+            {
+              name: "LCL_TEST_GOOD",
+              passed: true,
+              alerts: [],
+              methods: [
+                { name: "test_ok", passed: true, executionTime: 0.1, alerts: [] }
+              ]
+            },
+            {
+              name: "LCL_TEST_BAD",
+              passed: false,
+              alerts: [],
+              methods: [
+                { name: "test_ok2", passed: true, executionTime: 0.1, alerts: [] },
+                {
+                  name: "test_fail", passed: false, executionTime: 0.3,
+                  alerts: [{ kind: "failedAssertion", title: "Assertion failed", details: [] }]
+                }
+              ]
+            }
+          ]
+        }))
 
         const result: any = await tool.invoke(
           makeOptions({ objectName: "ZCL_TEST", connectionId: "dev100" }),
@@ -551,7 +524,7 @@ describe("RunUnitTestsTool", () => {
           path: "/zcl_test/source/main",
           file: null
         })
-        ;(isAbapFile as unknown as jest.Mock).mockReturnValue(false)
+        ;(isAbapFile as unknown as Mock).mockReturnValue(false)
 
         const result: any = await tool.invoke(
           makeOptions({ objectName: "ZCL_TEST", connectionId: "dev100" }),

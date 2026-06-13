@@ -1,24 +1,24 @@
-jest.mock("vscode", () => ({
+vi.mock("vscode", () => ({
   Uri: {
-    parse: jest.fn((s: string) => ({ scheme: "adt", path: s, toString: () => s }))
+    parse: vi.fn(function (s: string) { return ({ scheme: "adt", path: s, toString: () => s }) })
   },
   workspace: {
     fs: {
-      readFile: jest.fn().mockResolvedValue(Buffer.from("REPORT Z."))
+      readFile: vi.fn().mockResolvedValue(Buffer.from("REPORT Z."))
     }
   }
-}), { virtual: true })
-jest.mock("../../../lib", () => ({
-  log: jest.fn(),
-  caughtToString: jest.fn((e: any) => String(e))
 }))
-jest.mock("../../../services/funMessenger", () => ({
+vi.mock("../../../lib", () => ({
+  log: vi.fn(),
+  caughtToString: vi.fn(function (e: any) { return String(e) })
+}))
+vi.mock("../../../services/funMessenger", () => ({
   funWindow: {
-    showWarningMessage: jest.fn()
+    showWarningMessage: vi.fn()
   }
 }))
-jest.mock("./variableCapture", () => ({
-  captureScopesBatched: jest.fn().mockResolvedValue([
+vi.mock("./variableCapture", () => ({
+  captureScopesBatched: vi.fn().mockResolvedValue([
     { name: "LOCAL", variables: [{ id: "V1", name: "X", value: "10", type: "I", metaType: "simple" }] }
   ])
 }))
@@ -29,7 +29,7 @@ import { funWindow as window } from "../../../services/funMessenger"
 import { DEFAULT_CAPTURE_OPTIONS } from "./types"
 import type { CapturedStackFrame } from "./types"
 
-const mockCaptureScopesBatched = captureScopesBatched as jest.MockedFunction<typeof captureScopesBatched>
+const mockCaptureScopesBatched = captureScopesBatched as MockedFunction<typeof captureScopesBatched>
 
 function makeStackFrames(count = 1): CapturedStackFrame[] {
   return Array.from({ length: count }, (_, i) => ({
@@ -47,7 +47,7 @@ function makeClient() {
 
 describe("DebugRecorder", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     // Reset captureScopesBatched to return one scope each time
     mockCaptureScopesBatched.mockResolvedValue([
       { name: "LOCAL", variables: [{ id: "V1", name: "X", value: "10", type: "I", metaType: "simple" }] }
@@ -175,11 +175,11 @@ describe("DebugRecorder", () => {
     test("does not capture after recording stopped mid-async", async () => {
       let resolveFn: () => void
       const waitForCapture = new Promise<void>(r => (resolveFn = r))
-      mockCaptureScopesBatched.mockImplementationOnce(async () => {
-        resolveFn!()
-        await new Promise(r => setTimeout(r, 10))
-        return []
-      })
+      mockCaptureScopesBatched.mockImplementationOnce(async function () {
+              resolveFn!()
+              await new Promise(r => setTimeout(r, 10))
+              return []
+            })
       const recorder = new DebugRecorder()
       recorder.startRecording("TST")
       const capturePromise = recorder.captureSnapshot(makeClient(), 1, makeStackFrames())

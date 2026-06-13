@@ -3,91 +3,84 @@
  * Covers blame lifecycle handlers and configuration-driven rendering.
  */
 
-jest.mock(
+vi.mock(
   "vscode",
   () => {
-    const mockDisposable = { dispose: jest.fn() }
+    const mockDisposable = { dispose: vi.fn() }
     return {
       ProgressLocation: { Notification: 15 },
       OverviewRulerLane: { Right: 4 },
       DecorationRangeBehavior: { ClosedClosed: 0, OpenOpen: 1 },
-      Range: jest.fn((sl: number, sc: number, el: number, ec: number) => ({
-        start: { line: sl, character: sc },
-        end: { line: el, character: ec }
-      })),
-      ThemeColor: jest.fn((id: string) => ({ id })),
-      MarkdownString: jest.fn(function (value: string) {
+      Range: vi.fn(function (sl: number, sc: number, el: number, ec: number) { return ({
+              start: { line: sl, character: sc },
+              end: { line: el, character: ec }
+            }) }),
+      ThemeColor: vi.fn(function (id: string) { return ({ id }) }),
+      MarkdownString: vi.fn(function (value: string) {
         ;(this as any).value = value
         ;(this as any).isTrusted = false
       }),
-      commands: { registerCommand: jest.fn(() => mockDisposable) },
+      commands: { registerCommand: vi.fn(function () { return mockDisposable }) },
       workspace: {
-        getConfiguration: jest.fn(() => ({ get: jest.fn((_: string, fallback: unknown) => fallback) })),
-        onDidSaveTextDocument: jest.fn(() => mockDisposable),
-        onDidChangeConfiguration: jest.fn(() => mockDisposable)
+        getConfiguration: vi.fn(function () { return ({ get: vi.fn(function (_: string, fallback: unknown) { return fallback }) }) }),
+        onDidSaveTextDocument: vi.fn(function () { return mockDisposable }),
+        onDidChangeConfiguration: vi.fn(function () { return mockDisposable })
       }
     }
-  },
-  { virtual: true }
+  }
 )
 
-jest.mock(
+vi.mock(
   "../adt/conections",
   () => ({
-    getClient: jest.fn(),
+    getClient: vi.fn(),
     ADTSCHEME: "adt",
-    abapUri: jest.fn(() => true)
-  }),
-  { virtual: true }
+    abapUri: vi.fn(function () { return true })
+  })
 )
 
-jest.mock(
+vi.mock(
   "../scm/abaprevisions/abaprevisionservice",
   () => ({
-    AbapRevisionService: { get: jest.fn() }
-  }),
-  { virtual: true }
+    AbapRevisionService: { get: vi.fn() }
+  })
 )
 
-jest.mock(
+vi.mock(
   "../context",
   () => ({
-    setContext: jest.fn()
-  }),
-  { virtual: true }
+    setContext: vi.fn()
+  })
 )
 
-jest.mock(
+vi.mock(
   "../lib",
   () => ({
-    log: jest.fn()
-  }),
-  { virtual: true }
+    log: vi.fn()
+  })
 )
 
-jest.mock(
+vi.mock(
   "../services/telemetry",
   () => ({
-    logTelemetry: jest.fn()
-  }),
-  { virtual: true }
+    logTelemetry: vi.fn()
+  })
 )
 
-jest.mock(
+vi.mock(
   "../services/funMessenger",
   () => ({
     funWindow: {
       activeTextEditor: undefined,
       visibleTextEditors: [],
-      onDidChangeTextEditorSelection: jest.fn(() => ({ dispose: jest.fn() })),
-      showWarningMessage: jest.fn(),
-      showInformationMessage: jest.fn(),
-      showErrorMessage: jest.fn(),
-      withProgress: jest.fn(),
-      createTextEditorDecorationType: jest.fn(() => ({ dispose: jest.fn() }))
+      onDidChangeTextEditorSelection: vi.fn(function () { return ({ dispose: vi.fn() }) }),
+      showWarningMessage: vi.fn(),
+      showInformationMessage: vi.fn(),
+      showErrorMessage: vi.fn(),
+      withProgress: vi.fn(),
+      createTextEditorDecorationType: vi.fn(function () { return ({ dispose: vi.fn() }) })
     }
-  }),
-  { virtual: true }
+  })
 )
 
 import {
@@ -103,9 +96,11 @@ import {
 
 import { funWindow as window } from "../services/funMessenger"
 import { setContext } from "../context"
+import * as __$mock_vscode from "vscode";
+import * as __$mock_scm_abaprevisions_abaprevisionservice from "../scm/abaprevisions/abaprevisionservice";
 
-const mockedWindow = window as jest.Mocked<typeof window>
-const mockedSetContext = setContext as jest.Mock
+const mockedWindow = window as Mocked<typeof window>
+const mockedSetContext = setContext as Mock
 
 // Helper to make a fake vscode.TextEditor.
 function makeEditor(uriStr: string, scheme = "adt", dirty = false, lang = "abap") {
@@ -118,7 +113,7 @@ function makeEditor(uriStr: string, scheme = "adt", dirty = false, lang = "abap"
       lineCount: 3,
       lineAt: (_i: number) => ({ text: "some line text", length: 14 })
     },
-    setDecorations: jest.fn(),
+    setDecorations: vi.fn(),
     selection: { active: { line: 0, character: 0 } },
     viewColumn: 1
   } as any
@@ -141,17 +136,16 @@ afterEach(async () => {
 
 describe("showBlame", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
 
     // Default configuration falls back to the implementation defaults.
-    const { workspace } = require("vscode")
+    const { workspace } = (__$mock_vscode)
     workspace.getConfiguration.mockReturnValue({
-      get: jest.fn((_: string, fallback: unknown) => fallback)
+      get: vi.fn(function (_: string, fallback: unknown) { return fallback })
     })
 
     // Execute the progress callback immediately so the test can assert synchronously.
-    mockedWindow.withProgress.mockImplementation(async (_options: any, task: any) =>
-      task({ report: jest.fn() }, { isCancellationRequested: false })
+    mockedWindow.withProgress.mockImplementation(function (_options: any, task: any) { return task({ report: vi.fn() }, { isCancellationRequested: false }) }
     )
   })
 
@@ -161,16 +155,15 @@ describe("showBlame", () => {
     ;(mockedWindow as any).visibleTextEditors = [editor]
 
     const revisionDate = new Date(Date.now() - 400 * 24 * 60 * 60 * 1000).toISOString()
-    const { workspace } = require("vscode")
+    const { workspace } = (__$mock_vscode)
     workspace.getConfiguration.mockReturnValue({
-      get: jest.fn((key: string, fallback: unknown) =>
-        key === "blame.renderMode" ? "gitlens" : fallback
+      get: vi.fn(function (key: string, fallback: unknown) { return key === "blame.renderMode" ? "gitlens" : fallback }
       )
     })
 
-    const { AbapRevisionService } = require("../scm/abaprevisions/abaprevisionservice")
+    const { AbapRevisionService } = (__$mock_scm_abaprevisions_abaprevisionservice)
     AbapRevisionService.get.mockReturnValue({
-      uriRevisions: jest.fn().mockResolvedValue([
+      uriRevisions: vi.fn().mockResolvedValue([
         {
           author: "JSMITH",
           date: revisionDate,
@@ -184,7 +177,7 @@ describe("showBlame", () => {
     await showBlame()
 
     expect(editor.setDecorations).toHaveBeenCalled()
-    const leaderCall = (editor.setDecorations as jest.Mock).mock.calls.find(
+    const leaderCall = (editor.setDecorations as Mock).mock.calls.find(
       call =>
         Array.isArray(call[1]) &&
         call[1].length > 0 &&
@@ -204,16 +197,15 @@ describe("showBlame", () => {
     ;(mockedWindow as any).visibleTextEditors = [editor]
 
     const revisionDate = new Date(Date.now() - 15 * 60 * 1000).toISOString()
-    const { workspace } = require("vscode")
+    const { workspace } = (__$mock_vscode)
     workspace.getConfiguration.mockReturnValue({
-      get: jest.fn((key: string, fallback: unknown) =>
-        key === "blame.renderMode" ? "classic" : fallback
+      get: vi.fn(function (key: string, fallback: unknown) { return key === "blame.renderMode" ? "classic" : fallback }
       )
     })
 
-    const { AbapRevisionService } = require("../scm/abaprevisions/abaprevisionservice")
+    const { AbapRevisionService } = (__$mock_scm_abaprevisions_abaprevisionservice)
     AbapRevisionService.get.mockReturnValue({
-      uriRevisions: jest.fn().mockResolvedValue([
+      uriRevisions: vi.fn().mockResolvedValue([
         {
           author: "JSMITH",
           date: revisionDate,
@@ -226,14 +218,14 @@ describe("showBlame", () => {
 
     await showBlame()
 
-    const classicCall = (editor.setDecorations as jest.Mock).mock.calls.find(
+    const classicCall = (editor.setDecorations as Mock).mock.calls.find(
       call =>
         Array.isArray(call[1]) &&
         call[1].length === 3 &&
         call[1][0].renderOptions?.after?.contentText?.includes("JSMITH -")
     )
 
-    const selectedLineCall = (editor.setDecorations as jest.Mock).mock.calls.find(
+    const selectedLineCall = (editor.setDecorations as Mock).mock.calls.find(
       call =>
         Array.isArray(call[1]) &&
         call[1].length === 1 &&
@@ -249,7 +241,7 @@ describe("showBlame", () => {
 
 describe("hideBlame", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it("does nothing if no active editor", async () => {
@@ -269,7 +261,7 @@ describe("hideBlame", () => {
 
 describe("onBlameActiveEditorChanged", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it("handles undefined editor gracefully", () => {
@@ -292,12 +284,12 @@ describe("onBlameActiveEditorChanged", () => {
 
 describe("onBlameConfigurationChanged", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it("ignores unrelated configuration changes", () => {
     const event = {
-      affectsConfiguration: jest.fn(() => false)
+      affectsConfiguration: vi.fn(function () { return false })
     } as any
 
     expect(() => onBlameConfigurationChanged(event)).not.toThrow()
@@ -307,7 +299,7 @@ describe("onBlameConfigurationChanged", () => {
 
 describe("onBlameTextEditorSelectionChanged", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it("highlights all lines from the same blame group", async () => {
@@ -316,13 +308,12 @@ describe("onBlameTextEditorSelectionChanged", () => {
     ;(mockedWindow as any).visibleTextEditors = [editor]
 
     const revisionDate = new Date(Date.now() - 60 * 60 * 1000).toISOString()
-    mockedWindow.withProgress.mockImplementation(async (_options: any, task: any) =>
-      task({ report: jest.fn() }, { isCancellationRequested: false })
+    mockedWindow.withProgress.mockImplementation(function (_options: any, task: any) { return task({ report: vi.fn() }, { isCancellationRequested: false }) }
     )
 
-    const { AbapRevisionService } = require("../scm/abaprevisions/abaprevisionservice")
+    const { AbapRevisionService } = (__$mock_scm_abaprevisions_abaprevisionservice)
     AbapRevisionService.get.mockReturnValue({
-      uriRevisions: jest.fn().mockResolvedValue([
+      uriRevisions: vi.fn().mockResolvedValue([
         {
           author: "JSMITH",
           date: revisionDate,
@@ -334,14 +325,14 @@ describe("onBlameTextEditorSelectionChanged", () => {
     })
 
     await showBlame()
-    ;(editor.setDecorations as jest.Mock).mockClear()
+    ;(editor.setDecorations as Mock).mockClear()
 
     onBlameTextEditorSelectionChanged({
       textEditor: editor,
       selections: [{ active: { line: 1, character: 0 } }]
     } as any)
 
-    const highlightCall = (editor.setDecorations as jest.Mock).mock.calls.find(
+    const highlightCall = (editor.setDecorations as Mock).mock.calls.find(
       call => Array.isArray(call[1]) && call[1].length === 3 && call[1][0].start?.line === 0
     )
     expect(highlightCall).toBeDefined()
@@ -352,21 +343,19 @@ describe("onBlameTextEditorSelectionChanged", () => {
     ;(mockedWindow as any).activeTextEditor = editor
     ;(mockedWindow as any).visibleTextEditors = [editor]
 
-    const { workspace } = require("vscode")
+    const { workspace } = (__$mock_vscode)
     workspace.getConfiguration.mockReturnValue({
-      get: jest.fn((key: string, fallback: unknown) =>
-        key === "blame.renderMode" ? "classic" : fallback
+      get: vi.fn(function (key: string, fallback: unknown) { return key === "blame.renderMode" ? "classic" : fallback }
       )
     })
 
     const revisionDate = new Date(Date.now() - 60 * 60 * 1000).toISOString()
-    mockedWindow.withProgress.mockImplementation(async (_options: any, task: any) =>
-      task({ report: jest.fn() }, { isCancellationRequested: false })
+    mockedWindow.withProgress.mockImplementation(function (_options: any, task: any) { return task({ report: vi.fn() }, { isCancellationRequested: false }) }
     )
 
-    const { AbapRevisionService } = require("../scm/abaprevisions/abaprevisionservice")
+    const { AbapRevisionService } = (__$mock_scm_abaprevisions_abaprevisionservice)
     AbapRevisionService.get.mockReturnValue({
-      uriRevisions: jest.fn().mockResolvedValue([
+      uriRevisions: vi.fn().mockResolvedValue([
         {
           author: "JSMITH",
           date: revisionDate,
@@ -378,22 +367,22 @@ describe("onBlameTextEditorSelectionChanged", () => {
     })
 
     await showBlame()
-    ;(editor.setDecorations as jest.Mock).mockClear()
+    ;(editor.setDecorations as Mock).mockClear()
 
     onBlameTextEditorSelectionChanged({
       textEditor: editor,
       selections: [{ active: { line: 1, character: 0 } }]
     } as any)
 
-    expect((editor.setDecorations as jest.Mock).mock.calls).toHaveLength(3)
-    expect((editor.setDecorations as jest.Mock).mock.calls[1][1][0].renderOptions.after.contentText).toContain("JSMITH,")
-    expect((editor.setDecorations as jest.Mock).mock.calls[2][1]).toEqual([])
+    expect((editor.setDecorations as Mock).mock.calls).toHaveLength(3)
+    expect((editor.setDecorations as Mock).mock.calls[1][1][0].renderOptions.after.contentText).toContain("JSMITH,")
+    expect((editor.setDecorations as Mock).mock.calls[2][1]).toEqual([])
   })
 })
 
 describe("onBlameDocumentChanged", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it("ignores non-adt documents", () => {
@@ -424,7 +413,7 @@ describe("onBlameDocumentChanged", () => {
 
 describe("onBlameDocumentSaved", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it("ignores non-adt documents", () => {
@@ -450,7 +439,7 @@ describe("onBlameDocumentSaved", () => {
 
 describe("initializeBlameGutter", () => {
   it("registers commands and subscriptions", () => {
-    const { commands, workspace } = require("vscode")
+    const { commands, workspace } = (__$mock_vscode)
     const subscriptions: any[] = []
     const context = { subscriptions } as any
     initializeBlameGutter(context)

@@ -1,44 +1,43 @@
-jest.mock(
+vi.mock(
   "vscode",
   () => ({
     Uri: {
-      parse: jest.fn((url: string) => {
-        const match = url.match(/^([^:]+):\/\/([^\/]*)(.*)$/)
-        return {
-          scheme: match?.[1] ?? "",
-          authority: match?.[2] ?? "",
-          path: match?.[3] ?? "",
-          toString: () => url
-        }
-      })
+      parse: vi.fn(function (url: string) {
+              const match = url.match(/^([^:]+):\/\/([^\/]*)(.*)$/)
+              return {
+                scheme: match?.[1] ?? "",
+                authority: match?.[2] ?? "",
+                path: match?.[3] ?? "",
+                toString: () => url
+              }
+            })
     },
-    LanguageModelTextPart: jest.fn((t: string) => ({ value: t })),
-    LanguageModelToolResult: jest.fn((content: any[]) => ({ content })),
+    LanguageModelTextPart: vi.fn(function (t: string) { return ({ value: t }) }),
+    LanguageModelToolResult: vi.fn(function (content: any[]) { return ({ content }) }),
     ProgressLocation: { Window: 10 },
     window: {
-      withProgress: jest.fn()
+      withProgress: vi.fn()
     }
-  }),
-  { virtual: true }
+  })
 )
 
-jest.mock("../conections", () => ({
-  getClient: jest.fn(),
-  uriRoot: jest.fn()
+vi.mock("../conections", () => ({
+  getClient: vi.fn(),
+  uriRoot: vi.fn()
 }))
 
-jest.mock("abapfs", () => ({
-  isAbapFile: jest.fn()
+vi.mock("abapfs", () => ({
+  isAbapFile: vi.fn()
 }))
 
-jest.mock("../operations/AdtObjectActivator", () => ({
+vi.mock("../operations/AdtObjectActivator", () => ({
   AdtObjectActivator: {
-    get: jest.fn()
+    get: vi.fn()
   }
 }))
 
-jest.mock("../../services/telemetry", () => ({
-  logTelemetry: jest.fn()
+vi.mock("../../services/telemetry", () => ({
+  logTelemetry: vi.fn()
 }))
 
 jest.mock("../../services/lm-tools/toolGuard", () => ({
@@ -52,15 +51,15 @@ import { isAbapFile } from "abapfs"
 import { AdtObjectActivator } from "../operations/AdtObjectActivator"
 import * as vscode from "vscode"
 
-const mockGetClient = getClient as jest.MockedFunction<typeof getClient>
-const mockUriRoot = uriRoot as jest.MockedFunction<typeof uriRoot>
-const mockIsAbapFile = isAbapFile as jest.MockedFunction<typeof isAbapFile>
+const mockGetClient = getClient as MockedFunction<typeof getClient>
+const mockUriRoot = uriRoot as MockedFunction<typeof uriRoot>
+const mockIsAbapFile = isAbapFile as MockedFunction<typeof isAbapFile>
 
 const mockToken = {} as any
 
 beforeEach(() => {
-  jest.clearAllMocks()
-  ;(vscode.window.withProgress as jest.Mock).mockImplementation((_opts: any, fn: Function) => fn())
+  vi.clearAllMocks()
+  ;(vscode.window.withProgress as Mock).mockImplementation(function (_opts: any, fn: Function) { return fn() })
 })
 
 describe("ActivateTool", () => {
@@ -74,14 +73,14 @@ describe("ActivateTool", () => {
     test("activates object and returns success message", async () => {
       const mockObject = { path: "/sap/bc/adt/programs/programs/ztest" }
       const mockFile = { object: mockObject }
-      const mockActivator = { activate: jest.fn().mockResolvedValue({ ok: true }) }
+      const mockActivator = { activate: vi.fn().mockResolvedValue({ ok: true }) }
 
       mockIsAbapFile.mockReturnValue(true)
       const mockRoot = {
-        getNodePathAsync: jest.fn().mockResolvedValue([{ file: mockFile, path: "/ztest" }])
+        getNodePathAsync: vi.fn().mockResolvedValue([{ file: mockFile, path: "/ztest" }])
       }
       mockUriRoot.mockReturnValue(mockRoot as any)
-      ;(AdtObjectActivator.get as jest.Mock).mockReturnValue(mockActivator)
+      ;(AdtObjectActivator.get as Mock).mockReturnValue(mockActivator)
 
       const result = await tool.invoke(
         { input: { url: "adt://dev100/sap/bc/adt/programs/programs/ztest" } } as any,
@@ -96,11 +95,10 @@ describe("ActivateTool", () => {
     test("throws when object not found in path", async () => {
       mockIsAbapFile.mockReturnValue(false)
       const mockRoot = {
-        getNodePathAsync: jest.fn().mockResolvedValue([{ file: {}, path: "/" }])
+        getNodePathAsync: vi.fn().mockResolvedValue([{ file: {}, path: "/" }])
       }
       mockUriRoot.mockReturnValue(mockRoot as any)
-      ;(vscode.window.withProgress as jest.Mock).mockImplementation((_opts: any, fn: Function) =>
-        fn()
+      ;(vscode.window.withProgress as Mock).mockImplementation(function (_opts: any, fn: Function) { return fn() }
       )
 
       await expect(

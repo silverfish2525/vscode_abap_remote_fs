@@ -1,26 +1,18 @@
-jest.mock(
-  "vscode",
-  () => ({
-    LanguageModelToolResult: jest.fn().mockImplementation((parts: any[]) => ({ parts })),
-    LanguageModelTextPart: jest.fn().mockImplementation((text: string) => ({ text })),
-    MarkdownString: jest.fn().mockImplementation((text: string) => ({ text })),
-    lm: { registerTool: jest.fn(() => ({ dispose: jest.fn() })) }
-  }),
-  { virtual: true }
-)
-
-jest.mock("../../adt/conections", () => ({}))
-jest.mock("../telemetry", () => ({ logTelemetry: jest.fn() }))
-jest.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: jest.fn(() => ({ dispose: jest.fn() }))
+vi.mock("vscode", () => ({
+  LanguageModelToolResult: vi.fn().mockImplementation(function (parts: any[]) { return ({ parts }) }),
+  LanguageModelTextPart: vi.fn().mockImplementation(function (text: string) { return ({ text }) }),
+  MarkdownString: vi.fn().mockImplementation(function (text: string) { return ({ text }) }),
+  lm: { registerTool: vi.fn(function () { return ({ dispose: vi.fn() }) }) }
 }))
-jest.mock("../abapSearchService", () => ({ getSearchService: jest.fn() }))
-jest.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }))
 
-jest.mock("./toolGuard", () => ({
-  assertToolInvocationAuthorized: jest.fn(),
-  isToolInvocationAuthorized: jest.fn(() => true)
+vi.mock("../../adt/conections", () => ({}))
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("./toolRegistry", () => ({
+  registerToolWithRegistry: vi.fn(function () { return ({ dispose: vi.fn() }) })
 }))
+vi.mock("../abapSearchService", () => ({ getSearchService: vi.fn() }))
+vi.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }))
+
 import { SearchABAPObjectsTool } from "./searchObjectsTool"
 import { getSearchService } from "../abapSearchService"
 import { funWindow as window } from "../funMessenger"
@@ -32,15 +24,15 @@ function makeOptions(input: any = {}) {
   return { input } as any
 }
 
-const mockSearcher = { searchObjects: jest.fn() }
+const mockSearcher = { searchObjects: vi.fn() }
 
 describe("SearchABAPObjectsTool", () => {
   let tool: SearchABAPObjectsTool
 
   beforeEach(() => {
     tool = new SearchABAPObjectsTool()
-    jest.clearAllMocks()
-    ;(getSearchService as jest.Mock).mockReturnValue(mockSearcher)
+    vi.clearAllMocks()
+    ;(getSearchService as Mock).mockReturnValue(mockSearcher)
     ;(window as any).activeTextEditor = undefined
   })
 
@@ -92,7 +84,10 @@ describe("SearchABAPObjectsTool", () => {
 
     it("normalizes connectionId to lowercase", async () => {
       mockSearcher.searchObjects.mockResolvedValue([])
-      await tool.invoke(makeOptions({ pattern: "Z*", connectionId: "DEV100" }), mockToken)
+      await tool.invoke(
+        makeOptions({ pattern: "Z*", connectionId: "DEV100" }),
+        mockToken
+      )
       expect(getSearchService).toHaveBeenCalledWith("dev100")
     })
 
@@ -107,12 +102,7 @@ describe("SearchABAPObjectsTool", () => {
 
     it("returns formatted results when objects found", async () => {
       mockSearcher.searchObjects.mockResolvedValue([
-        {
-          name: "ZTEST_CLASS",
-          type: "CLAS/OC",
-          description: "Test Class",
-          uri: "/sap/bc/adt/oo/classes/ztest_class"
-        }
+        { name: "ZTEST_CLASS", type: "CLAS/OC", description: "Test Class", uri: "/sap/bc/adt/oo/classes/ztest_class" }
       ])
       const result: any = await tool.invoke(
         makeOptions({ pattern: "ZTEST*", connectionId: "dev100" }),
@@ -129,10 +119,7 @@ describe("SearchABAPObjectsTool", () => {
 
     it("uses provided maxResults", async () => {
       mockSearcher.searchObjects.mockResolvedValue([])
-      await tool.invoke(
-        makeOptions({ pattern: "Z*", connectionId: "dev100", maxResults: 5 }),
-        mockToken
-      )
+      await tool.invoke(makeOptions({ pattern: "Z*", connectionId: "dev100", maxResults: 5 }), mockToken)
       expect(mockSearcher.searchObjects).toHaveBeenCalledWith("Z*", undefined, 5)
     })
 
@@ -150,7 +137,7 @@ describe("SearchABAPObjectsTool", () => {
         document: { uri: { scheme: "adt", authority: "dev100" } }
       }
       // abapUri mock - need to mock it
-      jest.doMock("../../adt/conections", () => ({
+      vi.doMock("../../adt/conections", () => ({
         abapUri: () => true
       }))
       mockSearcher.searchObjects.mockResolvedValue([])
@@ -161,7 +148,9 @@ describe("SearchABAPObjectsTool", () => {
 
     it("throws when no connectionId and no active ABAP editor", async () => {
       ;(window as any).activeTextEditor = undefined
-      await expect(tool.invoke(makeOptions({ pattern: "Z*" }), mockToken)).rejects.toThrow()
+      await expect(
+        tool.invoke(makeOptions({ pattern: "Z*" }), mockToken)
+      ).rejects.toThrow()
     })
   })
 })

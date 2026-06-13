@@ -1,45 +1,27 @@
-jest.mock(
-  "vscode",
-  () => ({
-    LanguageModelToolResult: jest.fn().mockImplementation((parts: any[]) => ({ parts })),
-    LanguageModelTextPart: jest.fn().mockImplementation((text: string) => ({ text })),
-    MarkdownString: jest.fn().mockImplementation((text: string) => ({ text })),
-    lm: { registerTool: jest.fn(() => ({ dispose: jest.fn() })) }
-  }),
-  { virtual: true }
-)
-
-jest.mock("../../adt/conections", () => ({}))
-jest.mock("../telemetry", () => ({ logTelemetry: jest.fn() }))
-jest.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: jest.fn(() => ({ dispose: jest.fn() }))
+vi.mock("vscode", () => ({
+  LanguageModelToolResult: vi.fn().mockImplementation(function (parts: any[]) { return ({ parts }) }),
+  LanguageModelTextPart: vi.fn().mockImplementation(function (text: string) { return ({ text }) }),
+  MarkdownString: vi.fn().mockImplementation(function (text: string) { return ({ text }) }),
+  lm: { registerTool: vi.fn(function () { return ({ dispose: vi.fn() }) }) }
 }))
-jest.mock("../MermaidWebviewManager", () => ({
+
+vi.mock("../../adt/conections", () => ({}))
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("./toolRegistry", () => ({
+  registerToolWithRegistry: vi.fn(function () { return ({ dispose: vi.fn() }) })
+}))
+vi.mock("../MermaidWebviewManager", () => ({
   MermaidWebviewManager: {
-    getInstance: jest.fn()
+    getInstance: vi.fn()
   }
 }))
-jest.mock("../MermaidDocumentation", () => ({
+vi.mock("../MermaidDocumentation", () => ({
   MERMAID_DOCUMENTATION: {
-    flowchart: {
-      description: "Flowchart description",
-      syntax: "graph TD",
-      keywords: ["graph", "flowchart"],
-      examples: ["graph TD\nA-->B"]
-    },
-    sequence: {
-      description: "Sequence description",
-      syntax: "sequenceDiagram",
-      keywords: ["sequenceDiagram"],
-      examples: []
-    }
+    flowchart: { description: "Flowchart description", syntax: "graph TD", keywords: ["graph", "flowchart"], examples: ["graph TD\nA-->B"] },
+    sequence: { description: "Sequence description", syntax: "sequenceDiagram", keywords: ["sequenceDiagram"], examples: [] }
   }
 }))
 
-jest.mock("./toolGuard", () => ({
-  assertToolInvocationAuthorized: jest.fn(),
-  isToolInvocationAuthorized: jest.fn(() => true)
-}))
 import {
   CreateMermaidDiagramTool,
   ValidateMermaidSyntaxTool,
@@ -56,9 +38,9 @@ function makeOptions(input: any = {}) {
 }
 
 const mockWebviewManager = {
-  renderDiagram: jest.fn(),
-  validateSyntax: jest.fn(),
-  detectDiagramType: jest.fn()
+  renderDiagram: vi.fn(),
+  validateSyntax: vi.fn(),
+  detectDiagramType: vi.fn()
 }
 
 describe("CreateMermaidDiagramTool", () => {
@@ -66,8 +48,8 @@ describe("CreateMermaidDiagramTool", () => {
 
   beforeEach(() => {
     tool = new CreateMermaidDiagramTool()
-    jest.clearAllMocks()
-    ;(MermaidWebviewManager.getInstance as jest.Mock).mockReturnValue(mockWebviewManager)
+    vi.clearAllMocks()
+    ;(MermaidWebviewManager.getInstance as Mock).mockReturnValue(mockWebviewManager)
   })
 
   describe("prepareInvocation", () => {
@@ -139,18 +121,18 @@ describe("CreateMermaidDiagramTool", () => {
         success: false,
         error: "Parse error on line 1"
       })
-      await expect(tool.invoke(makeOptions({ code: "invalid code" }), mockToken)).rejects.toThrow(
-        "Failed to create diagram"
-      )
+      await expect(
+        tool.invoke(makeOptions({ code: "invalid code" }), mockToken)
+      ).rejects.toThrow("Failed to create diagram")
     })
 
     it("wraps Parse error as syntax error", async () => {
       mockWebviewManager.renderDiagram.mockRejectedValue(
         new Error("Parse error on line 1: unexpected token")
       )
-      await expect(tool.invoke(makeOptions({ code: "bad code" }), mockToken)).rejects.toThrow(
-        "Syntax error in diagram code"
-      )
+      await expect(
+        tool.invoke(makeOptions({ code: "bad code" }), mockToken)
+      ).rejects.toThrow("Syntax error in diagram code")
     })
   })
 })
@@ -160,8 +142,8 @@ describe("ValidateMermaidSyntaxTool", () => {
 
   beforeEach(() => {
     tool = new ValidateMermaidSyntaxTool()
-    jest.clearAllMocks()
-    ;(MermaidWebviewManager.getInstance as jest.Mock).mockReturnValue(mockWebviewManager)
+    vi.clearAllMocks()
+    ;(MermaidWebviewManager.getInstance as Mock).mockReturnValue(mockWebviewManager)
   })
 
   describe("prepareInvocation", () => {
@@ -183,7 +165,10 @@ describe("ValidateMermaidSyntaxTool", () => {
 
     it("returns valid message for correct syntax", async () => {
       mockWebviewManager.validateSyntax.mockResolvedValue({ valid: true })
-      const result: any = await tool.invoke(makeOptions({ code: "graph TD\nA-->B" }), mockToken)
+      const result: any = await tool.invoke(
+        makeOptions({ code: "graph TD\nA-->B" }),
+        mockToken
+      )
       expect(result.parts[0].text).toContain("valid")
     })
 
@@ -192,7 +177,10 @@ describe("ValidateMermaidSyntaxTool", () => {
         valid: false,
         error: "Unexpected token on line 2"
       })
-      const result: any = await tool.invoke(makeOptions({ code: "bad code" }), mockToken)
+      const result: any = await tool.invoke(
+        makeOptions({ code: "bad code" }),
+        mockToken
+      )
       expect(result.parts[0].text).toContain("Unexpected token")
     })
 
@@ -212,7 +200,7 @@ describe("GetMermaidDocumentationTool", () => {
 
   beforeEach(() => {
     tool = new GetMermaidDocumentationTool()
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   describe("prepareInvocation", () => {
@@ -259,8 +247,8 @@ describe("DetectMermaidDiagramTypeTool", () => {
 
   beforeEach(() => {
     tool = new DetectMermaidDiagramTypeTool()
-    jest.clearAllMocks()
-    ;(MermaidWebviewManager.getInstance as jest.Mock).mockReturnValue(mockWebviewManager)
+    vi.clearAllMocks()
+    ;(MermaidWebviewManager.getInstance as Mock).mockReturnValue(mockWebviewManager)
   })
 
   describe("prepareInvocation", () => {
@@ -282,7 +270,10 @@ describe("DetectMermaidDiagramTypeTool", () => {
 
     it("returns detected diagram type", async () => {
       mockWebviewManager.detectDiagramType.mockResolvedValue({ diagramType: "flowchart" })
-      const result: any = await tool.invoke(makeOptions({ code: "graph TD\nA-->B" }), mockToken)
+      const result: any = await tool.invoke(
+        makeOptions({ code: "graph TD\nA-->B" }),
+        mockToken
+      )
       expect(result.parts[0].text).toContain("flowchart")
     })
   })

@@ -3,47 +3,47 @@
  * Tests showQuery function.
  */
 
-jest.mock("vscode", () => ({
+vi.mock("vscode", () => ({
   Uri: {
-    parse: jest.fn((s: string) => ({
-      toString: () => s,
-      authority: s.replace(/.*?:\/\//, "").split("/")[0] ?? "",
-      scheme: s.split(":")[0],
-    })),
+    parse: vi.fn(function (s: string) { return ({
+          toString: () => s,
+          authority: s.replace(/.*?:\/\//, "").split("/")[0] ?? "",
+          scheme: s.split(":")[0],
+        }) }),
   },
-}), { virtual: true })
+}))
 
-jest.mock("../../services/funMessenger", () => ({
+vi.mock("../../services/funMessenger", () => ({
   funWindow: {},
-}), { virtual: true })
+}))
 
-jest.mock("../../adt/conections", () => ({
+vi.mock("../../adt/conections", () => ({
   ADTSCHEME: "adt",
-  abapUri: jest.fn(),
-  getClient: jest.fn(),
-}), { virtual: true })
+  abapUri: vi.fn(),
+  getClient: vi.fn(),
+}))
 
-jest.mock("../../adt/operations/AdtObjectFinder", () => ({
-  findAbapObject: jest.fn(),
-}), { virtual: true })
+vi.mock("../../adt/operations/AdtObjectFinder", () => ({
+  findAbapObject: vi.fn(),
+}))
 
-jest.mock("../../extension", () => ({
+vi.mock("../../extension", () => ({
   context: { extensionUri: { fsPath: "/ext" } },
-}), { virtual: true })
+}))
 
-jest.mock("./queryPanel", () => ({
+vi.mock("./queryPanel", () => ({
   QueryPanel: {
-    createOrShow: jest.fn(),
+    createOrShow: vi.fn(),
   },
-}), { virtual: true })
+}))
 
-jest.mock("../../lib", () => ({
+vi.mock("../../lib", () => ({
   viewableObjecttypes: new Set(["TABL", "VIEW", "DDLS"]),
-}), { virtual: true })
+}))
 
-jest.mock("../../commands/commands", () => ({
-  currentUri: jest.fn(),
-}), { virtual: true })
+vi.mock("../../commands/commands", () => ({
+  currentUri: vi.fn(),
+}))
 
 import { showQuery } from "./query"
 import { abapUri, getClient } from "../../adt/conections"
@@ -51,14 +51,14 @@ import { findAbapObject } from "../../adt/operations/AdtObjectFinder"
 import { QueryPanel } from "./queryPanel"
 import { currentUri } from "../../commands/commands"
 
-const mockedAbapUri = abapUri as jest.Mock
-const mockedGetClient = getClient as jest.Mock
-const mockedFindAbapObject = findAbapObject as jest.Mock
-const mockedCurrentUri = currentUri as jest.Mock
+const mockedAbapUri = abapUri as Mock
+const mockedGetClient = getClient as Mock
+const mockedFindAbapObject = findAbapObject as Mock
+const mockedCurrentUri = currentUri as Mock
 
 describe("showQuery", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it("returns early if no current URI", async () => {

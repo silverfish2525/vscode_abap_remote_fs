@@ -1,49 +1,48 @@
-jest.mock(
+vi.mock(
   "vscode",
   () => ({
     Uri: {
-      parse: jest.fn((s: string) => ({
-        scheme: "adt",
-        path: s.replace(/^adt:\/\/[^/]+/, ""),
-        toString: () => s
-      }))
+      parse: vi.fn(function (s: string) { return ({
+              scheme: "adt",
+              path: s.replace(/^adt:\/\/[^/]+/, ""),
+              toString: () => s
+            }) })
     },
     DebugConfiguration: {},
     DebugSession: {}
-  }),
-  { virtual: true }
+  })
 )
-jest.mock("@vscode/debugadapter", () => ({
-  LoggingDebugSession: jest.fn().mockImplementation(function (this: any) {
-    this.sendResponse = jest.fn()
-    this.sendEvent = jest.fn()
+vi.mock("@vscode/debugadapter", () => ({
+  LoggingDebugSession: vi.fn().mockImplementation(function (this: any) {
+    this.sendResponse = vi.fn()
+    this.sendEvent = vi.fn()
   }),
-  InitializedEvent: jest.fn().mockImplementation(() => ({ type: "initialized" })),
-  Thread: jest.fn().mockImplementation((id: number, name: string) => ({ id, name }))
+  InitializedEvent: vi.fn().mockImplementation(function () { return ({ type: "initialized" }) }),
+  Thread: vi.fn().mockImplementation(function (id: number, name: string) { return ({ id, name }) })
 }))
-jest.mock("./abapConfigurationProvider", () => ({
+vi.mock("./abapConfigurationProvider", () => ({
   DEBUGTYPE: "abap"
 }))
-jest.mock("../conections", () => ({
-  getRoot: jest.fn()
+vi.mock("../conections", () => ({
+  getRoot: vi.fn()
 }))
-jest.mock("abapfs", () => ({
-  isAbapFile: jest.fn(() => false)
+vi.mock("abapfs", () => ({
+  isAbapFile: vi.fn(function () { return false })
 }))
-jest.mock("../../lib", () => ({
-  caughtToString: jest.fn((e: any) => String(e)),
-  log: jest.fn()
+vi.mock("../../lib", () => ({
+  caughtToString: vi.fn(function (e: any) { return String(e) }),
+  log: vi.fn()
 }))
-jest.mock("./debugListener", () => ({
-  errorType: jest.fn()
+vi.mock("./debugListener", () => ({
+  errorType: vi.fn()
 }))
-jest.mock("./replay/recordingIO", () => ({
-  saveRecording: jest.fn().mockResolvedValue(undefined)
+vi.mock("./replay/recordingIO", () => ({
+  saveRecording: vi.fn().mockResolvedValue(undefined)
 }))
-jest.mock("../../services/funMessenger", () => ({
+vi.mock("../../services/funMessenger", () => ({
   funWindow: {
-    showInformationMessage: jest.fn().mockResolvedValue(undefined),
-    showErrorMessage: jest.fn()
+    showInformationMessage: vi.fn().mockResolvedValue(undefined),
+    showErrorMessage: vi.fn()
   }
 }))
 
@@ -54,32 +53,32 @@ import { errorType } from "./debugListener"
 import { saveRecording } from "./replay/recordingIO"
 import { funWindow as window } from "../../services/funMessenger"
 
-const mockIsAbapFile = isAbapFile as jest.MockedFunction<typeof isAbapFile>
-const mockGetRoot = getRoot as jest.MockedFunction<typeof getRoot>
-const mockErrorType = errorType as jest.MockedFunction<typeof errorType>
-const mockSaveRecording = saveRecording as jest.MockedFunction<typeof saveRecording>
+const mockIsAbapFile = isAbapFile as MockedFunction<typeof isAbapFile>
+const mockGetRoot = getRoot as MockedFunction<typeof getRoot>
+const mockErrorType = errorType as MockedFunction<typeof errorType>
+const mockSaveRecording = saveRecording as MockedFunction<typeof saveRecording>
 
 function makeVariableManager() {
   return {
-    getScopes: jest.fn().mockResolvedValue([]),
-    getVariables: jest.fn().mockResolvedValue([]),
-    setVariable: jest.fn().mockResolvedValue({ value: "newval", success: true }),
-    evaluate: jest.fn().mockResolvedValue({ result: "42", variablesReference: 0 })
+    getScopes: vi.fn().mockResolvedValue([]),
+    getVariables: vi.fn().mockResolvedValue([]),
+    setVariable: vi.fn().mockResolvedValue({ value: "newval", success: true }),
+    evaluate: vi.fn().mockResolvedValue({ result: "42", variablesReference: 0 })
   }
 }
 
 function makeBreakpointManager() {
   return {
-    setBreakpoints: jest.fn().mockResolvedValue([]),
-    getBreakpoints: jest.fn().mockReturnValue([])
+    setBreakpoints: vi.fn().mockResolvedValue([]),
+    getBreakpoints: vi.fn().mockReturnValue([])
   }
 }
 
 function makeService(threadId: number, overrides: Partial<any> = {}) {
   return {
     debuggee: { NAME: "TestUser", DEBUGGEE_ID: "DBG1" },
-    getStack: jest.fn().mockReturnValue([]),
-    debuggerStep: jest.fn().mockResolvedValue(undefined),
+    getStack: vi.fn().mockReturnValue([]),
+    debuggerStep: vi.fn().mockResolvedValue(undefined),
     ...overrides
   }
 }
@@ -89,18 +88,18 @@ function makeListener(overrides: Partial<any> = {}) {
   return {
     breakpointManager: makeBreakpointManager(),
     variableManager: makeVariableManager(),
-    addListener: jest.fn().mockReturnValue({ dispose: jest.fn() }),
-    service: jest.fn((id: number) => {
-      const s = serviceMap.get(id)
-      if (!s) throw new Error(`No service for ${id}`)
-      return s
-    }),
-    activeServices: jest.fn(() => [...serviceMap]),
+    addListener: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+    service: vi.fn(function (id: number) {
+          const s = serviceMap.get(id)
+          if (!s) throw new Error(`No service for ${id}`)
+          return s
+        }),
+    activeServices: vi.fn(function () { return [...serviceMap] }),
     activeThreads: [[1, { debuggee: { name: "hi" } }]],
-    fireMainLoop: jest.fn().mockResolvedValue(true),
-    logout: jest.fn().mockResolvedValue(undefined),
+    fireMainLoop: vi.fn().mockResolvedValue(true),
+    logout: vi.fn().mockResolvedValue(undefined),
     isRecording: false,
-    stopRecording: jest.fn().mockResolvedValue(undefined),
+    stopRecording: vi.fn().mockResolvedValue(undefined),
     ...overrides
   } as any
 }
@@ -115,7 +114,7 @@ describe("AbapDebugSession", () => {
   let listener: ReturnType<typeof makeListener>
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     // Clear static session map between tests
     ;(AbapDebugSession as any).sessions = new Map()
     listener = makeListener()
@@ -343,7 +342,7 @@ describe("AbapDebugSession", () => {
   describe("disconnectRequest", () => {
     test("calls logOut and sends response", async () => {
       const response = makeResponse()
-      const logOutSpy = jest.spyOn(session, "logOut").mockResolvedValueOnce(undefined)
+      const logOutSpy = vi.spyOn(session, "logOut").mockResolvedValueOnce(undefined)
       await (session as any).disconnectRequest(response, {})
       expect(logOutSpy).toHaveBeenCalled()
       expect((session as any).sendResponse).toHaveBeenCalledWith(response)
@@ -359,7 +358,7 @@ describe("AbapDebugSession", () => {
     })
 
     test("calls onClose callback if registered", async () => {
-      const onClose = jest.fn()
+      const onClose = vi.fn()
       session.onClose(onClose)
       await session.logOut()
       expect(onClose).toHaveBeenCalled()
@@ -368,8 +367,8 @@ describe("AbapDebugSession", () => {
     test("prompts to save recording when recording has steps", async () => {
       const recording = { totalSteps: 3 }
       listener.isRecording = true
-      listener.stopRecording = jest.fn().mockResolvedValue(recording)
-      ;(window.showInformationMessage as jest.Mock).mockResolvedValueOnce("Save")
+      listener.stopRecording = vi.fn().mockResolvedValue(recording)
+      ;(window.showInformationMessage as Mock).mockResolvedValueOnce("Save")
       await session.logOut()
       expect(mockSaveRecording).toHaveBeenCalledWith(recording)
     })
@@ -377,8 +376,8 @@ describe("AbapDebugSession", () => {
     test("discards recording when user chooses Discard", async () => {
       const recording = { totalSteps: 3 }
       listener.isRecording = true
-      listener.stopRecording = jest.fn().mockResolvedValue(recording)
-      ;(window.showInformationMessage as jest.Mock).mockResolvedValueOnce("Discard")
+      listener.stopRecording = vi.fn().mockResolvedValue(recording)
+      ;(window.showInformationMessage as Mock).mockResolvedValueOnce("Discard")
       await session.logOut()
       expect(mockSaveRecording).not.toHaveBeenCalled()
     })
@@ -395,11 +394,11 @@ describe("AbapDebugSession", () => {
       const node = {
         object: {
           structure: {},
-          contentsPath: jest.fn(() => "/sap/bc/adt/programs/programs/ZPROG"),
-          loadStructure: jest.fn().mockResolvedValue(undefined)
+          contentsPath: vi.fn(function () { return "/sap/bc/adt/programs/programs/ZPROG" }),
+          loadStructure: vi.fn().mockResolvedValue(undefined)
         }
       }
-      mockGetRoot.mockReturnValueOnce({ getNodeAsync: jest.fn().mockResolvedValue(node) } as any)
+      mockGetRoot.mockReturnValueOnce({ getNodeAsync: vi.fn().mockResolvedValue(node) } as any)
       mockIsAbapFile.mockReturnValueOnce(true)
       const response = makeResponse()
       await (session as any).gotoTargetsRequest(response, {

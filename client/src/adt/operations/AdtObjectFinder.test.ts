@@ -2,7 +2,8 @@ interface MockUri {
   scheme: string; authority: string; path: string;
   toString(): string; with(o: any): MockUri
 }
-const makeUri = (s: string): MockUri => ({
+const { makeUri } = vi.hoisted(() => {
+  const makeUri = (s: string): MockUri => ({
   scheme: s.split("://")[0] || "",
   authority: s.split("://")[1]?.split("/")[0] || "",
   path: "/" + (s.split("://")[1]?.split("/").slice(1).join("/") || ""),
@@ -14,74 +15,80 @@ const makeUri = (s: string): MockUri => ({
     return merged as MockUri
   }
 })
+  return { makeUri }
+})
 
-jest.mock("vscode", () => ({
+vi.mock("vscode", () => ({
   workspace: {
-    openTextDocument: jest.fn(),
+    openTextDocument: vi.fn(),
     workspaceFolders: []
   },
-  commands: { executeCommand: jest.fn() },
+  commands: { executeCommand: vi.fn() },
   Uri: {
-    parse: jest.fn((s: string) => makeUri(s))
+    parse: vi.fn(function (s: string) { return makeUri(s) })
   },
-  ThemeIcon: jest.fn(),
-  FileStat: jest.fn(),
-  Range: jest.fn().mockImplementation((s: any, e: any) => ({ start: s, end: e })),
-  QuickPickItem: jest.fn()
-}), { virtual: true })
+  ThemeIcon: vi.fn(class {}),
+  FileStat: vi.fn(class {}),
+  Range: vi.fn().mockImplementation(function (s: any, e: any) { return ({ start: s, end: e }) }),
+  QuickPickItem: vi.fn(class {})
+}))
 
-jest.mock("../../lib", () => ({
-  splitAdtUri: jest.fn((u: string) => ({ path: u, type: undefined, name: undefined, start: undefined })),
-  vscPosition: jest.fn((l: number, c: number) => ({ line: l, character: c })),
-  log: jest.fn(),
-  caughtToString: jest.fn((e: any) => String(e)),
-  promCache: jest.fn(() => {
-    const map = new Map()
-    return (key: string, fn: () => Promise<any>, force?: boolean) => {
-      if (force || !map.has(key)) {
-        const p = fn()
-        map.set(key, p)
+vi.mock("../../lib", () => ({
+  splitAdtUri: vi.fn(function (u: string) { return ({ path: u, type: undefined, name: undefined, start: undefined }) }),
+  vscPosition: vi.fn(function (l: number, c: number) { return ({ line: l, character: c }) }),
+  log: vi.fn(),
+  caughtToString: vi.fn(function (e: any) { return String(e) }),
+  promCache: vi.fn(function () {
+      const map = new Map()
+      return (key: string, fn: () => Promise<any>, force?: boolean) => {
+        if (force || !map.has(key)) {
+          const p = fn()
+          map.set(key, p)
+        }
+        return map.get(key)
       }
-      return map.get(key)
-    }
-  })
+    })
 }))
 
-jest.mock("../conections", () => ({
-  getClient: jest.fn(),
-  getRoot: jest.fn(),
-  uriRoot: jest.fn()
+vi.mock("../conections", () => ({
+  getClient: vi.fn(),
+  getRoot: vi.fn(),
+  uriRoot: vi.fn()
 }))
 
-jest.mock("../../extension", () => ({
+vi.mock("../../extension", () => ({
   context: {
     globalState: {
-      get: jest.fn(),
-      update: jest.fn()
+      get: vi.fn(),
+      update: vi.fn()
     }
   }
 }))
 
-jest.mock("../../services/funMessenger", () => ({
+vi.mock("../../services/funMessenger", () => ({
   funWindow: {
-    showQuickPick: jest.fn(),
-    showInputBox: jest.fn(),
-    showTextDocument: jest.fn(),
-    showErrorMessage: jest.fn(),
-    showInformationMessage: jest.fn()
+    showQuickPick: vi.fn(),
+    showInputBox: vi.fn(),
+    showTextDocument: vi.fn(),
+    showErrorMessage: vi.fn(),
+    showInformationMessage: vi.fn()
   }
 }))
 
-jest.mock("abapfs", () => ({
-  isFolder: jest.fn(),
-  isAbapFolder: jest.fn(),
-  isAbapFile: jest.fn(),
-  isAbapStat: jest.fn()
+vi.mock("abapfs", () => ({
+  isFolder: vi.fn(),
+  isAbapFolder: vi.fn(),
+  isAbapFile: vi.fn(),
+  isAbapStat: vi.fn()
 }))
 
-jest.mock("./AdtObjectCreator", () => ({ PACKAGE: "DEVC/K" }))
+vi.mock("./AdtObjectCreator", () => ({ PACKAGE: "DEVC/K" }))
 
 import { MySearchResult, AdtObjectFinder, createUri } from "./AdtObjectFinder"
+import * as __$mock_vscode from "vscode";
+import * as __$mock_conections from "../conections";
+import * as __$mock_abapfs from "abapfs";
+import * as __$mock_services_funMessenger from "../../services/funMessenger";
 
 describe("MySearchResult", () => {
   const makeSR = (overrides: Record<string, any> = {}) => ({
@@ -128,7 +135,7 @@ describe("MySearchResult", () => {
 
   describe("createResults", () => {
     it("creates array of MySearchResult from raw results", async () => {
-      const rawClient: any = { loadTypes: jest.fn().mockResolvedValue([]) }
+      const rawClient: any = { loadTypes: vi.fn().mockResolvedValue([]) }
       const rawResults = [makeSR(), makeSR({ "adtcore:name": "ZPROG2" })]
       const results = await MySearchResult.createResults(rawResults, rawClient)
       expect(results).toHaveLength(2)
@@ -137,7 +144,7 @@ describe("MySearchResult", () => {
 
     it("loads types if any result has no description", async () => {
       const rawClient: any = {
-        loadTypes: jest.fn().mockResolvedValue([
+        loadTypes: vi.fn().mockResolvedValue([
           { OBJECT_TYPE: "PROG/P", OBJECT_TYPE_LABEL: "Program" }
         ])
       }
@@ -149,7 +156,7 @@ describe("MySearchResult", () => {
 
     it("uses type as description fallback when no matching type label", async () => {
       const rawClient: any = {
-        loadTypes: jest.fn().mockResolvedValue([])
+        loadTypes: vi.fn().mockResolvedValue([])
       }
       const rawResults = [makeSR({ "adtcore:description": undefined, "adtcore:type": "CLAS/OC" })]
       const results = await MySearchResult.createResults(rawResults, rawClient)
@@ -157,14 +164,14 @@ describe("MySearchResult", () => {
     })
 
     it("sets packageName from name for PACKAGE type", async () => {
-      const rawClient: any = { loadTypes: jest.fn().mockResolvedValue([]) }
+      const rawClient: any = { loadTypes: vi.fn().mockResolvedValue([]) }
       const rawResults = [makeSR({ "adtcore:type": "DEVC/K", "adtcore:packageName": undefined })]
       const results = await MySearchResult.createResults(rawResults, rawClient)
       expect(results[0]!.packageName).toBe("ZPROG") // name
     })
 
     it("sets packageName to 'unknown' when not a package and no packageName", async () => {
-      const rawClient: any = { loadTypes: jest.fn().mockResolvedValue([]) }
+      const rawClient: any = { loadTypes: vi.fn().mockResolvedValue([]) }
       const rawResults = [makeSR({ "adtcore:packageName": undefined })]
       const results = await MySearchResult.createResults(rawResults, rawClient)
       expect(results[0]!.packageName).toBe("unknown")
@@ -174,7 +181,7 @@ describe("MySearchResult", () => {
 
 describe("createUri", () => {
   it("creates an adt:// URI from connId and path", () => {
-    const { Uri } = require("vscode")
+    const { Uri } = (__$mock_vscode)
     createUri("myconn", "/sap/bc/adt/programs/programs/zprog")
     expect(Uri.parse).toHaveBeenCalledWith(
       expect.stringContaining("adt://myconn")
@@ -187,13 +194,13 @@ describe("AdtObjectFinder", () => {
   let mockRoot: any
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockRoot = {
-      findByAdtUri: jest.fn(),
-      getNodePath: jest.fn().mockReturnValue([])
+      findByAdtUri: vi.fn(),
+      getNodePath: vi.fn().mockReturnValue([])
     }
-    const { getRoot } = require("../conections")
-    ;(getRoot as jest.Mock).mockReturnValue(mockRoot)
+    const { getRoot } = (__$mock_conections)
+    ;(getRoot as Mock).mockReturnValue(mockRoot)
   })
 
   it("constructs with connId", () => {
@@ -202,14 +209,14 @@ describe("AdtObjectFinder", () => {
   })
 
   it("vscodeUri returns uri string", async () => {
-    const { isAbapFile } = require("abapfs")
-    ;(isAbapFile as jest.Mock).mockReturnValue(false)
+    const { isAbapFile } = (__$mock_abapfs)
+    ;(isAbapFile as Mock).mockReturnValue(false)
     mockRoot.findByAdtUri.mockResolvedValue({
       path: "/sap/bc/adt/programs/programs/zprog/source/main",
       file: {}
     })
-    const { Uri } = require("vscode")
-    ;(Uri.parse as jest.Mock).mockReturnValue(makeUri("adt://testconn/sap/bc/adt/programs/programs/zprog/source/main"))
+    const { Uri } = (__$mock_vscode)
+    ;(Uri.parse as Mock).mockReturnValue(makeUri("adt://testconn/sap/bc/adt/programs/programs/zprog/source/main"))
 
     finder = new AdtObjectFinder("testconn")
     const uri = await finder.vscodeUri("/sap/bc/adt/programs/programs/zprog/source/main")
@@ -229,15 +236,15 @@ describe("AdtObjectFinder", () => {
   })
 
   it("vscodeObject returns abap object for abap file", async () => {
-    const { isAbapStat } = require("abapfs")
-    ;(isAbapStat as jest.Mock).mockReturnValue(true)
+    const { isAbapStat } = (__$mock_abapfs)
+    ;(isAbapStat as Mock).mockReturnValue(true)
     const mockObj = { name: "ZPROG", type: "PROG/P" }
     mockRoot.findByAdtUri.mockResolvedValue({
       path: "/path",
       file: { object: mockObj }
     })
-    const { Uri } = require("vscode")
-    ;(Uri.parse as jest.Mock).mockReturnValue(makeUri("adt://conn/path"))
+    const { Uri } = (__$mock_vscode)
+    ;(Uri.parse as Mock).mockReturnValue(makeUri("adt://conn/path"))
 
     finder = new AdtObjectFinder("testconn")
     const obj = await finder.vscodeObject("/path")
@@ -247,7 +254,7 @@ describe("AdtObjectFinder", () => {
   it("displayAdtUri shows error message on failure", async () => {
     mockRoot.findByAdtUri.mockRejectedValue(new Error("Not found"))
     finder = new AdtObjectFinder("testconn")
-    const { funWindow } = require("../../services/funMessenger")
+    const { funWindow } = (__$mock_services_funMessenger)
     // Should not throw - shows error message instead
     await expect(
       finder.displayAdtUri("adt://testconn/sap/bc/adt/programs/programs/zprog")

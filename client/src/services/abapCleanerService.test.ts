@@ -3,80 +3,80 @@
  * Tests CleanerConfig loading, path validation, availability checks, and CleanerResult.
  */
 
-jest.mock(
+vi.mock(
   "vscode",
   () => ({
     workspace: {
-      getConfiguration: jest.fn().mockReturnValue({
-        get: jest.fn((key: string, def: any) => def),
-        update: jest.fn()
+      getConfiguration: vi.fn().mockReturnValue({
+        get: vi.fn(function (key: string, def: any) { return def }),
+        update: vi.fn()
       }),
-      onDidChangeConfiguration: jest.fn().mockReturnValue({ dispose: jest.fn() }),
-      applyEdit: jest.fn().mockResolvedValue(true),
-      fs: { writeFile: jest.fn().mockResolvedValue(undefined) }
+      onDidChangeConfiguration: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+      applyEdit: vi.fn().mockResolvedValue(true),
+      fs: { writeFile: vi.fn().mockResolvedValue(undefined) }
     },
     commands: {
-      executeCommand: jest.fn().mockResolvedValue(undefined),
-      registerCommand: jest.fn()
+      executeCommand: vi.fn().mockResolvedValue(undefined),
+      registerCommand: vi.fn()
     },
     window: {
-      showInformationMessage: jest.fn(),
-      showErrorMessage: jest.fn(),
-      showWarningMessage: jest.fn(),
-      showQuickPick: jest.fn(),
-      showOpenDialog: jest.fn(),
-      withProgress: jest.fn(),
+      showInformationMessage: vi.fn(),
+      showErrorMessage: vi.fn(),
+      showWarningMessage: vi.fn(),
+      showQuickPick: vi.fn(),
+      showOpenDialog: vi.fn(),
+      withProgress: vi.fn(),
       activeTextEditor: undefined,
       visibleTextEditors: []
     },
     ProgressLocation: { Notification: 15 },
-    WorkspaceEdit: jest.fn().mockImplementation(() => ({
-      replace: jest.fn()
-    })),
-    Range: jest.fn().mockImplementation((s: any, e: any) => ({ start: s, end: e })),
-    Position: jest.fn().mockImplementation((l: number, c: number) => ({ line: l, character: c })),
-    Uri: { file: jest.fn((p: string) => ({ fsPath: p })), parse: jest.fn((s: string) => ({ toString: () => s })) },
-    env: { openExternal: jest.fn() }
-  }),
-  { virtual: true }
+    WorkspaceEdit: vi.fn().mockImplementation(function () { return ({
+          replace: vi.fn()
+        }) }),
+    Range: vi.fn().mockImplementation(function (s: any, e: any) { return ({ start: s, end: e }) }),
+    Position: vi.fn().mockImplementation(function (l: number, c: number) { return ({ line: l, character: c }) }),
+    Uri: { file: vi.fn(function (p: string) { return ({ fsPath: p }) }), parse: vi.fn(function (s: string) { return ({ toString: () => s }) }) },
+    env: { openExternal: vi.fn() }
+  })
 )
 
-jest.mock("./funMessenger", () => ({
+vi.mock("./funMessenger", () => ({
   funWindow: {
-    showInformationMessage: jest.fn(),
-    showErrorMessage: jest.fn(),
-    showWarningMessage: jest.fn(),
-    showQuickPick: jest.fn(),
-    showOpenDialog: jest.fn(),
-    withProgress: jest.fn(),
+    showInformationMessage: vi.fn(),
+    showErrorMessage: vi.fn(),
+    showWarningMessage: vi.fn(),
+    showQuickPick: vi.fn(),
+    showOpenDialog: vi.fn(),
+    withProgress: vi.fn(),
     activeTextEditor: undefined,
     visibleTextEditors: []
   }
 }))
 
-jest.mock("../lib", () => ({ log: jest.fn() }))
-jest.mock("./telemetry", () => ({ logTelemetry: jest.fn() }))
+vi.mock("../lib", () => ({ log: vi.fn() }))
+vi.mock("./telemetry", () => ({ logTelemetry: vi.fn() }))
 
 // Mock filesystem
-jest.mock("fs", () => ({
-  existsSync: jest.fn().mockReturnValue(true),
-  mkdtempSync: jest.fn().mockReturnValue("/tmp/abap-cleaner-test"),
-  writeFileSync: jest.fn(),
-  readFileSync: jest.fn().mockReturnValue("cleaned code"),
-  unlinkSync: jest.fn()
+vi.mock("fs", () => ({
+  existsSync: vi.fn().mockReturnValue(true),
+  mkdtempSync: vi.fn().mockReturnValue("/tmp/abap-cleaner-test"),
+  writeFileSync: vi.fn(),
+  readFileSync: vi.fn().mockReturnValue("cleaned code"),
+  unlinkSync: vi.fn()
 }))
 
-jest.mock("util", () => ({
-  promisify: jest.fn((fn: any) => fn)
+vi.mock("util", () => ({
+  promisify: vi.fn(function (fn: any) { return fn })
 }))
 
-jest.mock("child_process", () => ({
-  exec: jest.fn()
+vi.mock("child_process", () => ({
+  exec: vi.fn()
 }))
 
 import * as vscode from "vscode"
 import * as fs from "fs"
 import { ABAPCleanerService } from "./abapCleanerService"
+import * as __$mock_funMessenger from "./funMessenger";
 
 // Reset singleton between tests
 function resetSingleton() {
@@ -84,19 +84,19 @@ function resetSingleton() {
 }
 
 function setupConfig(overrides: Record<string, any> = {}) {
-  ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue({
-    get: jest.fn((key: string, def: any) => {
-      if (key in overrides) return overrides[key]
-      return def
-    }),
-    update: jest.fn()
+  ;(vscode.workspace.getConfiguration as Mock).mockReturnValue({
+    get: vi.fn(function (key: string, def: any) {
+          if (key in overrides) return overrides[key]
+          return def
+        }),
+    update: vi.fn()
   })
-  ;(vscode.workspace.onDidChangeConfiguration as jest.Mock).mockReturnValue({ dispose: jest.fn() })
+  ;(vscode.workspace.onDidChangeConfiguration as Mock).mockReturnValue({ dispose: vi.fn() })
 }
 
 describe("ABAPCleanerService", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     resetSingleton()
     setupConfig()
   })
@@ -123,14 +123,14 @@ describe("ABAPCleanerService", () => {
     })
 
     it("returns false when enabled but executable does not exist", () => {
-      ;(fs.existsSync as jest.Mock).mockReturnValue(false)
+      ;(fs.existsSync as Mock).mockReturnValue(false)
       setupConfig({ enabled: true, executablePath: "/path/to/abap-cleanerc.exe" })
       const svc = ABAPCleanerService.getInstance()
       expect(svc.isAvailable()).toBe(false)
     })
 
     it("returns true when enabled and executable exists", () => {
-      ;(fs.existsSync as jest.Mock).mockReturnValue(true)
+      ;(fs.existsSync as Mock).mockReturnValue(true)
       setupConfig({ enabled: true, executablePath: "/path/to/abap-cleanerc.exe" })
       const svc = ABAPCleanerService.getInstance()
       expect(svc.isAvailable()).toBe(true)
@@ -145,14 +145,14 @@ describe("ABAPCleanerService", () => {
     })
 
     it("returns false when file does not exist on filesystem", () => {
-      ;(fs.existsSync as jest.Mock).mockReturnValue(false)
+      ;(fs.existsSync as Mock).mockReturnValue(false)
       setupConfig({ executablePath: "/nonexistent/path.exe" })
       const svc = ABAPCleanerService.getInstance()
       expect(svc.isExecutableValid()).toBe(false)
     })
 
     it("returns true when file exists", () => {
-      ;(fs.existsSync as jest.Mock).mockReturnValue(true)
+      ;(fs.existsSync as Mock).mockReturnValue(true)
       setupConfig({ executablePath: "/valid/path.exe" })
       const svc = ABAPCleanerService.getInstance()
       expect(svc.isExecutableValid()).toBe(true)
@@ -161,7 +161,7 @@ describe("ABAPCleanerService", () => {
 
   describe("cleanCode - path validation", () => {
     beforeEach(() => {
-      ;(fs.existsSync as jest.Mock).mockReturnValue(true)
+      ;(fs.existsSync as Mock).mockReturnValue(true)
       setupConfig({ enabled: true, executablePath: "/valid/abap-cleanerc.exe" })
     })
 
@@ -216,24 +216,24 @@ describe("ABAPCleanerService", () => {
 
   describe("cleanActiveEditor", () => {
     it("returns false when no active editor", async () => {
-      const { funWindow } = require("./funMessenger")
+      const { funWindow } = (__$mock_funMessenger)
       funWindow.activeTextEditor = undefined
       setupConfig({ enabled: true, executablePath: "/valid/path.exe" })
-      ;(fs.existsSync as jest.Mock).mockReturnValue(true)
+      ;(fs.existsSync as Mock).mockReturnValue(true)
       const svc = ABAPCleanerService.getInstance()
       const result = await svc.cleanActiveEditor()
       expect(result).toBe(false)
     })
 
     it("returns false when active editor is not ABAP", async () => {
-      const { funWindow } = require("./funMessenger")
+      const { funWindow } = (__$mock_funMessenger)
       funWindow.activeTextEditor = {
         document: { languageId: "javascript", getText: () => "", fileName: "test.js" },
         selection: { isEmpty: true }
       }
-      funWindow.showWarningMessage = jest.fn()
+      funWindow.showWarningMessage = vi.fn()
       setupConfig({ enabled: true, executablePath: "/valid/path.exe" })
-      ;(fs.existsSync as jest.Mock).mockReturnValue(true)
+      ;(fs.existsSync as Mock).mockReturnValue(true)
       const svc = ABAPCleanerService.getInstance()
       const result = await svc.cleanActiveEditor()
       expect(result).toBe(false)
