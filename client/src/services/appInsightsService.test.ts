@@ -2,10 +2,24 @@ vi.mock("vscode", () => ({
   extensions: {
     getExtension: vi.fn().mockReturnValue({ packageJSON: { version: "2.1.0" } })
   },
+  env: {
+    isTelemetryEnabled: false,
+    machineId: "test-machine-id",
+    sessionId: "test-session-id",
+    language: "en"
+  },
   version: "1.85.0",
-  Disposable: vi.fn().mockImplementation(function (fn: () => void) {
-    return { dispose: fn }
-  })
+  // Vitest 5 requires `class` (not arrow) when the mock is constructed with `new`.
+  // Biome will silently collapse `function() { ... }` factories back to arrows on save,
+  // which breaks `new vscode.Disposable(...)`. The class form survives auto-format.
+  Disposable: vi.fn(
+    class MockDisposable {
+      dispose: () => void
+      constructor(fn: () => void) {
+        this.dispose = fn
+      }
+    }
+  )
 }))
 
 vi.mock("../lib", () => ({ log: vi.fn() }))
@@ -56,7 +70,7 @@ vi.mock("../config", () => ({
   RemoteManager: {
     get: vi.fn().mockReturnValue({
       byId: vi.fn().mockReturnValue(null),
-      remoteList: vi.fn().mockReturnValue([])
+      firstConnectionUsername: vi.fn().mockReturnValue(null)
     })
   }
 }))
@@ -212,10 +226,13 @@ describe("getUserMapping priority", () => {
     ;(AppInsightsService as any).instance = undefined
     const svc = AppInsightsService.getInstance(makeContext())
 
-    const mockValidator = __$mock_sapSystemValidator.SapSystemValidator.getInstance()
+    const mockValidator =
+      __$mock_sapSystemValidator.SapSystemValidator.getInstance() as unknown as {
+        getUserMapping: Mock
+      }
     mockValidator.getUserMapping.mockReturnValue({ uniqueId: "dev-abc", manager: "Boss" })
 
-    const result = (svc as any).getUserMapping({ username: "john.doe" })
+    void (svc as any).getUserMapping({ username: "john.doe" })
     expect(mockValidator.getUserMapping).toHaveBeenCalledWith("john.doe")
   })
 
@@ -223,7 +240,10 @@ describe("getUserMapping priority", () => {
     ;(AppInsightsService as any).instance = undefined
     const svc = AppInsightsService.getInstance(makeContext())
 
-    const mockValidator = __$mock_sapSystemValidator.SapSystemValidator.getInstance()
+    const mockValidator =
+      __$mock_sapSystemValidator.SapSystemValidator.getInstance() as unknown as {
+        getUserMapping: Mock
+      }
     mockValidator.getUserMapping.mockReturnValue(null)
 
     const result = (svc as any).getUserMapping({ username: "unknown.user" })

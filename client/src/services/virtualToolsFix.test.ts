@@ -3,25 +3,30 @@
  * Tests the disableVirtualToolGrouping function behavior under various conditions.
  */
 
-vi.mock(
-  "vscode",
-  () => ({
-    workspace: {
-      getConfiguration: vi.fn(),
-      workspaceFolders: [{ uri: { fsPath: "/workspace" } }]
-    },
-    window: {
-      showWarningMessage: vi.fn(),
-      showInformationMessage: vi.fn(),
-      withProgress: vi.fn()
-    },
-    ConfigurationTarget: {
-      Global: 1,
-      Workspace: 2
-    },
-    ProgressLocation: { Notification: 15 }
-  })
-)
+vi.mock("vscode", () => ({
+  workspace: {
+    getConfiguration: vi.fn(),
+    workspaceFolders: [{ uri: { fsPath: "/workspace" } }]
+  },
+  window: {
+    showWarningMessage: vi.fn(),
+    showInformationMessage: vi.fn(),
+    withProgress: vi.fn()
+  },
+  // Source guards on `vscode.lm.selectChatModels({})` returning at least
+  // one model — without it the precheck short-circuits before the warning.
+  lm: {
+    selectChatModels: vi.fn().mockResolvedValue([{ id: "test-model" }])
+  },
+  commands: {
+    executeCommand: vi.fn().mockResolvedValue(undefined)
+  },
+  ConfigurationTarget: {
+    Global: 1,
+    Workspace: 2
+  },
+  ProgressLocation: { Notification: 15 }
+}))
 
 vi.mock("./funMessenger", () => ({
   funWindow: {
@@ -44,20 +49,24 @@ const mockFunWindow = funWindow as Mocked<typeof funWindow>
 function makeContext(dismissed = false): any {
   return {
     globalState: {
-      get: vi.fn(function (key: string) {
-              if (key === "abapfs.virtualToolsFix.dismissed") return dismissed
-              return undefined
-            }),
+      get: vi.fn((key: string) => {
+        if (key === "abapfs.virtualToolsFix.dismissed") return dismissed
+        return undefined
+      }),
       update: vi.fn().mockResolvedValue(undefined)
     },
     subscriptions: []
   }
 }
 
-function makeConfig(effectiveValue: number | undefined, workspaceValue?: number, globalValue?: number) {
+function makeConfig(
+  effectiveValue: number | undefined,
+  workspaceValue?: number,
+  globalValue?: number
+) {
   return {
     inspect: vi.fn().mockReturnValue({
-      defaultValue: 128,
+      defaultValue: effectiveValue ?? 128,
       workspaceValue,
       globalValue,
       key: "github.copilot.chat.virtualTools.threshold"
@@ -138,12 +147,13 @@ describe("disableVirtualToolGrouping", () => {
     expect(cfg.update).not.toHaveBeenCalled()
   })
 
-  it("calls withProgress when user chooses 'Disable Grouping & Reload'", async () => {
+  it("calls withProgress when user chooses 'Disable & Reload'", async () => {
     const context = makeContext(false)
     const cfg = makeConfig(128)
     ;(vscode.workspace.getConfiguration as Mock).mockReturnValue(cfg)
-    ;(mockFunWindow.showWarningMessage as Mock).mockResolvedValue("Disable Grouping & Reload")
-    ;(mockFunWindow.withProgress as Mock).mockImplementation(function (_opts: any, task: any) { return task({ report: vi.fn() }, {}) }
+    ;(mockFunWindow.showWarningMessage as Mock).mockResolvedValue("Disable & Reload")
+    ;(mockFunWindow.withProgress as Mock).mockImplementation((_opts: any, task: any) =>
+      task({ report: vi.fn() }, {})
     )
     ;(vscode.workspace as any).workspaceFolders = []
     // Prevent reloadWindow from throwing
@@ -157,8 +167,9 @@ describe("disableVirtualToolGrouping", () => {
     const context = makeContext(false)
     const cfg = makeConfig(128)
     ;(vscode.workspace.getConfiguration as Mock).mockReturnValue(cfg)
-    ;(mockFunWindow.showWarningMessage as Mock).mockResolvedValue("Disable Grouping & Reload")
-    ;(mockFunWindow.withProgress as Mock).mockImplementation(function (_opts: any, task: any) { return task({ report: vi.fn() }, {}) }
+    ;(mockFunWindow.showWarningMessage as Mock).mockResolvedValue("Disable & Reload")
+    ;(mockFunWindow.withProgress as Mock).mockImplementation((_opts: any, task: any) =>
+      task({ report: vi.fn() }, {})
     )
     ;(vscode as any).commands = { executeCommand: vi.fn().mockResolvedValue(undefined) }
     ;(vscode.workspace as any).workspaceFolders = []
@@ -172,9 +183,9 @@ describe("disableVirtualToolGrouping", () => {
 
   it("does not throw when an unexpected error occurs", async () => {
     const context = makeContext(false)
-    ;(vscode.workspace.getConfiguration as Mock).mockImplementation(function () {
-          throw new Error("Unexpected error")
-        })
+    ;(vscode.workspace.getConfiguration as Mock).mockImplementation(() => {
+      throw new Error("Unexpected error")
+    })
     await expect(disableVirtualToolGrouping(context)).resolves.not.toThrow()
   })
 

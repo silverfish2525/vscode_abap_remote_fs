@@ -8,15 +8,12 @@ vi.mock("vscode", () => ({
     Object.assign(this, { dispose: fn })
   }),
   env: { openExternal: vi.fn() },
-  Uri: { parse: vi.fn((url) => ({ toString: () => url })) },
+  Uri: { parse: vi.fn(url => ({ toString: () => url })) },
   commands: { registerCommand: vi.fn().mockReturnValue({ dispose: vi.fn() }) }
 }))
 
 import * as vscode from "vscode"
-import {
-  initializeReviewPrompt,
-  incrementReviewCounter
-} from "./reviewPrompt"
+import { initializeReviewPrompt, incrementReviewCounter } from "./reviewPrompt"
 
 const mockShowInfoMessage = vscode.window.showInformationMessage as Mock
 const mockCreateStatusBarItem = vscode.window.createStatusBarItem as Mock
@@ -41,8 +38,8 @@ function makeContext(overrides: Record<string, any> = {}) {
     globalState: {
       get: vi.fn((key: string) => state[key]),
       update: vi.fn((key: string, value: any) => {
-              state[key] = value
-            }),
+        state[key] = value
+      }),
       _state: state
     },
     subscriptions,
@@ -65,9 +62,7 @@ beforeEach(() => {
 describe("initializeReviewPrompt", () => {
   test("stores first activation date when not already stored", async () => {
     // Use fresh require after beforeEach resetModules
-    const {
-      initializeReviewPrompt: init
-    } = (await import("./reviewPrompt"))
+    const { initializeReviewPrompt: init } = await import("./reviewPrompt")
 
     const ctx = makeContext()
     ;(ctx.globalState.get as Mock).mockReturnValue(undefined)
@@ -83,14 +78,14 @@ describe("initializeReviewPrompt", () => {
   })
 
   test("does NOT overwrite existing activation date", async () => {
-    const { initializeReviewPrompt: init } = (await import("./reviewPrompt"))
+    const { initializeReviewPrompt: init } = await import("./reviewPrompt")
 
     const existingDate = "2024-01-01T00:00:00.000Z"
     const ctx = makeContext()
     ;(ctx.globalState.get as Mock).mockImplementation((key: string) => {
-          if (key === "abapfs.reviewPrompt.firstActivationDate") return existingDate
-          return undefined
-        })
+      if (key === "abapfs.reviewPrompt.firstActivationDate") return existingDate
+      return undefined
+    })
 
     init(ctx)
 
@@ -102,14 +97,14 @@ describe("initializeReviewPrompt", () => {
   })
 
   test("does not throw on error", async () => {
-    const { initializeReviewPrompt: init } = (await import("./reviewPrompt"))
+    const { initializeReviewPrompt: init } = await import("./reviewPrompt")
 
     // Pass a broken context
     const brokenCtx = {
       globalState: {
         get: vi.fn().mockImplementation(() => {
-                  throw new Error("state error")
-                }),
+          throw new Error("state error")
+        }),
         update: vi.fn()
       },
       subscriptions: []
@@ -121,17 +116,18 @@ describe("initializeReviewPrompt", () => {
 
 describe("incrementReviewCounter", () => {
   test("increments counter in globalState", async () => {
-    const { initializeReviewPrompt: init, incrementReviewCounter: inc } = (await import("./reviewPrompt"))
+    const { initializeReviewPrompt: init, incrementReviewCounter: inc } =
+      await import("./reviewPrompt")
 
     const ctx = makeContext()
     let count = 0
     ;(ctx.globalState.get as Mock).mockImplementation((key: string) => {
-          if (key === "abapfs.reviewPrompt.usageCount") return count
-          return undefined
-        })
+      if (key === "abapfs.reviewPrompt.usageCount") return count
+      return undefined
+    })
     ;(ctx.globalState.update as Mock).mockImplementation((key: string, val: any) => {
-          if (key === "abapfs.reviewPrompt.usageCount") count = val
-        })
+      if (key === "abapfs.reviewPrompt.usageCount") count = val
+    })
 
     init(ctx)
     inc()
@@ -143,17 +139,18 @@ describe("incrementReviewCounter", () => {
 
   test("does nothing when context is not initialized", async () => {
     // Don't call initializeReviewPrompt — just call incrementReviewCounter directly
-    const { incrementReviewCounter: inc } = (await import("./reviewPrompt"))
+    const { incrementReviewCounter: inc } = await import("./reviewPrompt")
     expect(() => inc()).not.toThrow()
   })
 
   test("handles counter increment error silently", async () => {
-    const { initializeReviewPrompt: init, incrementReviewCounter: inc } = (await import("./reviewPrompt"))
+    const { initializeReviewPrompt: init, incrementReviewCounter: inc } =
+      await import("./reviewPrompt")
 
     const ctx = makeContext()
     ;(ctx.globalState.get as Mock).mockImplementation(() => {
-          throw new Error("state error")
-        })
+      throw new Error("state error")
+    })
     ;(ctx.globalState.update as Mock).mockImplementation(() => {})
 
     init(ctx)
@@ -164,16 +161,17 @@ describe("incrementReviewCounter", () => {
 describe("review prompt conditions", () => {
   test("prompt is NOT shown when usage count is below threshold (100)", async () => {
     vi.useFakeTimers()
-    const { initializeReviewPrompt: init, incrementReviewCounter: inc } = (await import("./reviewPrompt"))
-    const mockVscode = (vscode)
+    const { initializeReviewPrompt: init, incrementReviewCounter: inc } =
+      await import("./reviewPrompt")
+    const mockVscode = vscode
     mockVscode.window.showInformationMessage = vi.fn().mockResolvedValue(undefined)
 
     const ctx = makeContext()
     const state: Record<string, any> = {}
     ;(ctx.globalState.get as Mock).mockImplementation((key: string) => state[key])
     ;(ctx.globalState.update as Mock).mockImplementation((key: string, val: any) => {
-          state[key] = val
-        })
+      state[key] = val
+    })
 
     // Set activation date far in the past (100 days ago)
     state["abapfs.reviewPrompt.firstActivationDate"] = new Date(
@@ -190,16 +188,16 @@ describe("review prompt conditions", () => {
 
   test("prompt is NOT shown when days threshold not met (< 7 days)", async () => {
     vi.useFakeTimers()
-    const { initializeReviewPrompt: init } = (await import("./reviewPrompt"))
-    const mockVscode = (vscode)
+    const { initializeReviewPrompt: init } = await import("./reviewPrompt")
+    const mockVscode = vscode
     mockVscode.window.showInformationMessage = vi.fn().mockResolvedValue(undefined)
 
     const ctx = makeContext()
     const state: Record<string, any> = {}
     ;(ctx.globalState.get as Mock).mockImplementation((key: string) => state[key])
     ;(ctx.globalState.update as Mock).mockImplementation((key: string, val: any) => {
-          state[key] = val
-        })
+      state[key] = val
+    })
 
     // Set activation date to today (0 days elapsed)
     state["abapfs.reviewPrompt.firstActivationDate"] = new Date().toISOString()
@@ -214,8 +212,8 @@ describe("review prompt conditions", () => {
 
   test("prompt is NOT shown when neverShowAgain is true", async () => {
     vi.useFakeTimers()
-    const { initializeReviewPrompt: init } = (await import("./reviewPrompt"))
-    const mockVscode = (vscode)
+    const { initializeReviewPrompt: init } = await import("./reviewPrompt")
+    const mockVscode = vscode
     mockVscode.window.showInformationMessage = vi.fn().mockResolvedValue(undefined)
 
     const ctx = makeContext()
@@ -228,8 +226,8 @@ describe("review prompt conditions", () => {
     }
     ;(ctx.globalState.get as Mock).mockImplementation((key: string) => state[key])
     ;(ctx.globalState.update as Mock).mockImplementation((key: string, val: any) => {
-          state[key] = val
-        })
+      state[key] = val
+    })
 
     init(ctx)
 
@@ -240,8 +238,8 @@ describe("review prompt conditions", () => {
 
   test("prompt IS shown when both usage >= 100 AND days >= 7", async () => {
     vi.useFakeTimers()
-    const { initializeReviewPrompt: init } = (await import("./reviewPrompt"))
-    const mockVscode = (vscode)
+    const { initializeReviewPrompt: init } = await import("./reviewPrompt")
+    const mockVscode = vscode
     mockVscode.window.showInformationMessage = vi.fn().mockResolvedValue(undefined)
     mockVscode.window.createStatusBarItem = vi.fn().mockReturnValue(makeStatusBarItem())
     mockVscode.commands.registerCommand = vi.fn().mockReturnValue({ dispose: vi.fn() })
@@ -255,8 +253,8 @@ describe("review prompt conditions", () => {
     }
     ;(ctx.globalState.get as Mock).mockImplementation((key: string) => state[key])
     ;(ctx.globalState.update as Mock).mockImplementation((key: string, val: any) => {
-          state[key] = val
-        })
+      state[key] = val
+    })
 
     init(ctx)
 
@@ -273,8 +271,9 @@ describe("review prompt conditions", () => {
 
   test("prompt is NOT shown twice in the same session", async () => {
     vi.useFakeTimers()
-    const { initializeReviewPrompt: init, incrementReviewCounter: inc } = (await import("./reviewPrompt"))
-    const mockVscode = (vscode)
+    const { initializeReviewPrompt: init, incrementReviewCounter: inc } =
+      await import("./reviewPrompt")
+    const mockVscode = vscode
     mockVscode.window.showInformationMessage = vi.fn().mockResolvedValue(undefined)
     mockVscode.window.createStatusBarItem = vi.fn().mockReturnValue(makeStatusBarItem())
     mockVscode.commands.registerCommand = vi.fn().mockReturnValue({ dispose: vi.fn() })
@@ -288,8 +287,8 @@ describe("review prompt conditions", () => {
     }
     ;(ctx.globalState.get as Mock).mockImplementation((key: string) => state[key])
     ;(ctx.globalState.update as Mock).mockImplementation((key: string, val: any) => {
-          state[key] = val
-        })
+      state[key] = val
+    })
 
     init(ctx)
     vi.runAllTimers()
@@ -309,8 +308,8 @@ describe("review prompt conditions", () => {
 describe("review prompt button handlers", () => {
   test("'Rate Now' opens marketplace URL and sets permanent dismissal", async () => {
     vi.useFakeTimers()
-    const { initializeReviewPrompt: init } = (await import("./reviewPrompt"))
-    const mockVscode = (vscode)
+    const { initializeReviewPrompt: init } = await import("./reviewPrompt")
+    const mockVscode = vscode
 
     // Simulate user clicking "⭐ Rate Now"
     mockVscode.window.showInformationMessage = vi.fn().mockResolvedValue("⭐ Rate Now")
@@ -326,8 +325,8 @@ describe("review prompt button handlers", () => {
     }
     ;(ctx.globalState.get as Mock).mockImplementation((key: string) => state[key])
     ;(ctx.globalState.update as Mock).mockImplementation((key: string, val: any) => {
-          state[key] = val
-        })
+      state[key] = val
+    })
 
     init(ctx)
     vi.runAllTimers()
@@ -346,8 +345,8 @@ describe("review prompt button handlers", () => {
 
   test("'Never Show Again' sets permanent dismissal without opening URL", async () => {
     vi.useFakeTimers()
-    const { initializeReviewPrompt: init } = (await import("./reviewPrompt"))
-    const mockVscode = (vscode)
+    const { initializeReviewPrompt: init } = await import("./reviewPrompt")
+    const mockVscode = vscode
 
     mockVscode.window.showInformationMessage = vi.fn().mockResolvedValue("Never Show Again")
     mockVscode.window.createStatusBarItem = vi.fn().mockReturnValue(makeStatusBarItem())
@@ -362,8 +361,8 @@ describe("review prompt button handlers", () => {
     }
     ;(ctx.globalState.get as Mock).mockImplementation((key: string) => state[key])
     ;(ctx.globalState.update as Mock).mockImplementation((key: string, val: any) => {
-          state[key] = val
-        })
+      state[key] = val
+    })
 
     init(ctx)
     vi.runAllTimers()
@@ -379,8 +378,8 @@ describe("review prompt button handlers", () => {
 
   test("'Remind Me Later' resets usage counter and first activation date", async () => {
     vi.useFakeTimers()
-    const { initializeReviewPrompt: init } = (await import("./reviewPrompt"))
-    const mockVscode = (vscode)
+    const { initializeReviewPrompt: init } = await import("./reviewPrompt")
+    const mockVscode = vscode
 
     mockVscode.window.showInformationMessage = vi.fn().mockResolvedValue("Remind Me Later")
     mockVscode.window.createStatusBarItem = vi.fn().mockReturnValue(makeStatusBarItem())
@@ -395,8 +394,8 @@ describe("review prompt button handlers", () => {
     }
     ;(ctx.globalState.get as Mock).mockImplementation((key: string) => state[key])
     ;(ctx.globalState.update as Mock).mockImplementation((key: string, val: any) => {
-          state[key] = val
-        })
+      state[key] = val
+    })
 
     init(ctx)
     vi.runAllTimers()
@@ -414,8 +413,8 @@ describe("review prompt button handlers", () => {
 
   test("dismissing prompt (X button / undefined) resets counter like 'Remind Me Later'", async () => {
     vi.useFakeTimers()
-    const { initializeReviewPrompt: init } = (await import("./reviewPrompt"))
-    const mockVscode = (vscode)
+    const { initializeReviewPrompt: init } = await import("./reviewPrompt")
+    const mockVscode = vscode
 
     // undefined means user dismissed without clicking any button
     mockVscode.window.showInformationMessage = vi.fn().mockResolvedValue(undefined)
@@ -431,8 +430,8 @@ describe("review prompt button handlers", () => {
     }
     ;(ctx.globalState.get as Mock).mockImplementation((key: string) => state[key])
     ;(ctx.globalState.update as Mock).mockImplementation((key: string, val: any) => {
-          state[key] = val
-        })
+      state[key] = val
+    })
 
     init(ctx)
     vi.runAllTimers()
@@ -450,8 +449,9 @@ describe("review prompt button handlers", () => {
 describe("review prompt counter logic", () => {
   test("evaluateAndSchedule is triggered every 10th increment", async () => {
     vi.useFakeTimers()
-    const { initializeReviewPrompt: init, incrementReviewCounter: inc } = (await import("./reviewPrompt"))
-    const mockVscode = (vscode)
+    const { initializeReviewPrompt: init, incrementReviewCounter: inc } =
+      await import("./reviewPrompt")
+    const mockVscode = vscode
     mockVscode.window.showInformationMessage = vi.fn().mockResolvedValue(undefined)
     mockVscode.window.createStatusBarItem = vi.fn().mockReturnValue(makeStatusBarItem())
     mockVscode.commands.registerCommand = vi.fn().mockReturnValue({ dispose: vi.fn() })
@@ -465,8 +465,8 @@ describe("review prompt counter logic", () => {
     }
     ;(ctx.globalState.get as Mock).mockImplementation((key: string) => state[key])
     ;(ctx.globalState.update as Mock).mockImplementation((key: string, val: any) => {
-          state[key] = val
-        })
+      state[key] = val
+    })
 
     init(ctx)
 
@@ -485,14 +485,15 @@ describe("review prompt counter logic", () => {
   })
 
   test("counter starts at 0 on fresh install (no state)", async () => {
-    const { initializeReviewPrompt: init, incrementReviewCounter: inc } = (await import("./reviewPrompt"))
+    const { initializeReviewPrompt: init, incrementReviewCounter: inc } =
+      await import("./reviewPrompt")
 
     const ctx = makeContext()
     const state: Record<string, any> = {}
     ;(ctx.globalState.get as Mock).mockImplementation((key: string) => state[key])
     ;(ctx.globalState.update as Mock).mockImplementation((key: string, val: any) => {
-          state[key] = val
-        })
+      state[key] = val
+    })
 
     init(ctx)
     inc()
@@ -505,8 +506,8 @@ describe("review prompt counter logic", () => {
 describe("review prompt status bar", () => {
   test("status bar item is created when prompt is shown and not dismissed", async () => {
     vi.useFakeTimers()
-    const { initializeReviewPrompt: init } = (await import("./reviewPrompt"))
-    const mockVscode = (vscode)
+    const { initializeReviewPrompt: init } = await import("./reviewPrompt")
+    const mockVscode = vscode
     const mockBarItem = makeStatusBarItem()
     mockVscode.window.showInformationMessage = vi.fn().mockResolvedValue(undefined)
     mockVscode.window.createStatusBarItem = vi.fn().mockReturnValue(mockBarItem)
@@ -521,8 +522,8 @@ describe("review prompt status bar", () => {
     }
     ;(ctx.globalState.get as Mock).mockImplementation((key: string) => state[key])
     ;(ctx.globalState.update as Mock).mockImplementation((key: string, val: any) => {
-          state[key] = val
-        })
+      state[key] = val
+    })
 
     init(ctx)
     vi.runAllTimers()
@@ -535,8 +536,8 @@ describe("review prompt status bar", () => {
 
   test("status bar is NOT created when statusBarDismissed is true", async () => {
     vi.useFakeTimers()
-    const { initializeReviewPrompt: init } = (await import("./reviewPrompt"))
-    const mockVscode = (vscode)
+    const { initializeReviewPrompt: init } = await import("./reviewPrompt")
+    const mockVscode = vscode
     mockVscode.window.showInformationMessage = vi.fn().mockResolvedValue(undefined)
     mockVscode.window.createStatusBarItem = vi.fn().mockReturnValue(makeStatusBarItem())
     mockVscode.commands.registerCommand = vi.fn().mockReturnValue({ dispose: vi.fn() })
@@ -551,8 +552,8 @@ describe("review prompt status bar", () => {
     }
     ;(ctx.globalState.get as Mock).mockImplementation((key: string) => state[key])
     ;(ctx.globalState.update as Mock).mockImplementation((key: string, val: any) => {
-          state[key] = val
-        })
+      state[key] = val
+    })
 
     init(ctx)
     vi.runAllTimers()
@@ -563,16 +564,16 @@ describe("review prompt status bar", () => {
 
   test("fresh install: first activation date is recorded, no prompt shown", async () => {
     vi.useFakeTimers()
-    const { initializeReviewPrompt: init } = (await import("./reviewPrompt"))
-    const mockVscode = (vscode)
+    const { initializeReviewPrompt: init } = await import("./reviewPrompt")
+    const mockVscode = vscode
     mockVscode.window.showInformationMessage = vi.fn().mockResolvedValue(undefined)
 
     const ctx = makeContext()
     const state: Record<string, any> = {}
     ;(ctx.globalState.get as Mock).mockImplementation((key: string) => state[key])
     ;(ctx.globalState.update as Mock).mockImplementation((key: string, val: any) => {
-          state[key] = val
-        })
+      state[key] = val
+    })
 
     init(ctx)
 

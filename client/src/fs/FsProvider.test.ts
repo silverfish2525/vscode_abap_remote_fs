@@ -149,7 +149,9 @@ describe("FsProvider", () => {
     ;(LocalFsProvider as unknown as Mock).mockImplementation(function (this: any) {
       Object.assign(this, {
         onDidChangeFile: vi.fn(),
-        watch: vi.fn(function (this: any) { Object.assign(this, { dispose: vi.fn() }) }),
+        watch: vi.fn(function (this: any) {
+          Object.assign(this, { dispose: vi.fn() })
+        }),
         stat: vi.fn(),
         readFile: vi.fn(),
         readDirectory: vi.fn(),

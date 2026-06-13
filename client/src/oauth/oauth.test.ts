@@ -42,7 +42,7 @@ vi.mock("abap_cloud_platform", () => ({
 }))
 
 vi.mock("../lib", () => ({
-  after: vi.fn((ms: number) => new Promise(() => {})), // never resolves by default
+  after: vi.fn((_ms: number) => new Promise(() => {})), // never resolves by default
   cache: vi.fn((fn: any) => fn)
 }))
 
@@ -54,11 +54,14 @@ vi.mock("fp-ts/lib/Option", () => ({
 }))
 
 const mockCreateToken = vi.fn()
-const mockRefresh = vi.fn()
 const { MockClientOAuth2 } = vi.hoisted(() => {
-  const MockClientOAuth2 = vi.fn().mockImplementation(() => ({
-    createToken: mockCreateToken
-  }))
+  // Vitest 5 requires `function` or `class` (not arrow) in vi.fn().mockImplementation
+  // when the result is used with `new` (see grantStorage tests + class-mock-fix codemod).
+  const MockClientOAuth2 = vi.fn(
+    class MockClientOAuth2 {
+      createToken = mockCreateToken
+    }
+  )
   return { MockClientOAuth2 }
 })
 vi.mock("client-oauth2", () => ({ default: MockClientOAuth2 }))

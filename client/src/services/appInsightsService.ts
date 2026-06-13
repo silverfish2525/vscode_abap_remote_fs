@@ -7,6 +7,8 @@ import * as vscode from "vscode"
 import * as os from "os"
 import * as crypto from "crypto"
 import { log } from "../lib"
+import { SapSystemValidator } from "./sapSystemValidator"
+import { RemoteManager } from "../config"
 
 // Application Insights SDK imported lazily only if telemetry is enabled
 let appInsights: any = null
@@ -173,8 +175,6 @@ export class AppInsightsService {
     username?: string
   }): { uniqueId: string; manager: string; sapSystem: string } | null {
     try {
-      // Import SapSystemValidator dynamically to avoid circular dependency
-      const { SapSystemValidator } = require("./sapSystemValidator")
       const validator = SapSystemValidator.getInstance()
 
       let username: string | null = null
@@ -220,7 +220,6 @@ export class AppInsightsService {
    */
   private getUsernameFromConnectionId(connectionId: string): string | null {
     try {
-      const { RemoteManager } = require("../config")
       const manager = RemoteManager.get()
       const connection = manager.byId(connectionId)
       return connection?.username || null
@@ -233,14 +232,7 @@ export class AppInsightsService {
    * Get username from VS Code settings (backup method)
    */
   private getUsernameFromSettings(): string | null {
-    try {
-      const { RemoteManager } = require("../config")
-      const manager = RemoteManager.get()
-      const connections = manager.remoteList()
-      return connections.length > 0 ? connections[0].username : null
-    } catch (error) {
-      return null
-    }
+    return RemoteManager.get().firstConnectionUsername()
   }
 
   /**

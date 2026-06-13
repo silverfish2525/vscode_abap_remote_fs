@@ -1,12 +1,19 @@
-vi.mock(
-  "vscode",
-  () => ({
-    LanguageModelToolResult: vi.fn().mockImplementation(function (parts: any[]) { return ({ parts }) }),
-    LanguageModelTextPart: vi.fn().mockImplementation(function (text: string) { return ({ text }) }),
-    MarkdownString: vi.fn().mockImplementation(function (text: string) { return ({ text }) }),
-    lm: { registerTool: vi.fn(function () { return ({ dispose: vi.fn() }) }) }
-  })
-)
+vi.mock("vscode", () => ({
+  LanguageModelToolResult: vi.fn().mockImplementation(function (parts: any[]) {
+    return { parts }
+  }),
+  LanguageModelTextPart: vi.fn().mockImplementation(function (text: string) {
+    return { text }
+  }),
+  MarkdownString: vi.fn().mockImplementation(function (text: string) {
+    return { text }
+  }),
+  lm: {
+    registerTool: vi.fn(function () {
+      return { dispose: vi.fn() }
+    })
+  }
+}))
 
 vi.mock("../../adt/conections", () => ({
   getClient: vi.fn(),
@@ -14,21 +21,25 @@ vi.mock("../../adt/conections", () => ({
 }))
 vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
 vi.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: vi.fn(function () { return ({ dispose: vi.fn() }) })
+  registerToolWithRegistry: vi.fn(function () {
+    return { dispose: vi.fn() }
+  })
 }))
 vi.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }))
 vi.mock("../../views/transports", () => ({ readTransports: vi.fn() }))
 
-jest.mock("./toolGuard", () => ({
-  assertToolInvocationAuthorized: jest.fn(),
-  isToolInvocationAuthorized: jest.fn(() => true)
+vi.mock("./toolGuard", () => ({
+  assertToolInvocationAuthorized: vi.fn(),
+  isToolInvocationAuthorized: vi.fn(function () {
+    return true
+  })
 }))
 import { ManageTransportRequestsTool } from "./transportTool"
 import { getClient } from "../../adt/conections"
 import { logTelemetry } from "../telemetry"
 import { funWindow as window } from "../funMessenger"
-import * as __$mock_views_transports from "../../views/transports";
-import * as __$mock_adt_conections from "../../adt/conections";
+import * as __$mock_views_transports from "../../views/transports"
+import * as __$mock_adt_conections from "../../adt/conections"
 
 const mockToken = {} as any
 
@@ -146,8 +157,8 @@ describe("ManageTransportRequestsTool", () => {
 
     it("wraps client errors", async () => {
       ;(getClient as Mock).mockImplementation(function () {
-              throw new Error("transport service error")
-            })
+        throw new Error("transport service error")
+      })
       await expect(
         tool.invoke(
           makeOptions({ action: "get_user_transports", connectionId: "dev100" }),
@@ -162,7 +173,7 @@ describe("ManageTransportRequestsTool", () => {
   // ====================================================================
   describe("invoke - get_user_transports output", () => {
     it("formats user transports with category headers, targets, and transport details", async () => {
-      const { readTransports } = (__$mock_views_transports)
+      const { readTransports } = __$mock_views_transports
       ;(readTransports as Mock).mockResolvedValue({
         workbench: [
           {
@@ -205,7 +216,7 @@ describe("ManageTransportRequestsTool", () => {
     })
 
     it("counts transports across multiple categories and targets", async () => {
-      const { readTransports } = (__$mock_views_transports)
+      const { readTransports } = __$mock_views_transports
       ;(readTransports as Mock).mockResolvedValue({
         workbench: [
           {
@@ -273,7 +284,7 @@ describe("ManageTransportRequestsTool", () => {
     })
 
     it("shows released section with lock icon", async () => {
-      const { readTransports } = (__$mock_views_transports)
+      const { readTransports } = __$mock_views_transports
       ;(readTransports as Mock).mockResolvedValue({
         workbench: [
           {
@@ -309,7 +320,7 @@ describe("ManageTransportRequestsTool", () => {
     })
 
     it("skips empty categories and empty target status sections", async () => {
-      const { readTransports } = (__$mock_views_transports)
+      const { readTransports } = __$mock_views_transports
       ;(readTransports as Mock).mockResolvedValue({
         workbench: [],
         customizing: [],
@@ -329,7 +340,7 @@ describe("ManageTransportRequestsTool", () => {
     })
 
     it("uses client.username when user parameter is not provided", async () => {
-      const { readTransports } = (__$mock_views_transports)
+      const { readTransports } = __$mock_views_transports
       ;(readTransports as Mock).mockResolvedValue({
         workbench: [],
         customizing: [],
@@ -864,13 +875,13 @@ describe("ManageTransportRequestsTool", () => {
     })
 
     it("uses active editor authority as connectionId when none provided", async () => {
-      const { abapUri } = (__$mock_adt_conections)
+      const { abapUri } = __$mock_adt_conections
       ;(abapUri as Mock).mockReturnValue(true)
       ;(window as any).activeTextEditor = {
         document: { uri: { authority: "DEV200", scheme: "adt" } }
       }
       mockClient.userTransports = vi.fn()
-      const { readTransports } = (__$mock_views_transports)
+      const { readTransports } = __$mock_views_transports
       ;(readTransports as Mock).mockResolvedValue({
         workbench: [],
         customizing: [],

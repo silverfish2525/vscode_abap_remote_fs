@@ -6,16 +6,20 @@ vi.mock("vscode", () => {
   }
   const FileChangeType = { Created: 1, Changed: 2, Deleted: 3 }
   const FileType = { Unknown: 0, File: 1, Directory: 2 }
-  const Disposable = class { constructor(public dispose: () => void) {} }
+  const Disposable = class {
+    constructor(public dispose: () => void) {}
+  }
   const Uri = {
     joinPath: vi.fn((base: any, ...parts: string[]) => ({
-          ...base,
-          path: [base.path, ...parts].join("/"),
-          toString: () => `${base.scheme}://${base.authority}${[base.path, ...parts].join("/")}`
-        })),
+      ...base,
+      path: [base.path, ...parts].join("/"),
+      toString: () => `${base.scheme}://${base.authority}${[base.path, ...parts].join("/")}`
+    })),
     parse: vi.fn((s: string) => ({ path: s, scheme: "adt", authority: "host", toString: () => s }))
   }
-  const RelativePattern = class { constructor(base: any, pattern: string) {} }
+  const RelativePattern = class {
+    constructor(base: any, pattern: string) {}
+  }
   const workspace = {
     fs: {
       stat: vi.fn(),
@@ -28,11 +32,11 @@ vi.mock("vscode", () => {
       copy: vi.fn()
     },
     createFileSystemWatcher: vi.fn(() => ({
-          onDidCreate: vi.fn(),
-          onDidChange: vi.fn(),
-          onDidDelete: vi.fn(),
-          dispose: vi.fn()
-        }))
+      onDidCreate: vi.fn(),
+      onDidChange: vi.fn(),
+      onDidDelete: vi.fn(),
+      dispose: vi.fn()
+    }))
   }
   return { EventEmitter, FileChangeType, FileType, Disposable, Uri, RelativePattern, workspace }
 })
@@ -53,27 +57,29 @@ vi.mock("../adt/conections", () => ({ ADTSCHEME: "adt" }))
 
 vi.mock("../config", () => ({
   getConfig: vi.fn(() => ({
-      get: vi.fn((key: string) => undefined)
-    }))
+    get: vi.fn((key: string) => undefined)
+  }))
 }))
 
 import { LocalFsProvider } from "./LocalFsProvider"
 import * as vscode from "vscode"
-import * as __$mock_config from "../config";
-import * as __$mock_localStorage from "./localStorage";
+import * as __$mock_config from "../config"
+import * as __$mock_localStorage from "./localStorage"
 
-const makeUri = (path: string, scheme = "adt", authority = "host") => ({
-  path,
-  scheme,
-  authority,
-  toString: () => `${scheme}://${authority}${path}`
-} as any)
+const makeUri = (path: string, scheme = "adt", authority = "host") =>
+  ({
+    path,
+    scheme,
+    authority,
+    toString: () => `${scheme}://${authority}${path}`
+  }) as any
 
-const makeContext = () => ({
-  storageUri: makeUri("/storage", "file"),
-  globalStorageUri: makeUri("/global-storage", "file"),
-  subscriptions: [] as any[]
-} as any)
+const makeContext = () =>
+  ({
+    storageUri: makeUri("/storage", "file"),
+    globalStorageUri: makeUri("/global-storage", "file"),
+    subscriptions: [] as any[]
+  }) as any
 
 describe("LocalFsProvider", () => {
   let provider: LocalFsProvider
@@ -91,7 +97,7 @@ describe("LocalFsProvider", () => {
     })
 
     it("uses globalStorageUri when preferGlobal is set", () => {
-      const { getConfig } = (__$mock_config)
+      const { getConfig } = __$mock_config
       ;(getConfig as Mock).mockReturnValue({ get: vi.fn(() => true) })
       const p = new LocalFsProvider(context)
       expect(p).toBeDefined()
@@ -146,7 +152,10 @@ describe("LocalFsProvider", () => {
 
   describe("readDirectory", () => {
     it("returns resolved directory contents", async () => {
-      const entries: [string, number][] = [["file.txt", 1], ["subdir", 2]]
+      const entries: [string, number][] = [
+        ["file.txt", 1],
+        ["subdir", 2]
+      ]
       ;(vscode.workspace.fs.readDirectory as Mock).mockResolvedValue(entries)
 
       const uri = makeUri("/mydir")
@@ -226,7 +235,7 @@ describe("LocalFsProvider", () => {
 
   describe("watch", () => {
     it("returns a Disposable", () => {
-      const { LocalStorage } = (__$mock_localStorage)
+      const { LocalStorage } = __$mock_localStorage
       ;(LocalStorage as Mock).mockImplementation(function (this: any) {
         Object.assign(this, {
           resolveUri: vi.fn().mockResolvedValue(makeUri("/resolved/path", "file"))
@@ -242,7 +251,7 @@ describe("LocalFsProvider", () => {
     })
 
     it("calling dispose on the returned Disposable does not throw", () => {
-      const { LocalStorage } = (__$mock_localStorage)
+      const { LocalStorage } = __$mock_localStorage
       ;(LocalStorage as Mock).mockImplementation(function (this: any) {
         Object.assign(this, {
           resolveUri: vi.fn().mockResolvedValue(makeUri("/resolved/path", "file"))

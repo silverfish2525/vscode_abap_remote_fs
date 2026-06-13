@@ -1,25 +1,26 @@
-vi.mock(
-  "vscode",
-  () => ({
-    Uri: {
-      parse: vi.fn(function (url: string) {
-              const match = url.match(/^([^:]+):\/\/([^\/]*)(.*)$/)
-              return {
-                scheme: match?.[1] ?? "",
-                authority: match?.[2] ?? "",
-                path: match?.[3] ?? "",
-                toString: () => url
-              }
-            })
-    },
-    LanguageModelTextPart: vi.fn(function (t: string) { return ({ value: t }) }),
-    LanguageModelToolResult: vi.fn(function (content: any[]) { return ({ content }) }),
-    ProgressLocation: { Window: 10 },
-    window: {
-      withProgress: vi.fn()
-    }
-  })
-)
+vi.mock("vscode", () => ({
+  Uri: {
+    parse: vi.fn(function (url: string) {
+      const match = url.match(/^([^:]+):\/\/([^\/]*)(.*)$/)
+      return {
+        scheme: match?.[1] ?? "",
+        authority: match?.[2] ?? "",
+        path: match?.[3] ?? "",
+        toString: () => url
+      }
+    })
+  },
+  LanguageModelTextPart: vi.fn(function (t: string) {
+    return { value: t }
+  }),
+  LanguageModelToolResult: vi.fn(function (content: any[]) {
+    return { content }
+  }),
+  ProgressLocation: { Window: 10 },
+  window: {
+    withProgress: vi.fn()
+  }
+}))
 
 vi.mock("../conections", () => ({
   getClient: vi.fn(),
@@ -40,9 +41,11 @@ vi.mock("../../services/telemetry", () => ({
   logTelemetry: vi.fn()
 }))
 
-jest.mock("../../services/lm-tools/toolGuard", () => ({
-  assertToolInvocationAuthorized: jest.fn(),
-  isToolInvocationAuthorized: jest.fn(() => true)
+vi.mock("../../services/lm-tools/toolGuard", () => ({
+  assertToolInvocationAuthorized: vi.fn(),
+  isToolInvocationAuthorized: vi.fn(function () {
+    return true
+  })
 }))
 
 import { ActivateTool } from "./activate"
@@ -59,7 +62,9 @@ const mockToken = {} as any
 
 beforeEach(() => {
   vi.clearAllMocks()
-  ;(vscode.window.withProgress as Mock).mockImplementation(function (_opts: any, fn: Function) { return fn() })
+  ;(vscode.window.withProgress as Mock).mockImplementation(function (_opts: any, fn: Function) {
+    return fn()
+  })
 })
 
 describe("ActivateTool", () => {
@@ -98,8 +103,9 @@ describe("ActivateTool", () => {
         getNodePathAsync: vi.fn().mockResolvedValue([{ file: {}, path: "/" }])
       }
       mockUriRoot.mockReturnValue(mockRoot as any)
-      ;(vscode.window.withProgress as Mock).mockImplementation(function (_opts: any, fn: Function) { return fn() }
-      )
+      ;(vscode.window.withProgress as Mock).mockImplementation(function (_opts: any, fn: Function) {
+        return fn()
+      })
 
       await expect(
         tool.invoke({ input: { url: "adt://dev100/bad/path" } } as any, mockToken)
