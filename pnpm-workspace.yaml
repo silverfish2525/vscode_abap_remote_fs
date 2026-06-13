@@ -18,12 +18,17 @@ packages:
 # right to execute arbitrary code at install time.
 #
 # Decisions for this workspace:
-#   - "@vscode/vsce-sign" : TRUE   — signs VSIX packages with a native binary;
-#                                    needed for `vsce package`/`vsce publish`.
-#   - keytar              : TRUE   — OS keychain bindings (Keychain on macOS,
-#                                    libsecret on Linux, Credential Vault on
-#                                    Windows). Used by the SAP credential
-#                                    storage path; native build is required.
+#   - "@vscode/vsce-sign" : TRUE   — native binary used by `vsce package`
+#                                    and `vsce publish` to sign VSIX bundles.
+#                                    Devtime-only, never reaches end users.
+#   - keytar              : TRUE   — transitive dependency of `@vscode/vsce`
+#                                    and `ovsx`. Used by those publishing
+#                                    tools (NOT by the extension itself —
+#                                    runtime credential storage goes through
+#                                    `vscode.ExtensionContext.secrets` in
+#                                    `client/src/lib/externalmodules.ts`).
+#                                    Native build is required for `vsce` /
+#                                    `ovsx` to work, so allow.
 #   - "@scarf/scarf"      : FALSE  — telemetry beacon shim. No reason to run.
 allowBuilds:
   "@vscode/vsce-sign": true

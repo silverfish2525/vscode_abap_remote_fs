@@ -3022,8 +3022,10 @@ After completing configuration above:
 1. **Install dependencies:**
 
    ```bash
-   npm install
+   pnpm install
    ```
+
+   > Requires `pnpm` (Node 22+ ships Corepack which auto-shims it; otherwise `npm i -g pnpm@11`).
 
 2. **Build and package:**
 
@@ -3032,8 +3034,8 @@ After completing configuration above:
    build-and-install.bat
 
    # Or manually:
-   npm run compile
-   npx vsce package
+   pnpm run compile
+   pnpm run createpackage   # vsce package --no-dependencies (deps are bundled)
    ```
 
 3. **Distribute** the generated `.vsix` file to your users. They can install it via Extensions → `...` → **Install from VSIX...**
