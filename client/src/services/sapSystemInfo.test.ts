@@ -1,9 +1,9 @@
-jest.mock("../adt/conections", () => ({
-  getClient: jest.fn()
+vi.mock("../adt/conections", () => ({
+  getClient: vi.fn()
 }))
-jest.mock("../config", () => ({
+vi.mock("../config", () => ({
   RemoteManager: {
-    get: jest.fn()
+    get: vi.fn()
   }
 }))
 
@@ -17,30 +17,30 @@ import {
 import { getClient } from "../adt/conections"
 import { RemoteManager } from "../config"
 
-const mockGetClient = getClient as jest.Mock
-const mockRemoteManagerGet = RemoteManager.get as jest.Mock
+const mockGetClient = getClient as Mock
+const mockRemoteManagerGet = RemoteManager.get as Mock
 
 function makeClient(queryResults: Record<string, any>) {
   return {
-    runQuery: jest.fn(async (sql: string) => {
-      if (sql.includes("T000")) return queryResults.t000 ?? null
-      if (sql.includes("CVERS")) return queryResults.cvers ?? null
-      if (sql.includes("SVERS")) return queryResults.svers ?? null
-      if (sql.includes("ttzcu")) return queryResults.ttz ?? null
-      return null
-    })
+    runQuery: vi.fn(async function (sql: string) {
+          if (sql.includes("T000")) return queryResults.t000 ?? null
+          if (sql.includes("CVERS")) return queryResults.cvers ?? null
+          if (sql.includes("SVERS")) return queryResults.svers ?? null
+          if (sql.includes("ttzcu")) return queryResults.ttz ?? null
+          return null
+        })
   }
 }
 
 function makeRemoteManager(url = "https://my-sap.example.com", client = "100") {
   return {
-    byId: jest.fn().mockReturnValue({ url, client })
+    byId: vi.fn().mockReturnValue({ url, client })
   }
 }
 
 beforeEach(() => {
   clearSystemInfoCache()
-  jest.clearAllMocks()
+  vi.clearAllMocks()
 })
 
 // ─── getSAPSystemInfo ────────────────────────────────────────────────────────
@@ -57,7 +57,7 @@ describe("getSAPSystemInfo", () => {
 
   test("throws when connection config not found", async () => {
     mockGetClient.mockReturnValue(makeClient({}))
-    mockRemoteManagerGet.mockReturnValue({ byId: jest.fn().mockReturnValue(null) })
+    mockRemoteManagerGet.mockReturnValue({ byId: vi.fn().mockReturnValue(null) })
 
     await expect(getSAPSystemInfo("dev100")).rejects.toThrow(
       "Connection configuration not found for: dev100"
@@ -238,10 +238,10 @@ describe("getSAPSystemInfo", () => {
     mockRemoteManagerGet.mockReturnValue(makeRemoteManager())
 
     await getSAPSystemInfo("dev100")
-    const callCount = (mockClient.runQuery as jest.Mock).mock.calls.length
+    const callCount = (mockClient.runQuery as Mock).mock.calls.length
 
     await getSAPSystemInfo("dev100")
-    expect((mockClient.runQuery as jest.Mock).mock.calls.length).toBe(callCount)
+    expect((mockClient.runQuery as Mock).mock.calls.length).toBe(callCount)
   })
 
   test("different URL produces different cache keys (no cross-contamination)", async () => {
@@ -266,16 +266,16 @@ describe("getSAPSystemInfo", () => {
     mockRemoteManagerGet.mockReturnValue(makeRemoteManager())
 
     await getSAPSystemInfo("dev100")
-    const firstCallCount = (mockClient.runQuery as jest.Mock).mock.calls.length
+    const firstCallCount = (mockClient.runQuery as Mock).mock.calls.length
 
     clearSystemInfoCache()
     await getSAPSystemInfo("dev100")
-    expect((mockClient.runQuery as jest.Mock).mock.calls.length).toBeGreaterThan(firstCallCount)
+    expect((mockClient.runQuery as Mock).mock.calls.length).toBeGreaterThan(firstCallCount)
   })
 
   test("query errors are handled gracefully — result still returned", async () => {
     const faultyClient = {
-      runQuery: jest.fn().mockRejectedValue(new Error("DB error"))
+      runQuery: vi.fn().mockRejectedValue(new Error("DB error"))
     }
     mockGetClient.mockReturnValue(faultyClient)
     mockRemoteManagerGet.mockReturnValue(makeRemoteManager())
@@ -302,7 +302,7 @@ describe("getSAPSystemInfo", () => {
 
     await getSAPSystemInfo("dev100")
 
-    const t000Call = (mockClient.runQuery as jest.Mock).mock.calls.find((c: any[]) =>
+    const t000Call = (mockClient.runQuery as Mock).mock.calls.find((c: any[]) =>
       c[0].includes("T000")
     )
     expect(t000Call![0]).toContain("'001'")

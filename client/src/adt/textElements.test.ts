@@ -1,7 +1,7 @@
-jest.mock("vscode", () => ({}), { virtual: true })
-jest.mock("../lib", () => ({ log: jest.fn() }))
-jest.mock("./AdtTransports", () => ({ selectTransport: jest.fn() }))
-jest.mock("abap-adt-api", () => ({
+vi.mock("vscode", () => ({}))
+vi.mock("../lib", () => ({ log: vi.fn() }))
+vi.mock("./AdtTransports", () => ({ selectTransport: vi.fn() }))
+vi.mock("abap-adt-api", () => ({
   ADTClient: {
     textElementsUrl: (objectType: string, objectName: string) => {
       const normalized = objectName.replace(/∕/g, "/")
@@ -13,13 +13,13 @@ jest.mock("abap-adt-api", () => ({
       if (upperType.startsWith("FUGR")) return `/sap/bc/adt/textelements/functiongroups/${encoded}`
       return `/sap/bc/adt/textelements/programs/${encoded}`
     },
-    lock: jest.fn(),
-    unLock: jest.fn(),
-    getTextElements: jest.fn()
+    lock: vi.fn(),
+    unLock: vi.fn(),
+    getTextElements: vi.fn()
   }
 }))
-jest.mock("../services/abapCopilotLogger", () => ({
-  logCommands: { info: jest.fn() }
+vi.mock("../services/abapCopilotLogger", () => ({
+  logCommands: { info: vi.fn() }
 }))
 
 import {
@@ -38,7 +38,7 @@ import {
 // We also need to test the exported async functions - need to mock ADTClient
 const makeClient = (overrides: Record<string, any> = {}) => ({
   httpClient: {
-    request: jest.fn().mockResolvedValue({ body: "" })
+    request: vi.fn().mockResolvedValue({ body: "" })
   },
   ...overrides
 })
@@ -227,7 +227,7 @@ describe("getTransportObjectPathFromObjectInfo", () => {
 
 describe("getTextElements (async)", () => {
   it("calls getTextElements with the correct URL and section", async () => {
-    const getTextElementsFn = jest
+    const getTextElementsFn = vi
       .fn()
       .mockResolvedValue({ textElements: [], programName: "ZPROG" })
     const client: any = { getTextElements: getTextElementsFn }
@@ -240,14 +240,14 @@ describe("getTextElements (async)", () => {
   })
 
   it("returns empty array on 404", async () => {
-    const getTextElementsFn = jest.fn().mockRejectedValue({ response: { status: 404 } })
+    const getTextElementsFn = vi.fn().mockRejectedValue({ response: { status: 404 } })
     const client: any = { getTextElements: getTextElementsFn }
     const result = await getTextElements(client, "ZMISSING")
     expect(result.textElements).toEqual([])
   })
 
   it("re-throws non-404 errors", async () => {
-    const getTextElementsFn = jest
+    const getTextElementsFn = vi
       .fn()
       .mockRejectedValue({ response: { status: 500 }, message: "Server error" })
     const client: any = { getTextElements: getTextElementsFn }
@@ -262,7 +262,7 @@ describe("getTextElements (async)", () => {
         { id: "002", text: "Output Mode", maxLength: 21 }
       ]
     }
-    const getTextElementsFn = jest.fn().mockResolvedValue(expected)
+    const getTextElementsFn = vi.fn().mockResolvedValue(expected)
     const client: any = { getTextElements: getTextElementsFn }
     const result = await getTextElements(client, "ZPROG")
     expect(result.textElements).toHaveLength(2)
@@ -277,19 +277,19 @@ describe("getTextElements (async)", () => {
 
 describe("getTextElementsSafe", () => {
   it("throws on empty object name", async () => {
-    const client: any = { httpClient: { request: jest.fn() } }
+    const client: any = { httpClient: { request: vi.fn() } }
     await expect(getTextElementsSafe(client, "")).rejects.toThrow("Object name is required")
   })
 
   it("throws on whitespace-only object name", async () => {
-    const client: any = { httpClient: { request: jest.fn() } }
+    const client: any = { httpClient: { request: vi.fn() } }
     await expect(getTextElementsSafe(client, "   ")).rejects.toThrow("Object name is required")
   })
 })
 
 describe("lockTextElements (async)", () => {
   it("calls connection.lock with the correct URL and MODIFY access mode", async () => {
-    const lockFn = jest.fn().mockResolvedValue({ LOCK_HANDLE: "HANDLE123" })
+    const lockFn = vi.fn().mockResolvedValue({ LOCK_HANDLE: "HANDLE123" })
     const client: any = { lock: lockFn }
     const result = await lockTextElements(client, "ZPROG")
     expect(lockFn).toHaveBeenCalledWith(
@@ -300,7 +300,7 @@ describe("lockTextElements (async)", () => {
   })
 
   it("maps AdtLock fields to LockResult", async () => {
-    const lockFn = jest.fn().mockResolvedValue({
+    const lockFn = vi.fn().mockResolvedValue({
       LOCK_HANDLE: "HANDLE456",
       CORRUSER: "DEVUSER",
       CORRNR: "TR123456",
@@ -319,7 +319,7 @@ describe("lockTextElements (async)", () => {
   })
 
   it("re-throws on lock failure", async () => {
-    const lockFn = jest.fn().mockRejectedValue(new Error("Connection refused"))
+    const lockFn = vi.fn().mockRejectedValue(new Error("Connection refused"))
     const client: any = { lock: lockFn }
     await expect(lockTextElements(client, "ZPROG")).rejects.toThrow("Failed to lock text elements")
   })

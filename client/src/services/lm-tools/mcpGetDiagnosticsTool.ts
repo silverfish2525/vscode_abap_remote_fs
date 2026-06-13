@@ -1,4 +1,3 @@
-
 /**
  * MCP Get Diagnostics Tool
  *
@@ -7,7 +6,7 @@
  */
 
 import * as vscode from "vscode"
-import { triggerSyntaxCheck } from "../../langClient"
+import { triggerSyntaxCheck } from "../syntaxCheckTrigger"
 
 // ============================================================================
 // INTERFACE

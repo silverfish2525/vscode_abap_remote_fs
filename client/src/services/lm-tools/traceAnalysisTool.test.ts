@@ -1,23 +1,15 @@
-jest.mock(
-  "vscode",
-  () => ({
-    LanguageModelToolResult: jest.fn().mockImplementation((parts: any[]) => ({ parts })),
-    LanguageModelTextPart: jest.fn().mockImplementation((text: string) => ({ text })),
-    MarkdownString: jest.fn().mockImplementation((text: string) => ({ text })),
-    lm: { registerTool: jest.fn(() => ({ dispose: jest.fn() })) }
-  }),
-  { virtual: true }
-)
-
-jest.mock("../../adt/conections", () => ({ getClient: jest.fn() }))
-jest.mock("../telemetry", () => ({ logTelemetry: jest.fn() }))
-jest.mock("../abapCopilotLogger", () => ({ logCommands: { error: jest.fn() } }))
-jest.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: jest.fn(() => ({ dispose: jest.fn() }))
+vi.mock("vscode", () => ({
+  LanguageModelToolResult: vi.fn().mockImplementation(function (parts: any[]) { return ({ parts }) }),
+  LanguageModelTextPart: vi.fn().mockImplementation(function (text: string) { return ({ text }) }),
+  MarkdownString: vi.fn().mockImplementation(function (text: string) { return ({ text }) }),
+  lm: { registerTool: vi.fn(function () { return ({ dispose: vi.fn() }) }) }
 }))
-jest.mock("./toolGuard", () => ({
-  assertToolInvocationAuthorized: jest.fn(),
-  isToolInvocationAuthorized: jest.fn(() => true)
+
+vi.mock("../../adt/conections", () => ({ getClient: vi.fn() }))
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("../abapCopilotLogger", () => ({ logCommands: { error: vi.fn() } }))
+vi.mock("./toolRegistry", () => ({
+  registerToolWithRegistry: vi.fn(function () { return ({ dispose: vi.fn() }) })
 }))
 
 import { ABAPTraceAnalysisTool } from "./traceAnalysisTool"
@@ -31,8 +23,8 @@ function makeOptions(input: any = {}) {
 }
 
 const mockClient = {
-  getAbapTraceRunList: jest.fn(),
-  getAbapTraceConfigurations: jest.fn()
+  getAbapTraceRunList: vi.fn(),
+  getAbapTraceConfigurations: vi.fn()
 }
 
 describe("ABAPTraceAnalysisTool", () => {
@@ -40,8 +32,8 @@ describe("ABAPTraceAnalysisTool", () => {
 
   beforeEach(() => {
     tool = new ABAPTraceAnalysisTool()
-    jest.clearAllMocks()
-    ;(getClient as jest.Mock).mockReturnValue(mockClient)
+    vi.clearAllMocks()
+    ;(getClient as Mock).mockReturnValue(mockClient)
   })
 
   describe("prepareInvocation", () => {
@@ -96,55 +88,70 @@ describe("ABAPTraceAnalysisTool", () => {
 
   describe("invoke", () => {
     it("logs telemetry", async () => {
-      mockClient.getAbapTraceRunList = jest.fn().mockResolvedValue([])
-      await tool
-        .invoke(makeOptions({ action: "list_runs", connectionId: "dev100" }), mockToken)
-        .catch(() => {})
+      mockClient.getAbapTraceRunList = vi.fn().mockResolvedValue([])
+      await tool.invoke(
+        makeOptions({ action: "list_runs", connectionId: "dev100" }),
+        mockToken
+      ).catch(() => {})
       expect(logTelemetry).toHaveBeenCalledWith("tool_analyze_abap_traces_called", {
         connectionId: "dev100"
       })
     })
 
     it("normalizes connectionId to lowercase", async () => {
-      mockClient.getAbapTraceRunList = jest.fn().mockResolvedValue([])
-      await tool
-        .invoke(makeOptions({ action: "list_runs", connectionId: "DEV100" }), mockToken)
-        .catch(() => {})
+      mockClient.getAbapTraceRunList = vi.fn().mockResolvedValue([])
+      await tool.invoke(
+        makeOptions({ action: "list_runs", connectionId: "DEV100" }),
+        mockToken
+      ).catch(() => {})
       expect(getClient).toHaveBeenCalledWith("dev100")
     })
 
     it("throws when analyze_run has no traceId", async () => {
       await expect(
-        tool.invoke(makeOptions({ action: "analyze_run", connectionId: "dev100" }), mockToken)
+        tool.invoke(
+          makeOptions({ action: "analyze_run", connectionId: "dev100" }),
+          mockToken
+        )
       ).rejects.toThrow("traceId parameter is required")
     })
 
     it("throws when get_statements has no traceId", async () => {
       await expect(
-        tool.invoke(makeOptions({ action: "get_statements", connectionId: "dev100" }), mockToken)
+        tool.invoke(
+          makeOptions({ action: "get_statements", connectionId: "dev100" }),
+          mockToken
+        )
       ).rejects.toThrow("traceId parameter is required")
     })
 
     it("throws when get_hitlist has no traceId", async () => {
       await expect(
-        tool.invoke(makeOptions({ action: "get_hitlist", connectionId: "dev100" }), mockToken)
+        tool.invoke(
+          makeOptions({ action: "get_hitlist", connectionId: "dev100" }),
+          mockToken
+        )
       ).rejects.toThrow("traceId parameter is required")
     })
 
     it("wraps client errors", async () => {
-      ;(getClient as jest.Mock).mockImplementation(() => {
-        throw new Error("connection error")
-      })
+      ;(getClient as Mock).mockImplementation(function () {
+              throw new Error("connection error")
+            })
       await expect(
-        tool.invoke(makeOptions({ action: "list_runs", connectionId: "dev100" }), mockToken)
+        tool.invoke(
+          makeOptions({ action: "list_runs", connectionId: "dev100" }),
+          mockToken
+        )
       ).rejects.toThrow("Failed to analyze ABAP traces: Error: connection error")
     })
 
     it("uses maxResults default of 20", async () => {
-      mockClient.getAbapTraceRunList = jest.fn().mockResolvedValue([])
-      await tool
-        .invoke(makeOptions({ action: "list_runs", connectionId: "dev100" }), mockToken)
-        .catch(() => {})
+      mockClient.getAbapTraceRunList = vi.fn().mockResolvedValue([])
+      await tool.invoke(
+        makeOptions({ action: "list_runs", connectionId: "dev100" }),
+        mockToken
+      ).catch(() => {})
       // Just verify invocation without error, maxResults defaults handled internally
       expect(logTelemetry).toHaveBeenCalled()
     })

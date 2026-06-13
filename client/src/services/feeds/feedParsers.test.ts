@@ -1,4 +1,4 @@
-jest.mock("../../lib", () => ({ log: () => {} }))
+vi.mock("../../lib", () => ({ log: () => {} }))
 
 import { determineFeedType, getDefaultQuery, toFeedMetadata, parseFeedEntry, parseFeedResponse } from "./feedParsers"
 import { FeedType } from "./feedTypes"

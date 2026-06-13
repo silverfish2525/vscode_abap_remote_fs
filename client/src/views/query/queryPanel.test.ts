@@ -4,33 +4,33 @@
  * showResult/showError methods, and dispose.
  */
 
-jest.mock("vscode", () => {
+vi.mock("vscode", () => {
   return {
     ViewColumn: { One: 1, Beside: 2 },
     Uri: {
-      file: jest.fn((p: string) => ({ fsPath: p, toString: () => `file://${p}` })),
-      parse: jest.fn((s: string) => ({ toString: () => s })),
-      joinPath: jest.fn((base: any, ...parts: string[]) => ({ ...base, path: [base.path || "", ...parts].join("/"), toString: () => parts.join("/") })),
+      file: vi.fn(function (p: string) { return ({ fsPath: p, toString: () => `file://${p}` }) }),
+      parse: vi.fn(function (s: string) { return ({ toString: () => s }) }),
+      joinPath: vi.fn(function (base: any, ...parts: string[]) { return ({ ...base, path: [base.path || "", ...parts].join("/"), toString: () => parts.join("/") }) }),
     },
     workspace: {
-      fs: { writeFile: jest.fn() },
-      getConfiguration: jest.fn(() => ({ get: jest.fn(() => []) })),
+      fs: { writeFile: vi.fn() },
+      getConfiguration: vi.fn(function () { return ({ get: vi.fn(function () { return [] }) }) }),
     },
   }
-}, { virtual: true })
+})
 
-jest.mock("../../services/funMessenger", () => ({
+vi.mock("../../services/funMessenger", () => ({
   funWindow: {
     activeTextEditor: undefined,
-    createWebviewPanel: jest.fn(),
-    showSaveDialog: jest.fn(),
-    showErrorMessage: jest.fn(),
+    createWebviewPanel: vi.fn(),
+    showSaveDialog: vi.fn(),
+    showErrorMessage: vi.fn(),
   },
-}), { virtual: true })
+}))
 
-jest.mock("../../lib", () => ({
-  log: jest.fn(),
-}), { virtual: true })
+vi.mock("../../lib", () => ({
+  log: vi.fn(),
+}))
 
 // We need to be able to test SQLValidator. It's not exported, so we test via
 // the message handling that calls it. But we can also test it indirectly.
@@ -38,8 +38,9 @@ jest.mock("../../lib", () => ({
 
 import { QueryPanel } from "./queryPanel"
 import { funWindow as window } from "../../services/funMessenger"
+import * as __$mock_vscode from "vscode";
 
-const mockedWindow = window as jest.Mocked<typeof window>
+const mockedWindow = window as Mocked<typeof window>
 
 function makeWebviewPanel() {
   const messageHandlers: Array<(msg: any) => void> = []
@@ -47,17 +48,17 @@ function makeWebviewPanel() {
 
   const webview = {
     html: "",
-    postMessage: jest.fn(),
-    onDidReceiveMessage: jest.fn((cb: any) => { messageHandlers.push(cb); return { dispose: jest.fn() } }),
-    asWebviewUri: jest.fn((uri: any) => uri),
+    postMessage: vi.fn(),
+    onDidReceiveMessage: vi.fn(function (cb: any) { messageHandlers.push(cb); return { dispose: vi.fn() } }),
+    asWebviewUri: vi.fn(function (uri: any) { return uri }),
     cspSource: "vscode-webview:",
   }
   const panel = {
     webview,
-    reveal: jest.fn(),
-    dispose: jest.fn(),
-    onDidDispose: jest.fn((cb: any) => { cb(); return { dispose: jest.fn() } }),
-    onDidChangeViewState: jest.fn((cb: any) => { changeViewHandlers.push(cb); return { dispose: jest.fn() } }),
+    reveal: vi.fn(),
+    dispose: vi.fn(),
+    onDidDispose: vi.fn(function (cb: any) { cb(); return { dispose: vi.fn() } }),
+    onDidChangeViewState: vi.fn(function (cb: any) { changeViewHandlers.push(cb); return { dispose: vi.fn() } }),
     visible: true,
     viewColumn: 1,
     _messageHandlers: messageHandlers,
@@ -68,21 +69,21 @@ function makeWebviewPanel() {
 
 function makeClient() {
   return {
-    runQuery: jest.fn().mockResolvedValue({ values: [], columns: [] }),
-    searchObject: jest.fn().mockResolvedValue([]),
-    tableContents: jest.fn().mockResolvedValue({ columns: [] }),
+    runQuery: vi.fn().mockResolvedValue({ values: [], columns: [] }),
+    searchObject: vi.fn().mockResolvedValue([]),
+    tableContents: vi.fn().mockResolvedValue({ columns: [] }),
   } as any
 }
 
 describe("QueryPanel.createOrShow", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   it("creates a new panel", () => {
     const panel = makeWebviewPanel()
-    ;(mockedWindow.createWebviewPanel as jest.Mock).mockReturnValue(panel)
-    const { Uri } = require("vscode")
+    ;(mockedWindow.createWebviewPanel as Mock).mockReturnValue(panel)
+    const { Uri } = (__$mock_vscode)
     const extensionUri = Uri.file("/ext")
     const client = makeClient()
     expect(() => QueryPanel.createOrShow(extensionUri, client, "MARA")).not.toThrow()
@@ -96,8 +97,8 @@ describe("QueryPanel.createOrShow", () => {
 
   it("sets initial html on the webview", () => {
     const panel = makeWebviewPanel()
-    ;(mockedWindow.createWebviewPanel as jest.Mock).mockReturnValue(panel)
-    const { Uri } = require("vscode")
+    ;(mockedWindow.createWebviewPanel as Mock).mockReturnValue(panel)
+    const { Uri } = (__$mock_vscode)
     QueryPanel.createOrShow(Uri.file("/ext"), makeClient(), "MARA")
     // html was set to the result of _update()
     expect(typeof panel.webview.html).toBe("string")
@@ -109,10 +110,10 @@ describe("QueryPanel message handlers – SQL validation", () => {
   let client: ReturnType<typeof makeClient>
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     panel = makeWebviewPanel()
-    ;(mockedWindow.createWebviewPanel as jest.Mock).mockReturnValue(panel)
-    const { Uri } = require("vscode")
+    ;(mockedWindow.createWebviewPanel as Mock).mockReturnValue(panel)
+    const { Uri } = (__$mock_vscode)
     client = makeClient()
     QueryPanel.createOrShow(Uri.file("/ext"), client, "")
   })
@@ -234,13 +235,13 @@ describe("QueryPanel.setTable and showResult/showError", () => {
   let panel: ReturnType<typeof makeWebviewPanel>
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     panel = makeWebviewPanel()
-    ;(mockedWindow.createWebviewPanel as jest.Mock).mockReturnValue(panel)
+    ;(mockedWindow.createWebviewPanel as Mock).mockReturnValue(panel)
   })
 
   it("showResult posts result message to webview", () => {
-    const { Uri } = require("vscode")
+    const { Uri } = (__$mock_vscode)
     QueryPanel.createOrShow(Uri.file("/ext"), makeClient(), "MARA")
     // Access the instance – since it's created inside createOrShow, we test via postMessage
     // We can send a result by triggering the execute command
@@ -257,10 +258,10 @@ describe("QueryPanel runCriteria", () => {
   let client: ReturnType<typeof makeClient>
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     panel = makeWebviewPanel()
-    ;(mockedWindow.createWebviewPanel as jest.Mock).mockReturnValue(panel)
-    const { Uri } = require("vscode")
+    ;(mockedWindow.createWebviewPanel as Mock).mockReturnValue(panel)
+    const { Uri } = (__$mock_vscode)
     client = makeClient()
     QueryPanel.createOrShow(Uri.file("/ext"), client, "MARA")
   })
@@ -319,10 +320,10 @@ describe("QueryPanel loadMore", () => {
   let client: ReturnType<typeof makeClient>
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     panel = makeWebviewPanel()
-    ;(mockedWindow.createWebviewPanel as jest.Mock).mockReturnValue(panel)
-    const { Uri } = require("vscode")
+    ;(mockedWindow.createWebviewPanel as Mock).mockReturnValue(panel)
+    const { Uri } = (__$mock_vscode)
     client = makeClient()
     QueryPanel.createOrShow(Uri.file("/ext"), client, "MARA")
   })

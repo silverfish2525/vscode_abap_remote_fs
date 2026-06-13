@@ -1,9 +1,9 @@
 // Must mock vscode before any imports that reference it
-jest.mock("vscode", () => ({
+vi.mock("vscode", () => ({
   workspace: {
-    getConfiguration: jest.fn(),
+    getConfiguration: vi.fn(),
     workspaceFolders: [] as any[],
-    onDidChangeConfiguration: jest.fn()
+    onDidChangeConfiguration: vi.fn()
   },
   ConfigurationTarget: {
     Global: 1,
@@ -11,39 +11,42 @@ jest.mock("vscode", () => ({
     WorkspaceFolder: 3
   },
   Uri: {
-    parse: jest.fn((s: string) => ({ toString: () => s }))
+    parse: vi.fn(function (s: string) { return ({ toString: () => s }) })
   }
-}), { virtual: true })
+}))
 
-jest.mock("./services/funMessenger", () => ({
+vi.mock("./services/funMessenger", () => ({
   funWindow: {
-    showQuickPick: jest.fn(),
-    showInputBox: jest.fn()
+    showQuickPick: vi.fn(),
+    showInputBox: vi.fn()
   }
 }))
-jest.mock("abap-adt-api", () => ({
-  ADTClient: jest.fn().mockImplementation(() => ({})),
-  createSSLConfig: jest.fn(() => ({})),
-  LogCallback: jest.fn()
+vi.mock("abap-adt-api", () => ({
+  ADTClient: vi.fn().mockImplementation(function () { return ({}) }),
+  createSSLConfig: vi.fn(function () { return ({}) }),
+  LogCallback: vi.fn(class {})
 }))
-const mockVault = {
-  getPassword: jest.fn().mockResolvedValue(null),
-  setPassword: jest.fn().mockResolvedValue(true),
-  deletePassword: jest.fn().mockResolvedValue(true)
+const { mockVault } = vi.hoisted(() => {
+  const mockVault = {
+  getPassword: vi.fn().mockResolvedValue(null),
+  setPassword: vi.fn().mockResolvedValue(true),
+  deletePassword: vi.fn().mockResolvedValue(true)
 }
-jest.mock("./lib", () => ({
+  return { mockVault }
+})
+vi.mock("./lib", () => ({
   PasswordVault: {
-    get: jest.fn(() => mockVault)
+    get: vi.fn(function () { return mockVault })
   }
 }))
-jest.mock("./oauth", () => ({ oauthLogin: jest.fn(() => undefined) }))
-jest.mock("./adt/conections", () => ({ ADTSCHEME: "adt" }))
-jest.mock("./adt/adtCommLog", () => ({
-  CallLogger: { get: jest.fn(() => undefined) }
+vi.mock("./oauth", () => ({ oauthLogin: vi.fn(function () { return undefined }) }))
+vi.mock("./adt/conections", () => ({ ADTSCHEME: "adt" }))
+vi.mock("./adt/adtCommLog", () => ({
+  CallLogger: { get: vi.fn(function () { return undefined }) }
 }))
-jest.mock("vscode-abap-remote-fs-sharedapi", () => ({}))
-jest.mock("fs", () => ({
-  readFileSync: jest.fn(() => { throw new Error("not found") })
+vi.mock("vscode-abap-remote-fs-sharedapi", () => ({}))
+vi.mock("fs", () => ({
+  readFileSync: vi.fn(function () { throw new Error("not found") })
 }))
 
 import { workspace, ConfigurationTarget } from "vscode"
@@ -57,24 +60,28 @@ import {
   RemoteManager,
   RemoteConfig
 } from "./config"
+import * as __$mock_abap_adt_api from "abap-adt-api";
+import * as __$mock_oauth from "./oauth";
+import * as __$mock_lib from "./lib";
+import * as __$mock_services_funMessenger from "./services/funMessenger";
 
 // ---- helpers ----------------------------------------------------------------
 
 function mockWorkspaceConfig(remotes: Record<string, any> = {}, inspect?: any) {
   const configObject: any = {
-    get: jest.fn((key: string, defaultVal?: any) => {
-      if (key === "remote") return remotes
-      return defaultVal
-    }),
-    update: jest.fn().mockResolvedValue(undefined),
-    inspect: jest.fn((key: string) => inspect || {
-      globalValue: remotes,
-      workspaceValue: {},
-      workspaceFolderValue: {}
-    }),
+    get: vi.fn(function (key: string, defaultVal?: any) {
+          if (key === "remote") return remotes
+          return defaultVal
+        }),
+    update: vi.fn().mockResolvedValue(undefined),
+    inspect: vi.fn(function (key: string) { return inspect || {
+          globalValue: remotes,
+          workspaceValue: {},
+          workspaceFolderValue: {}
+        } }),
     remote: remotes
   }
-  ;(workspace.getConfiguration as jest.Mock).mockReturnValue(configObject)
+  ;(workspace.getConfiguration as Mock).mockReturnValue(configObject)
   return configObject
 }
 
@@ -263,7 +270,7 @@ describe("saveNewRemote", () => {
 
 describe("createClient", () => {
   test("creates an ADTClient for an http URL", () => {
-    const { ADTClient } = require("abap-adt-api")
+    const { ADTClient } = (__$mock_abap_adt_api)
     const conf: RemoteConfig = {
       name: "dev",
       url: "http://host:50000",
@@ -284,8 +291,8 @@ describe("createClient", () => {
   })
 
   test("creates an ADTClient for an https URL with SSL config", () => {
-    const { ADTClient, createSSLConfig } = require("abap-adt-api")
-    ;(createSSLConfig as jest.Mock).mockReturnValue({ rejectUnauthorized: true })
+    const { ADTClient, createSSLConfig } = (__$mock_abap_adt_api)
+    ;(createSSLConfig as Mock).mockReturnValue({ rejectUnauthorized: true })
     const conf: RemoteConfig = {
       name: "dev",
       url: "https://host:8443",
@@ -301,9 +308,9 @@ describe("createClient", () => {
   })
 
   test("uses oauth password when oauthLogin returns a value", () => {
-    const { ADTClient } = require("abap-adt-api")
-    const { oauthLogin } = require("./oauth")
-    ;(oauthLogin as jest.Mock).mockReturnValue("oauth-token")
+    const { ADTClient } = (__$mock_abap_adt_api)
+    const { oauthLogin } = (__$mock_oauth)
+    ;(oauthLogin as Mock).mockReturnValue("oauth-token")
     const conf: RemoteConfig = {
       name: "dev",
       url: "http://host",
@@ -311,14 +318,14 @@ describe("createClient", () => {
       password: "normalpass"
     } as any
     createClient(conf)
-    const [, , password] = (ADTClient as jest.Mock).mock.calls.at(-1)
+    const [, , password] = (ADTClient as Mock).mock.calls.at(-1)
     expect(password).toBe("oauth-token")
   })
 
   test("falls back to conf.password when oauthLogin returns undefined", () => {
-    const { ADTClient } = require("abap-adt-api")
-    const { oauthLogin } = require("./oauth")
-    ;(oauthLogin as jest.Mock).mockReturnValue(undefined)
+    const { ADTClient } = (__$mock_abap_adt_api)
+    const { oauthLogin } = (__$mock_oauth)
+    ;(oauthLogin as Mock).mockReturnValue(undefined)
     const conf: RemoteConfig = {
       name: "dev",
       url: "http://host",
@@ -326,7 +333,7 @@ describe("createClient", () => {
       password: "mypass"
     } as any
     createClient(conf)
-    const [, , password] = (ADTClient as jest.Mock).mock.calls.at(-1)
+    const [, , password] = (ADTClient as Mock).mock.calls.at(-1)
     expect(password).toBe("mypass")
   })
 })
@@ -337,7 +344,7 @@ describe("RemoteManager", () => {
   // Reset singleton between tests
   beforeEach(() => {
     ;(RemoteManager as any).instance = undefined
-    ;(workspace.onDidChangeConfiguration as jest.Mock).mockReturnValue({ dispose: jest.fn() })
+    ;(workspace.onDidChangeConfiguration as Mock).mockReturnValue({ dispose: vi.fn() })
     ;(workspace as any).workspaceFolders = []
   })
 
@@ -384,7 +391,7 @@ describe("RemoteManager", () => {
   })
 
   test("savePassword stores password in vault and updates cached conn", async () => {
-    const vault = require("./lib").PasswordVault.get()
+    const vault = (__$mock_lib).PasswordVault.get()
     mockWorkspaceConfig(
       { dev: { url: "https://host", username: "user", password: "" } },
       {
@@ -406,8 +413,8 @@ describe("RemoteManager", () => {
   })
 
   test("getPassword returns empty string when vault has no password", async () => {
-    const vault = require("./lib").PasswordVault.get()
-    ;(vault.getPassword as jest.Mock).mockResolvedValue(null)
+    const vault = (__$mock_lib).PasswordVault.get()
+    ;(vault.getPassword as Mock).mockResolvedValue(null)
     ;(RemoteManager as any).instance = undefined
     mockWorkspaceConfig()
     const manager = RemoteManager.get()
@@ -416,7 +423,7 @@ describe("RemoteManager", () => {
   })
 
   test("clearPassword removes password from vault", async () => {
-    const vault = require("./lib").PasswordVault.get()
+    const vault = (__$mock_lib).PasswordVault.get()
     ;(RemoteManager as any).instance = undefined
     mockWorkspaceConfig()
     const manager = RemoteManager.get()
@@ -426,8 +433,8 @@ describe("RemoteManager", () => {
   })
 
   test("askPassword returns undefined when user cancels", async () => {
-    const { funWindow: w } = require("./services/funMessenger")
-    ;(w.showInputBox as jest.Mock).mockResolvedValue(undefined)
+    const { funWindow: w } = (__$mock_services_funMessenger)
+    ;(w.showInputBox as Mock).mockResolvedValue(undefined)
     ;(RemoteManager as any).instance = undefined
     mockWorkspaceConfig(
       { dev: { url: "https://host", username: "user", password: "" } },
@@ -452,17 +459,17 @@ describe("RemoteManager", () => {
     const manager = RemoteManager.get()
     // remoteList throws if no remote key
     const mockCfg = {
-      get: jest.fn(),
-      update: jest.fn(),
-      inspect: jest.fn(),
+      get: vi.fn(),
+      update: vi.fn(),
+      inspect: vi.fn(),
       remote: undefined // no remote key
     }
-    ;(workspace.getConfiguration as jest.Mock).mockReturnValue(mockCfg)
+    ;(workspace.getConfiguration as Mock).mockReturnValue(mockCfg)
     await expect(manager.selectConnection()).rejects.toThrow()
   })
 
   test("selectConnection returns first remote without prompting when only one", async () => {
-    const { funWindow: w } = require("./services/funMessenger")
+    const { funWindow: w } = (__$mock_services_funMessenger)
     ;(RemoteManager as any).instance = undefined
     mockWorkspaceConfig(
       { dev: { url: "https://host", username: "user", password: "" } },
@@ -472,8 +479,8 @@ describe("RemoteManager", () => {
         workspaceFolderValue: {}
       }
     )
-    const vault = require("./lib").PasswordVault.get()
-    ;(vault.getPassword as jest.Mock).mockResolvedValue("stored-pass")
+    const vault = (__$mock_lib).PasswordVault.get()
+    ;(vault.getPassword as Mock).mockResolvedValue("stored-pass")
     const manager = RemoteManager.get()
     const { remote, userCancel } = await manager.selectConnection()
     expect(w.showQuickPick).not.toHaveBeenCalled()
@@ -497,9 +504,9 @@ describe("RemoteManager", () => {
         workspaceFolderValue: {}
       }
     )
-    const vault = require("./lib").PasswordVault.get()
-    ;(vault.getPassword as jest.Mock).mockResolvedValue("")
-    const { funWindow: w } = require("./services/funMessenger")
+    const vault = (__$mock_lib).PasswordVault.get()
+    ;(vault.getPassword as Mock).mockResolvedValue("")
+    const { funWindow: w } = (__$mock_services_funMessenger)
     const manager = RemoteManager.get()
     const { remote, userCancel } = await manager.selectConnection("dev1")
     expect(w.showQuickPick).not.toHaveBeenCalled()

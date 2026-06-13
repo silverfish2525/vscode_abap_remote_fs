@@ -4,20 +4,21 @@
   "description": "Abap filesystem",
   "main": "out/index.js",
   "scripts": {
-    "test": "jest",
+    "test": "vitest run",
     "build": "tsc",
     "clean": "rm -Rf node_modules out tsconfig.tsbuildinfo",
-    "watch": "tsc -w"
+    "watch": "tsc -w",
+    "test:watch": "vitest"
   },
   "author": "Marcello Urbani",
   "license": "MIT",
   "devDependencies": {
-    "@types/jest": "^29.2.5",
+    "@types/node": "^22.19.20",
     "@types/vscode": "^1.74.0",
-    "jest": "^29.3.1",
-    "jest-mock-extended": "^4.0.0",
-"ts-jest": "^29.4.7",
-    "typescript": "^6.0.3"
+    "@vitest/coverage-v8": "5.0.0-beta.4",
+    "typescript": "^6.0.3",
+    "vitest": "5.0.0-beta.4",
+    "vitest-mock-extended": "^4.0.0"
   },
   "dependencies": {
     "abap-adt-api": "^8.4.0",

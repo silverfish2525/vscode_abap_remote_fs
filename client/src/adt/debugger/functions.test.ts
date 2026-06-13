@@ -1,21 +1,21 @@
-jest.mock("abap-adt-api", () => ({
-  ADTClient: jest.fn(),
-  createSSLConfig: jest.fn(() => ({ ssl: true }))
+vi.mock("abap-adt-api", () => ({
+  ADTClient: vi.fn(class {}),
+  createSSLConfig: vi.fn(function () { return ({ ssl: true }) })
 }))
-jest.mock("../../config", () => ({
-  formatKey: jest.fn((name: string) => `key:${name}`)
+vi.mock("../../config", () => ({
+  formatKey: vi.fn(function (name: string) { return `key:${name}` })
 }))
-jest.mock("../../langClient", () => ({
-  configFromKey: jest.fn()
+vi.mock("../../langClient", () => ({
+  configFromKey: vi.fn()
 }))
-jest.mock("../../oauth", () => ({
-  futureToken: jest.fn()
+vi.mock("../../oauth", () => ({
+  futureToken: vi.fn()
 }))
-jest.mock("crypto", () => ({
-  createHash: jest.fn(() => ({
-    update: jest.fn().mockReturnThis(),
-    digest: jest.fn(() => "mockhash")
-  }))
+vi.mock("crypto", () => ({
+  createHash: vi.fn(function () { return ({
+      update: vi.fn().mockReturnThis(),
+      digest: vi.fn(function () { return "mockhash" })
+    }) })
 }))
 
 import { md5, newClientFromKey } from "./functions"
@@ -23,9 +23,9 @@ import { ADTClient, createSSLConfig } from "abap-adt-api"
 import { configFromKey } from "../../langClient"
 import { futureToken } from "../../oauth"
 
-const MockADTClient = ADTClient as jest.MockedClass<typeof ADTClient>
-const mockConfigFromKey = configFromKey as jest.MockedFunction<typeof configFromKey>
-const mockFutureToken = futureToken as jest.MockedFunction<typeof futureToken>
+const MockADTClient = ADTClient as MockedClass<typeof ADTClient>
+const mockConfigFromKey = configFromKey as MockedFunction<typeof configFromKey>
+const mockFutureToken = futureToken as MockedFunction<typeof futureToken>
 
 describe("md5", () => {
   test("returns the digest of the hash", () => {
@@ -52,8 +52,8 @@ describe("newClientFromKey", () => {
   } as any
 
   beforeEach(() => {
-    jest.clearAllMocks()
-    MockADTClient.mockImplementation(() => ({} as any))
+    vi.clearAllMocks()
+    MockADTClient.mockImplementation(function () { return ({} as any) })
   })
 
   test("returns undefined when configFromKey returns undefined", async () => {
@@ -79,7 +79,7 @@ describe("newClientFromKey", () => {
   test("creates an ADTClient with HTTPS SSL config", async () => {
     const httpsConf = { ...baseConf, url: "https://my-sap-server" }
     mockConfigFromKey.mockResolvedValueOnce(httpsConf)
-    ;(createSSLConfig as jest.Mock).mockReturnValueOnce({ ssl: true })
+    ;(createSSLConfig as Mock).mockReturnValueOnce({ ssl: true })
     const client = await newClientFromKey("somekey")
     expect(client).toBeDefined()
     expect(createSSLConfig).toHaveBeenCalledWith(httpsConf.allowSelfSigned, httpsConf.customCA)
@@ -88,7 +88,7 @@ describe("newClientFromKey", () => {
   test("uses futureToken when oauth config is present", async () => {
     const oauthConf = { ...baseConf, oauth: { clientId: "id" } }
     mockConfigFromKey.mockResolvedValueOnce(oauthConf)
-    const fakeToken = jest.fn().mockResolvedValue("token123")
+    const fakeToken = vi.fn().mockResolvedValue("token123")
     mockFutureToken.mockReturnValueOnce(Promise.resolve("token123") as any)
     await newClientFromKey("somekey")
     // futureToken is called inside a lambda; ADTClient receives a function
@@ -99,7 +99,7 @@ describe("newClientFromKey", () => {
   test("passes extra options to ADTClient on HTTPS", async () => {
     const httpsConf = { ...baseConf, url: "https://secure" }
     mockConfigFromKey.mockResolvedValueOnce(httpsConf)
-    ;(createSSLConfig as jest.Mock).mockReturnValueOnce({ ssl: true })
+    ;(createSSLConfig as Mock).mockReturnValueOnce({ ssl: true })
     await newClientFromKey("somekey", { timeout: 5000 } as any)
     // SSL config should be merged with options
     const callArgs = MockADTClient.mock.calls[0]

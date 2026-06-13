@@ -1,8 +1,14 @@
-import { AbapObjectBase, AbapObjectConstructor, AbapObject } from "./AbapObject"
-import { AbapObjectService } from "./AOService"
-import { Node } from "abap-adt-api"
+import { AbapObjectBase, type AbapObjectConstructor, type AbapObject } from "./AbapObject"
+import type { AbapObjectService } from "./AOService"
+import type { Node } from "abap-adt-api"
 import { AbapObjectError } from "./AOError"
-import {} from "./objectTypes"
+// NOTE: a side-effect import of "./objectTypes" used to live here. It was
+// effectively dead — tsc strips empty imports and ts-jest inherited that —
+// but esbuild (vitest's transformer) preserves it, which creates a circular
+// load order: creator -> objectTypes -> AbapClass -> creator (partial). All
+// call sites that need the constructors Map populated already import
+// `./objectTypes` (or its re-export from `.`) explicitly, so removing this
+// is safe under jest, vitest, and the production build.
 
 const constructors = new Map<string, AbapObjectConstructor>()
 export const AbapObjectCreator =

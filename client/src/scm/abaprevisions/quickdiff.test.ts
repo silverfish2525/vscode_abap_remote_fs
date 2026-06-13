@@ -1,46 +1,46 @@
-jest.mock("vscode", () => ({
+vi.mock("vscode", () => ({
   Uri: {
-    parse: jest.fn((s: string) => ({
-      scheme: "adt",
-      authority: s.split("://")[1]?.split("/")[0] || "conn",
-      path: s,
-      toString: () => s
-    }))
+    parse: vi.fn(function (s: string) { return ({
+          scheme: "adt",
+          authority: s.split("://")[1]?.split("/")[0] || "conn",
+          path: s,
+          toString: () => s
+        }) })
   }
-}), { virtual: true })
+}))
 
-jest.mock("./abaprevisionservice", () => ({
+vi.mock("./abaprevisionservice", () => ({
   AbapRevisionService: {
-    get: jest.fn()
+    get: vi.fn()
   }
 }))
 
-jest.mock("../../adt/conections", () => ({
-  abapUri: jest.fn()
+vi.mock("../../adt/conections", () => ({
+  abapUri: vi.fn()
 }))
 
-jest.mock("./documentprovider", () => ({
-  quickDiffUri: jest.fn(),
+vi.mock("./documentprovider", () => ({
+  quickDiffUri: vi.fn(),
   AbapRevision: {
-    get: jest.fn().mockReturnValue({
-      notifyChanged: jest.fn()
+    get: vi.fn().mockReturnValue({
+      notifyChanged: vi.fn()
     })
   }
 }))
 
-jest.mock("./lenses", () => ({
+vi.mock("./lenses", () => ({
   AbapRevisionLens: {
-    get: jest.fn().mockReturnValue({
-      notify: jest.fn()
+    get: vi.fn().mockReturnValue({
+      notify: vi.fn()
     })
   }
 }))
 
-jest.mock("./abapscm", () => ({
-  toMs: jest.fn((date: string) => {
-    if (!date) return 0
-    return new Date(date).getTime()
-  })
+vi.mock("./abapscm", () => ({
+  toMs: vi.fn(function (date: string) {
+      if (!date) return 0
+      return new Date(date).getTime()
+    })
 }))
 
 import { AbapQuickDiff } from "./quickdiff"
@@ -48,10 +48,11 @@ import { abapUri } from "../../adt/conections"
 import { quickDiffUri, AbapRevision } from "./documentprovider"
 import { AbapRevisionLens } from "./lenses"
 import { AbapRevisionService } from "./abaprevisionservice"
+import * as __$mock_abapscm from "./abapscm";
 
 describe("AbapQuickDiff", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     // Reset singleton
     ;(AbapQuickDiff as any).instance = undefined
   })
@@ -100,7 +101,7 @@ describe("AbapQuickDiff", () => {
     })
 
     it("setCurrentRev notifies AbapRevision when quickDiffUri is returned", () => {
-      const mockQuickDiffUri = quickDiffUri as jest.Mock
+      const mockQuickDiffUri = quickDiffUri as Mock
       const mockQdUri: any = { toString: () => "adt_revision://conn/path" }
       mockQuickDiffUri.mockReturnValue(mockQdUri)
 
@@ -113,7 +114,7 @@ describe("AbapQuickDiff", () => {
 
   describe("provideOriginalResource", () => {
     it("returns undefined for non-ADT URIs", async () => {
-      ;(abapUri as jest.Mock).mockReturnValue(false)
+      ;(abapUri as Mock).mockReturnValue(false)
       const instance = AbapQuickDiff.get()
       const uri: any = { scheme: "file", toString: () => "file:///local.abap", authority: "conn" }
       const result = await instance.provideOriginalResource!(uri)
@@ -121,9 +122,9 @@ describe("AbapQuickDiff", () => {
     })
 
     it("returns quickDiffUri when current revision is set", async () => {
-      ;(abapUri as jest.Mock).mockReturnValue(true)
+      ;(abapUri as Mock).mockReturnValue(true)
       const mockQdUri: any = { toString: () => "adt_revision://conn/path" }
-      ;(quickDiffUri as jest.Mock).mockReturnValue(mockQdUri)
+      ;(quickDiffUri as Mock).mockReturnValue(mockQdUri)
 
       const instance = AbapQuickDiff.get()
       const uri: any = { toString: () => "adt://conn/path5", authority: "conn5" }
@@ -135,11 +136,11 @@ describe("AbapQuickDiff", () => {
     })
 
     it("returns undefined when fewer than 2 revisions", async () => {
-      ;(abapUri as jest.Mock).mockReturnValue(true)
+      ;(abapUri as Mock).mockReturnValue(true)
       const mockService: any = {
-        uriRevisions: jest.fn().mockResolvedValue([{ version: "v1", date: "20240101" }])
+        uriRevisions: vi.fn().mockResolvedValue([{ version: "v1", date: "20240101" }])
       }
-      ;(AbapRevisionService.get as jest.Mock).mockReturnValue(mockService)
+      ;(AbapRevisionService.get as Mock).mockReturnValue(mockService)
 
       const instance = AbapQuickDiff.get()
       const uri: any = { toString: () => "adt://conn/path6", authority: "conn6" }
@@ -149,11 +150,11 @@ describe("AbapQuickDiff", () => {
     })
 
     it("returns undefined when no revisions available", async () => {
-      ;(abapUri as jest.Mock).mockReturnValue(true)
+      ;(abapUri as Mock).mockReturnValue(true)
       const mockService: any = {
-        uriRevisions: jest.fn().mockResolvedValue(null)
+        uriRevisions: vi.fn().mockResolvedValue(null)
       }
-      ;(AbapRevisionService.get as jest.Mock).mockReturnValue(mockService)
+      ;(AbapRevisionService.get as Mock).mockReturnValue(mockService)
 
       const instance = AbapQuickDiff.get()
       const uri: any = { toString: () => "adt://conn/path7", authority: "conn7" }
@@ -162,11 +163,11 @@ describe("AbapQuickDiff", () => {
     })
 
     it("selects reference revision more than 90s older than head", async () => {
-      ;(abapUri as jest.Mock).mockReturnValue(true)
-      const { toMs } = require("./abapscm")
+      ;(abapUri as Mock).mockReturnValue(true)
+      const { toMs } = (__$mock_abapscm)
       const now = Date.now()
       // toMs mocked to parse date strings as timestamps
-      ;(toMs as jest.Mock).mockImplementation((date: string) => new Date(date).getTime())
+      ;(toMs as Mock).mockImplementation(function (date: string) { return new Date(date).getTime() })
 
       const newerDate = new Date(now).toISOString()
       const olderDate = new Date(now - 200000).toISOString() // 200s older
@@ -176,11 +177,11 @@ describe("AbapQuickDiff", () => {
         { version: "v2", date: olderDate }
       ]
       const mockService: any = {
-        uriRevisions: jest.fn().mockResolvedValue(revisions)
+        uriRevisions: vi.fn().mockResolvedValue(revisions)
       }
-      ;(AbapRevisionService.get as jest.Mock).mockReturnValue(mockService)
+      ;(AbapRevisionService.get as Mock).mockReturnValue(mockService)
       const mockQdUri: any = { toString: () => "adt_revision://conn/path" }
-      ;(quickDiffUri as jest.Mock).mockReturnValue(mockQdUri)
+      ;(quickDiffUri as Mock).mockReturnValue(mockQdUri)
 
       const instance = AbapQuickDiff.get()
       const uri: any = { toString: () => "adt://conn/path8", authority: "conn8" }
@@ -192,10 +193,10 @@ describe("AbapQuickDiff", () => {
     })
 
     it("falls back to revisions[1] when no revision is > 90s older", async () => {
-      ;(abapUri as jest.Mock).mockReturnValue(true)
-      const { toMs } = require("./abapscm")
+      ;(abapUri as Mock).mockReturnValue(true)
+      const { toMs } = (__$mock_abapscm)
       const now = Date.now()
-      ;(toMs as jest.Mock).mockImplementation((date: string) => new Date(date).getTime())
+      ;(toMs as Mock).mockImplementation(function (date: string) { return new Date(date).getTime() })
 
       const newerDate = new Date(now).toISOString()
       const almostSameDate = new Date(now - 50000).toISOString() // 50s - less than 90s
@@ -205,11 +206,11 @@ describe("AbapQuickDiff", () => {
         { version: "v2", date: almostSameDate }
       ]
       const mockService: any = {
-        uriRevisions: jest.fn().mockResolvedValue(revisions)
+        uriRevisions: vi.fn().mockResolvedValue(revisions)
       }
-      ;(AbapRevisionService.get as jest.Mock).mockReturnValue(mockService)
+      ;(AbapRevisionService.get as Mock).mockReturnValue(mockService)
       const mockQdUri: any = {}
-      ;(quickDiffUri as jest.Mock).mockReturnValue(mockQdUri)
+      ;(quickDiffUri as Mock).mockReturnValue(mockQdUri)
 
       const instance = AbapQuickDiff.get()
       const uri: any = { toString: () => "adt://conn/path9", authority: "conn9" }

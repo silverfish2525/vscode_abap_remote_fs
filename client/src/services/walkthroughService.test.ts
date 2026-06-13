@@ -1,29 +1,29 @@
-jest.mock(
+vi.mock(
   "vscode",
   () => ({
     window: {
-      createStatusBarItem: jest.fn(),
-      showInformationMessage: jest.fn()
+      createStatusBarItem: vi.fn(),
+      showInformationMessage: vi.fn()
     },
     StatusBarAlignment: { Left: 1, Right: 2 },
-    commands: { executeCommand: jest.fn().mockResolvedValue(undefined) },
-    Disposable: jest.fn().mockImplementation((fn: () => void) => ({ dispose: fn }))
-  }),
-  { virtual: true }
+    commands: { executeCommand: vi.fn().mockResolvedValue(undefined) },
+    Disposable: vi.fn().mockImplementation(function (fn: () => void) { return ({ dispose: fn }) })
+  })
 )
 
-jest.mock("../lib", () => ({ log: jest.fn() }))
-jest.mock("../commands", () => ({
-  command: jest.fn(
-    () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor
+vi.mock("../lib", () => ({ log: vi.fn() }))
+vi.mock("../commands", () => ({
+  command: vi.fn(
+    function () { return (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor }
   )
 }))
 
 import * as vscode from "vscode"
 import { showWelcomeWalkthrough } from "./walkthroughService"
+import * as __$mock_lib from "../lib";
 
-const mockExecuteCommand = vscode.commands.executeCommand as jest.Mock
-const mockLog = require("../lib").log as jest.Mock
+const mockExecuteCommand = vscode.commands.executeCommand as Mock
+const mockLog = (__$mock_lib).log as Mock
 
 function makeContext(walkthroughShown?: boolean) {
   const state: Record<string, any> = {}
@@ -33,22 +33,22 @@ function makeContext(walkthroughShown?: boolean) {
   const subscriptions: any[] = []
   return {
     globalState: {
-      get: jest.fn((key: string) => state[key]),
-      update: jest.fn((key: string, value: any) => {
-        state[key] = value
-      })
+      get: vi.fn(function (key: string) { return state[key] }),
+      update: vi.fn(function (key: string, value: any) {
+              state[key] = value
+            })
     },
     subscriptions
   } as any as vscode.ExtensionContext
 }
 
 beforeEach(() => {
-  jest.clearAllMocks()
-  jest.useFakeTimers()
+  vi.clearAllMocks()
+  vi.useFakeTimers()
 })
 
 afterEach(() => {
-  jest.useRealTimers()
+  vi.useRealTimers()
 })
 
 describe("showWelcomeWalkthrough", () => {
@@ -56,7 +56,7 @@ describe("showWelcomeWalkthrough", () => {
     const ctx = makeContext(true)
     showWelcomeWalkthrough(ctx)
 
-    jest.runAllTimers()
+    vi.runAllTimers()
 
     expect(ctx.globalState.update).not.toHaveBeenCalled()
     expect(mockExecuteCommand).not.toHaveBeenCalled()
@@ -84,7 +84,7 @@ describe("showWelcomeWalkthrough", () => {
     expect(mockExecuteCommand).not.toHaveBeenCalled()
 
     // After 5s delay
-    jest.advanceTimersByTime(5000)
+    vi.advanceTimersByTime(5000)
 
     expect(mockExecuteCommand).toHaveBeenCalledWith(
       "workbench.action.openWalkthrough",
@@ -97,7 +97,7 @@ describe("showWelcomeWalkthrough", () => {
     const ctx = makeContext(false)
     showWelcomeWalkthrough(ctx)
 
-    jest.advanceTimersByTime(5000)
+    vi.advanceTimersByTime(5000)
 
     expect(mockLog).toHaveBeenCalledWith(expect.stringContaining("walkthrough"))
   })
@@ -106,7 +106,7 @@ describe("showWelcomeWalkthrough", () => {
     const ctx = makeContext(false)
     showWelcomeWalkthrough(ctx)
 
-    jest.advanceTimersByTime(4999)
+    vi.advanceTimersByTime(4999)
     expect(mockExecuteCommand).not.toHaveBeenCalled()
   })
 
@@ -114,7 +114,7 @@ describe("showWelcomeWalkthrough", () => {
     const ctx = makeContext(true)
     showWelcomeWalkthrough(ctx)
 
-    jest.advanceTimersByTime(10000)
+    vi.advanceTimersByTime(10000)
     expect(mockExecuteCommand).not.toHaveBeenCalled()
   })
 
@@ -122,7 +122,7 @@ describe("showWelcomeWalkthrough", () => {
     const ctx = makeContext(false)
     showWelcomeWalkthrough(ctx)
 
-    jest.advanceTimersByTime(5000)
+    vi.advanceTimersByTime(5000)
 
     const callArg = mockExecuteCommand.mock.calls[0][1] as string
     expect(callArg).toContain("murbani.vscode-abap-remote-fs")

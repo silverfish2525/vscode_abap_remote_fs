@@ -1,4 +1,4 @@
-import { mock } from "jest-mock-extended"
+import { mock } from "vitest-mock-extended"
 import { AbapFsService, createRoot } from ".."
 import sampleNodeContents from "../testdata/nodeContents1.json"
 import sampleclas from "../testdata/zcl_ca_alv.json"
@@ -10,27 +10,27 @@ const mockClient = () => {
   const locks = new Map<string, string>()
   client.nodeContents.mockReturnValueOnce(Promise.resolve(sampleNodeContents))
   client.objectStructure.mockReturnValueOnce(Promise.resolve(sampleclas))
-  client.lock.mockImplementation(async (path: string) => {
-    if (locks.get(path)) throw new Error("Object locked by another user")
-    await delay(50)
-    const LOCK_HANDLE = Math.random().toString()
-    locks.set(path, LOCK_HANDLE)
-    return {
-      CORRNR: "",
-      LOCK_HANDLE,
-      CORRUSER: "",
-      CORRTEXT: "",
-      IS_LOCAL: "",
-      IS_LINK_UP: "",
-      MODIFICATION_SUPPORT: ""
-    }
-  })
-  client.unlock.mockImplementation(async (path, handle) => {
-    if (locks.get(path) !== handle) throw new Error(`Lock ID not matching`)
-    await delay(50)
-    locks.delete(path)
-    return ""
-  })
+  client.lock.mockImplementation(async function (path: string) {
+      if (locks.get(path)) throw new Error("Object locked by another user")
+      await delay(50)
+      const LOCK_HANDLE = Math.random().toString()
+      locks.set(path, LOCK_HANDLE)
+      return {
+        CORRNR: "",
+        LOCK_HANDLE,
+        CORRUSER: "",
+        CORRTEXT: "",
+        IS_LOCAL: "",
+        IS_LINK_UP: "",
+        MODIFICATION_SUPPORT: ""
+      }
+    })
+  client.unlock.mockImplementation(async function (path, handle) {
+      if (locks.get(path) !== handle) throw new Error(`Lock ID not matching`)
+      await delay(50)
+      locks.delete(path)
+      return ""
+    })
   return client
 }
 const curStat = (root: Root) => (path: string) => root.lockManager.lockStatus(path).status

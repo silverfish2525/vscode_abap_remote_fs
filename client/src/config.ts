@@ -1,17 +1,15 @@
-import {
-  ClientConfiguration
-} from "vscode-abap-remote-fs-sharedapi"
+import type { ClientConfiguration } from "vscode-abap-remote-fs-sharedapi"
 import {
   workspace,
-  QuickPickItem,
-  WorkspaceFolder,
-  Uri,
+  type QuickPickItem,
+  type WorkspaceFolder,
+  type Uri,
   ConfigurationTarget,
   Event,
-  ConfigurationChangeEvent
+  type ConfigurationChangeEvent
 } from "vscode"
 import { funWindow as window } from "./services/funMessenger"
-import { ADTClient, createSSLConfig, LogCallback, LogData } from "abap-adt-api"
+import { ADTClient, createSSLConfig, type LogCallback, type LogData } from "abap-adt-api"
 import { readFileSync } from "fs"
 import { PasswordVault } from "./lib"
 import { oauthLogin } from "./oauth"
@@ -200,6 +198,19 @@ export class RemoteManager {
   public byId(connectionId: string): RemoteConfig | undefined {
     connectionId = formatKey(connectionId)
     return this.connections.get(connectionId)
+  }
+
+  /**
+   * Username of the first configured remote, or null if none/unreadable.
+   * Used by telemetry to attribute events when no connection is active yet.
+   */
+  public firstConnectionUsername(): string | null {
+    try {
+      const remotes = this.remoteList()
+      return remotes.length > 0 ? remotes[0].username : null
+    } catch {
+      return null
+    }
   }
 
   public async byIdAsync(connectionId: string): Promise<RemoteConfig | undefined> {

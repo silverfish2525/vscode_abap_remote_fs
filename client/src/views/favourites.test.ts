@@ -3,7 +3,7 @@
  * Covers FavItem, FavouritesProvider and the fixold/fixoldu helpers (via Favourite).
  */
 
-jest.mock(
+vi.mock(
   "vscode",
   () => {
     return {
@@ -18,76 +18,73 @@ jest.mock(
         }
       },
       TreeItemCollapsibleState: { None: 0, Collapsed: 1, Expanded: 2 },
-      EventEmitter: jest.fn().mockImplementation(() => ({
-        event: {},
-        fire: jest.fn()
-      })),
+      EventEmitter: vi.fn().mockImplementation(function () { return ({
+              event: {},
+              fire: vi.fn()
+            }) }),
       Uri: {
-        parse: jest.fn((s: string) => ({
-          toString: () => s,
-          authority: s.replace(/.*?:\/\//, "").split("/")[0] ?? "",
-          path: "/" + (s.split("/").slice(3).join("/") || ""),
-          scheme: s.split(":")[0],
-          with: jest.fn(({ path }: any) => ({
-            toString: () => `adt://dev100${path}`,
-            authority: "dev100",
-            path
-          }))
-        }))
+        parse: vi.fn(function (s: string) { return ({
+                  toString: () => s,
+                  authority: s.replace(/.*?:\/\//, "").split("/")[0] ?? "",
+                  path: "/" + (s.split("/").slice(3).join("/") || ""),
+                  scheme: s.split(":")[0],
+                  with: vi.fn(function ({ path }: any) { return ({
+                                      toString: () => `adt://dev100${path}`,
+                                      authority: "dev100",
+                                      path
+                                    }) })
+                }) })
       },
       workspace: {
         workspaceFolders: []
       },
       FileStat: {}
     }
-  },
-  { virtual: true }
+  }
 )
 
-jest.mock(
+vi.mock(
   "fs-jetpack",
   () => ({
-    path: jest.fn((...parts: string[]) => parts.join("/")),
-    fileAsync: jest.fn(),
-    readAsync: jest.fn().mockResolvedValue(null)
-  }),
-  { virtual: true }
+    path: vi.fn(function (...parts: string[]) { return parts.join("/") }),
+    fileAsync: vi.fn(),
+    readAsync: vi.fn().mockResolvedValue(null)
+  })
 )
 
-jest.mock(
+vi.mock(
   "../lib",
   () => ({
     NSSLASH: "/",
     isString: (v: any) => typeof v === "string"
-  }),
-  { virtual: true }
+  })
 )
 
-jest.mock(
+vi.mock(
   "../adt/conections",
   () => ({
-    uriRoot: jest.fn(() => ({
-      getNodeAsync: jest.fn().mockResolvedValue(undefined)
-    })),
-    getRoot: jest.fn(),
+    uriRoot: vi.fn(function () { return ({
+          getNodeAsync: vi.fn().mockResolvedValue(undefined)
+        }) }),
+    getRoot: vi.fn(),
     ADTSCHEME: "adt"
-  }),
-  { virtual: true }
+  })
 )
 
-jest.mock(
+vi.mock(
   "abapfs",
   () => ({
-    isAbapFolder: jest.fn(),
-    isAbapStat: jest.fn(),
-    isFolder: jest.fn()
-  }),
-  { virtual: true }
+    isAbapFolder: vi.fn(),
+    isAbapStat: vi.fn(),
+    isFolder: vi.fn()
+  })
 )
 
 import { FavItem, FavouritesProvider, Favourite } from "./favourites"
+import * as __$mock_vscode from "vscode";
+import * as __$mock_fs_jetpack from "fs-jetpack";
 
-const { TreeItemCollapsibleState } = require("vscode")
+const { TreeItemCollapsibleState } = (__$mock_vscode)
 
 describe("FavItem – string constructor (dynamic)", () => {
   it("creates a dynamic FavItem from string uri and label", () => {
@@ -190,7 +187,7 @@ describe("FavouritesProvider", () => {
 
   it("refresh fires emitter", () => {
     const provider = FavouritesProvider.get()
-    const { EventEmitter } = require("vscode")
+    const { EventEmitter } = (__$mock_vscode)
     // The emitter is already created; we can spy on provider.refresh
     expect(() => provider.refresh()).not.toThrow()
   })
@@ -221,7 +218,7 @@ describe("FavouritesProvider", () => {
   })
 
   it("getChildren with no folders returns empty array", async () => {
-    const { workspace } = require("vscode")
+    const { workspace } = (__$mock_vscode)
     ;(workspace as any).workspaceFolders = []
     const provider = FavouritesProvider.get()
     const children = await provider.getChildren()
@@ -229,12 +226,12 @@ describe("FavouritesProvider", () => {
   })
 
   it("getChildren with single folder uses flat layout", async () => {
-    const { workspace, Uri } = require("vscode")
+    const { workspace, Uri } = (__$mock_vscode)
     ;(workspace as any).workspaceFolders = [
       { uri: { authority: "dev100", scheme: "adt", toString: () => "adt://dev100" } }
     ]
-    const { readAsync } = require("fs-jetpack")
-    ;(readAsync as jest.Mock).mockResolvedValueOnce([
+    const { readAsync } = (__$mock_fs_jetpack)
+    ;(readAsync as Mock).mockResolvedValueOnce([
       [
         "dev100",
         [
@@ -257,7 +254,7 @@ describe("FavouritesProvider", () => {
   })
 
   it("deleteFavourite does nothing if connId not in root", async () => {
-    const { workspace } = require("vscode")
+    const { workspace } = (__$mock_vscode)
     ;(workspace as any).workspaceFolders = []
     const provider = FavouritesProvider.get()
     const fav = new Favourite({

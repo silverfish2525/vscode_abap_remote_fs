@@ -1,9 +1,9 @@
-jest.mock("vscode", () => {
-  const postMessageMock = jest.fn()
+vi.mock("vscode", () => {
+  const postMessageMock = vi.fn()
   const webviewMock = {
     html: "",
     postMessage: postMessageMock,
-    onDidReceiveMessage: jest.fn(),
+    onDidReceiveMessage: vi.fn(),
     cspSource: "none"
   }
 
@@ -11,106 +11,109 @@ jest.mock("vscode", () => {
     ViewColumn: { One: 1 },
     Uri: {
       file: (p: string) => ({ fsPath: p, toString: () => p }),
-      joinPath: jest.fn((...args: any[]) => ({ fsPath: args.join("/") }))
+      joinPath: vi.fn(function (...args: any[]) { return ({ fsPath: args.join("/") }) })
     },
     ConfigurationTarget: { Global: 1, Workspace: 2, WorkspaceFolder: 3 },
     workspace: {
-      getConfiguration: jest.fn(),
+      getConfiguration: vi.fn(),
       fs: {
-        writeFile: jest.fn().mockResolvedValue(undefined)
+        writeFile: vi.fn().mockResolvedValue(undefined)
       }
-    }
-  }
-}, { virtual: true })
-
-jest.mock("../services/funMessenger", () => ({
-  funWindow: {
-    createWebviewPanel: jest.fn(),
-    showWarningMessage: jest.fn(),
-    showInputBox: jest.fn(),
-    showQuickPick: jest.fn(),
-    showSaveDialog: jest.fn()
-  }
-}))
-
-jest.mock("../config", () => ({
-  validateNewConfigId: jest.fn(() => (id: string) => undefined), // passes by default
-  formatKey: jest.fn((k: string) => k.toLowerCase()),
-  RemoteConfig: {}
-}))
-
-jest.mock("../services/abapCopilotLogger", () => ({
-  logCommands: {
-    error: jest.fn(),
-    info: jest.fn(),
-    debug: jest.fn()
-  }
-}))
-
-jest.mock("../services/telemetry", () => ({
-  logTelemetry: jest.fn()
-}))
-
-jest.mock("../lib", () => {
-  const vaultInstance = {
-    deletePassword: jest.fn().mockResolvedValue(true),
-    setPassword: jest.fn().mockResolvedValue(true),
-    getPassword: jest.fn().mockResolvedValue(null)
-  }
-  return {
-    PasswordVault: {
-      get: jest.fn(() => vaultInstance)
     }
   }
 })
 
-jest.mock("abap_cloud_platform", () => ({
-  isAbapServiceKey: jest.fn(() => false),
-  cfCodeGrant: jest.fn(),
-  getAbapSystemInfo: jest.fn(),
-  getAbapUserInfo: jest.fn(),
-  loginServer: jest.fn(),
-  cfInfo: jest.fn(),
-  cfPasswordGrant: jest.fn(),
-  cfOrganizations: jest.fn(),
-  cfSpaces: jest.fn(),
-  cfServices: jest.fn(),
-  cfServiceInstances: jest.fn(),
-  cfInstanceServiceKeys: jest.fn()
+vi.mock("../services/funMessenger", () => ({
+  funWindow: {
+    createWebviewPanel: vi.fn(),
+    showWarningMessage: vi.fn(),
+    showInputBox: vi.fn(),
+    showQuickPick: vi.fn(),
+    showSaveDialog: vi.fn()
+  }
+}))
+
+vi.mock("../config", () => ({
+  validateNewConfigId: vi.fn(function () { return (id: string) => undefined }), // passes by default
+  formatKey: vi.fn(function (k: string) { return k.toLowerCase() }),
+  RemoteConfig: {}
+}))
+
+vi.mock("../services/abapCopilotLogger", () => ({
+  logCommands: {
+    error: vi.fn(),
+    info: vi.fn(),
+    debug: vi.fn()
+  }
+}))
+
+vi.mock("../services/telemetry", () => ({
+  logTelemetry: vi.fn()
+}))
+
+vi.mock("../lib", () => {
+  const vaultInstance = {
+    deletePassword: vi.fn().mockResolvedValue(true),
+    setPassword: vi.fn().mockResolvedValue(true),
+    getPassword: vi.fn().mockResolvedValue(null)
+  }
+  return {
+    PasswordVault: {
+      get: vi.fn(function () { return vaultInstance })
+    }
+  }
+})
+
+vi.mock("abap_cloud_platform", () => ({
+  isAbapServiceKey: vi.fn(function () { return false }),
+  cfCodeGrant: vi.fn(),
+  getAbapSystemInfo: vi.fn(),
+  getAbapUserInfo: vi.fn(),
+  loginServer: vi.fn(),
+  cfInfo: vi.fn(),
+  cfPasswordGrant: vi.fn(),
+  cfOrganizations: vi.fn(),
+  cfSpaces: vi.fn(),
+  cfServices: vi.fn(),
+  cfServiceInstances: vi.fn(),
+  cfInstanceServiceKeys: vi.fn()
 }))
 
 import * as vscode from "vscode"
 import { SapConnectionManager } from "./sapConnectionManager"
 import { validateNewConfigId } from "../config"
 import { logTelemetry } from "../services/telemetry"
+import * as __$mock_services_funMessenger from "../services/funMessenger";
+import * as __$mock_lib from "../lib";
+import * as __$mock_abap_cloud_platform from "abap_cloud_platform";
 
 // ---- helpers ----------------------------------------------------------------
 
-let postMessageMock: jest.Mock
-let disposeListenerMock: jest.Mock
+let postMessageMock: Mock
+let disposeListenerMock: Mock
 let receiveMessageHandler: ((msg: any) => void) | undefined
 
 function makePanelMock() {
-  postMessageMock = jest.fn()
-  disposeListenerMock = jest.fn()
+  postMessageMock = vi.fn()
+  disposeListenerMock = vi.fn()
   receiveMessageHandler = undefined
 
   return {
     webview: {
       html: "",
       postMessage: postMessageMock,
-      onDidReceiveMessage: jest.fn((handler: any) => {
-        receiveMessageHandler = handler
-        return { dispose: jest.fn() }
-      }),
+      onDidReceiveMessage: vi.fn(function (handler: any) {
+              receiveMessageHandler = handler
+              return { dispose: vi.fn() }
+            }),
       cspSource: "none"
     },
-    onDidDispose: jest.fn((cb: any) => {
-      disposeListenerMock = cb
-      return { dispose: jest.fn() }
-    }),
-    reveal: jest.fn(),
-    dispose: jest.fn()
+    onDidDispose: vi.fn(function (cb: any) {
+          disposeListenerMock = cb
+          return { dispose: vi.fn() }
+        }),
+    reveal: vi.fn(),
+    dispose: vi.fn()
   }
 }
 
@@ -119,17 +122,17 @@ function makeWorkspaceConfig(
   workspaceRemotes: Record<string, any> = {}
 ) {
   return {
-    inspect: jest.fn(() => ({
-      globalValue: globalRemotes,
-      workspaceValue: workspaceRemotes
-    })),
-    update: jest.fn().mockResolvedValue(undefined)
+    inspect: vi.fn(function () { return ({
+          globalValue: globalRemotes,
+          workspaceValue: workspaceRemotes
+        }) }),
+    update: vi.fn().mockResolvedValue(undefined)
   }
 }
 
 function createManager(): { manager: SapConnectionManager; panel: any; extensionUri: vscode.Uri } {
   const panel = makePanelMock()
-  ;(require("../services/funMessenger").funWindow.createWebviewPanel as jest.Mock).mockReturnValue(
+  ;((__$mock_services_funMessenger).funWindow.createWebviewPanel as Mock).mockReturnValue(
     panel
   )
   const extensionUri = vscode.Uri.file("/ext")
@@ -141,7 +144,7 @@ function createManager(): { manager: SapConnectionManager; panel: any; extension
 // ---- setup/teardown ---------------------------------------------------------
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   ;(SapConnectionManager as any).currentPanel = undefined
 })
 
@@ -149,16 +152,16 @@ beforeEach(() => {
 
 describe("SapConnectionManager.createOrShow", () => {
   test("creates a new panel and stores it as currentPanel", () => {
-    const { funWindow: w } = require("../services/funMessenger")
-    ;(w.createWebviewPanel as jest.Mock).mockReturnValue(makePanelMock())
+    const { funWindow: w } = (__$mock_services_funMessenger)
+    ;(w.createWebviewPanel as Mock).mockReturnValue(makePanelMock())
     SapConnectionManager.createOrShow(vscode.Uri.file("/ext"))
     expect((SapConnectionManager as any).currentPanel).toBeDefined()
   })
 
   test("reuses existing panel on second call (reveal)", () => {
-    const { funWindow: w } = require("../services/funMessenger")
+    const { funWindow: w } = (__$mock_services_funMessenger)
     const panel = makePanelMock()
-    ;(w.createWebviewPanel as jest.Mock).mockReturnValue(panel)
+    ;(w.createWebviewPanel as Mock).mockReturnValue(panel)
     SapConnectionManager.createOrShow(vscode.Uri.file("/ext"))
     SapConnectionManager.createOrShow(vscode.Uri.file("/ext"))
     // createWebviewPanel should only be called once
@@ -167,9 +170,9 @@ describe("SapConnectionManager.createOrShow", () => {
   })
 
   test("clears currentPanel when panel is disposed", () => {
-    const { funWindow: w } = require("../services/funMessenger")
+    const { funWindow: w } = (__$mock_services_funMessenger)
     const panel = makePanelMock()
-    ;(w.createWebviewPanel as jest.Mock).mockReturnValue(panel)
+    ;(w.createWebviewPanel as Mock).mockReturnValue(panel)
     SapConnectionManager.createOrShow(vscode.Uri.file("/ext"))
     expect((SapConnectionManager as any).currentPanel).toBeDefined()
     // Trigger dispose listener
@@ -183,7 +186,7 @@ describe("SapConnectionManager.createOrShow", () => {
 describe("message handling: ready / loadConnections", () => {
   test("sends connections to webview on 'ready' message", async () => {
     const cfg = makeWorkspaceConfig({ dev: { url: "https://h", username: "u" } })
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue(cfg)
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue(cfg)
     createManager()
 
     await receiveMessageHandler!({ type: "ready" })
@@ -195,7 +198,7 @@ describe("message handling: ready / loadConnections", () => {
 
   test("sends connections to webview on 'loadConnections' message", async () => {
     const cfg = makeWorkspaceConfig({})
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue(cfg)
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue(cfg)
     createManager()
 
     await receiveMessageHandler!({ type: "loadConnections" })
@@ -210,7 +213,7 @@ describe("message handling: ready / loadConnections", () => {
       { global_conn: { url: "https://g", username: "ug" } },
       { ws_conn: { url: "https://w", username: "uw" } }
     )
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue(cfg)
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue(cfg)
     createManager()
 
     await receiveMessageHandler!({ type: "ready" })
@@ -225,7 +228,7 @@ describe("message handling: ready / loadConnections", () => {
 
 describe("message handling: saveConnection (new)", () => {
   test("saves new connection and sends success message", async () => {
-    ;(validateNewConfigId as jest.Mock).mockReturnValue((_id: string) => undefined)
+    ;(validateNewConfigId as Mock).mockReturnValue((_id: string) => undefined)
 
     const connection = {
       url: "https://host:8443",
@@ -238,12 +241,12 @@ describe("message handling: saveConnection (new)", () => {
 
     // First config call: get current remotes; second: verify save
     const cfg = {
-      inspect: jest.fn()
+      inspect: vi.fn()
         .mockReturnValueOnce({ globalValue: {}, workspaceValue: {} })
         .mockReturnValueOnce({ globalValue: { newConn: connection }, workspaceValue: {} }),
-      update: jest.fn().mockResolvedValue(undefined)
+      update: vi.fn().mockResolvedValue(undefined)
     }
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue(cfg)
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue(cfg)
 
     createManager()
 
@@ -267,13 +270,13 @@ describe("message handling: saveConnection (new)", () => {
   })
 
   test("sends formValidationError when new connection id is invalid", async () => {
-    ;(validateNewConfigId as jest.Mock).mockReturnValue((_id: string) => "Key already in use")
+    ;(validateNewConfigId as Mock).mockReturnValue((_id: string) => "Key already in use")
 
     const cfg = {
-      inspect: jest.fn().mockReturnValue({ globalValue: { newConn: {} }, workspaceValue: {} }),
-      update: jest.fn()
+      inspect: vi.fn().mockReturnValue({ globalValue: { newConn: {} }, workspaceValue: {} }),
+      update: vi.fn()
     }
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue(cfg)
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue(cfg)
 
     createManager()
 
@@ -292,17 +295,17 @@ describe("message handling: saveConnection (new)", () => {
   })
 
   test("rolls back and sends error when save verification fails", async () => {
-    ;(validateNewConfigId as jest.Mock).mockReturnValue((_id: string) => undefined)
+    ;(validateNewConfigId as Mock).mockReturnValue((_id: string) => undefined)
 
     const connection = { url: "https://h", username: "u" }
 
     const cfg = {
-      inspect: jest.fn()
+      inspect: vi.fn()
         .mockReturnValueOnce({ globalValue: {}, workspaceValue: {} })
         .mockReturnValueOnce({ globalValue: {}, workspaceValue: {} }), // missing after save
-      update: jest.fn().mockResolvedValue(undefined)
+      update: vi.fn().mockResolvedValue(undefined)
     }
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue(cfg)
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue(cfg)
 
     createManager()
 
@@ -324,16 +327,16 @@ describe("message handling: saveConnection (new)", () => {
   })
 
   test("saves to workspace target when target is 'workspace'", async () => {
-    ;(validateNewConfigId as jest.Mock).mockReturnValue((_id: string) => undefined)
+    ;(validateNewConfigId as Mock).mockReturnValue((_id: string) => undefined)
 
     const connection = { url: "https://h", username: "u" }
     const cfg = {
-      inspect: jest.fn()
+      inspect: vi.fn()
         .mockReturnValueOnce({ globalValue: {}, workspaceValue: {} })
         .mockReturnValueOnce({ globalValue: {}, workspaceValue: { wsConn: connection } }),
-      update: jest.fn().mockResolvedValue(undefined)
+      update: vi.fn().mockResolvedValue(undefined)
     }
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue(cfg)
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue(cfg)
 
     createManager()
 
@@ -360,12 +363,12 @@ describe("message handling: deleteConnection", () => {
     const existing = { dev: { url: "https://h", username: "u" } }
 
     const cfg = {
-      inspect: jest.fn()
+      inspect: vi.fn()
         .mockReturnValueOnce({ globalValue: existing, workspaceValue: {} })
         .mockReturnValueOnce({ globalValue: {}, workspaceValue: {} }), // verified deleted
-      update: jest.fn().mockResolvedValue(undefined)
+      update: vi.fn().mockResolvedValue(undefined)
     }
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue(cfg)
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue(cfg)
 
     createManager()
 
@@ -389,12 +392,12 @@ describe("message handling: deleteConnection", () => {
     const existing = { dev: { url: "https://h", username: "u" } }
 
     const cfg = {
-      inspect: jest.fn()
+      inspect: vi.fn()
         .mockReturnValueOnce({ globalValue: existing, workspaceValue: {} })
         .mockReturnValueOnce({ globalValue: existing, workspaceValue: {} }), // still there!
-      update: jest.fn().mockResolvedValue(undefined)
+      update: vi.fn().mockResolvedValue(undefined)
     }
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue(cfg)
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue(cfg)
 
     createManager()
 
@@ -412,16 +415,16 @@ describe("message handling: deleteConnection", () => {
   })
 
   test("clears password from vault when deleting", async () => {
-    const vault = require("../lib").PasswordVault.get()
+    const vault = (__$mock_lib).PasswordVault.get()
     const existing = { dev: { url: "https://h", username: "myuser" } }
 
     const cfg = {
-      inspect: jest.fn()
+      inspect: vi.fn()
         .mockReturnValueOnce({ globalValue: existing, workspaceValue: {} })
         .mockReturnValueOnce({ globalValue: {}, workspaceValue: {} }),
-      update: jest.fn().mockResolvedValue(undefined)
+      update: vi.fn().mockResolvedValue(undefined)
     }
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue(cfg)
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue(cfg)
 
     createManager()
 
@@ -443,10 +446,10 @@ describe("message handling: importFromJson", () => {
   test("merges imported connections and sends success", async () => {
     const existing = { dev1: { url: "https://h1", username: "u1" } }
     const cfg = {
-      inspect: jest.fn().mockReturnValue({ globalValue: existing, workspaceValue: {} }),
-      update: jest.fn().mockResolvedValue(undefined)
+      inspect: vi.fn().mockReturnValue({ globalValue: existing, workspaceValue: {} }),
+      update: vi.fn().mockResolvedValue(undefined)
     }
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue(cfg)
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue(cfg)
 
     createManager()
 
@@ -469,10 +472,10 @@ describe("message handling: importFromJson", () => {
 
   test("sends error message when JSON is invalid", async () => {
     const cfg = {
-      inspect: jest.fn().mockReturnValue({ globalValue: {}, workspaceValue: {} }),
-      update: jest.fn()
+      inspect: vi.fn().mockReturnValue({ globalValue: {}, workspaceValue: {} }),
+      update: vi.fn()
     }
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue(cfg)
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue(cfg)
 
     createManager()
 
@@ -493,17 +496,17 @@ describe("message handling: importFromJson", () => {
 
 describe("message handling: confirmDeleteConnection", () => {
   test("calls deleteConnection when user confirms", async () => {
-    const { funWindow: w } = require("../services/funMessenger")
-    ;(w.showWarningMessage as jest.Mock).mockResolvedValue("Delete")
+    const { funWindow: w } = (__$mock_services_funMessenger)
+    ;(w.showWarningMessage as Mock).mockResolvedValue("Delete")
 
     const existing = { dev: { url: "https://h", username: "u" } }
     const cfg = {
-      inspect: jest.fn()
+      inspect: vi.fn()
         .mockReturnValueOnce({ globalValue: existing, workspaceValue: {} })
         .mockReturnValueOnce({ globalValue: {}, workspaceValue: {} }),
-      update: jest.fn().mockResolvedValue(undefined)
+      update: vi.fn().mockResolvedValue(undefined)
     }
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue(cfg)
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue(cfg)
 
     createManager()
 
@@ -517,14 +520,14 @@ describe("message handling: confirmDeleteConnection", () => {
   })
 
   test("does not delete when user cancels", async () => {
-    const { funWindow: w } = require("../services/funMessenger")
-    ;(w.showWarningMessage as jest.Mock).mockResolvedValue(undefined)
+    const { funWindow: w } = (__$mock_services_funMessenger)
+    ;(w.showWarningMessage as Mock).mockResolvedValue(undefined)
 
     const cfg = {
-      inspect: jest.fn().mockReturnValue({ globalValue: {}, workspaceValue: {} }),
-      update: jest.fn()
+      inspect: vi.fn().mockReturnValue({ globalValue: {}, workspaceValue: {} }),
+      update: vi.fn()
     }
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue(cfg)
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue(cfg)
 
     createManager()
 
@@ -548,10 +551,10 @@ describe("message handling: bulkDelete", () => {
       keep: { url: "https://h3", username: "u3" }
     }
     const cfg = {
-      inspect: jest.fn().mockReturnValue({ globalValue: existing, workspaceValue: {} }),
-      update: jest.fn().mockResolvedValue(undefined)
+      inspect: vi.fn().mockReturnValue({ globalValue: existing, workspaceValue: {} }),
+      update: vi.fn().mockResolvedValue(undefined)
     }
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue(cfg)
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue(cfg)
 
     createManager()
 
@@ -572,18 +575,18 @@ describe("message handling: bulkDelete", () => {
 
 describe("message handling: requestBulkUsernameEdit / bulkEditUsername", () => {
   test("prompts for username and updates connections", async () => {
-    const { funWindow: w } = require("../services/funMessenger")
-    ;(w.showInputBox as jest.Mock).mockResolvedValue("newuser")
+    const { funWindow: w } = (__$mock_services_funMessenger)
+    ;(w.showInputBox as Mock).mockResolvedValue("newuser")
 
     const existing = {
       conn1: { url: "https://h1", username: "old1" },
       conn2: { url: "https://h2", username: "old2" }
     }
     const cfg = {
-      inspect: jest.fn().mockReturnValue({ globalValue: existing, workspaceValue: {} }),
-      update: jest.fn().mockResolvedValue(undefined)
+      inspect: vi.fn().mockReturnValue({ globalValue: existing, workspaceValue: {} }),
+      update: vi.fn().mockResolvedValue(undefined)
     }
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue(cfg)
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue(cfg)
 
     createManager()
 
@@ -599,14 +602,14 @@ describe("message handling: requestBulkUsernameEdit / bulkEditUsername", () => {
   })
 
   test("does not update when user cancels the username prompt", async () => {
-    const { funWindow: w } = require("../services/funMessenger")
-    ;(w.showInputBox as jest.Mock).mockResolvedValue(undefined)
+    const { funWindow: w } = (__$mock_services_funMessenger)
+    ;(w.showInputBox as Mock).mockResolvedValue(undefined)
 
     const cfg = {
-      inspect: jest.fn().mockReturnValue({ globalValue: {}, workspaceValue: {} }),
-      update: jest.fn()
+      inspect: vi.fn().mockReturnValue({ globalValue: {}, workspaceValue: {} }),
+      update: vi.fn()
     }
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue(cfg)
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue(cfg)
 
     createManager()
 
@@ -622,10 +625,10 @@ describe("message handling: requestBulkUsernameEdit / bulkEditUsername", () => {
   test("bulkEditUsername directly updates usernames", async () => {
     const existing = { conn1: { url: "https://h", username: "old" } }
     const cfg = {
-      inspect: jest.fn().mockReturnValue({ globalValue: existing, workspaceValue: {} }),
-      update: jest.fn().mockResolvedValue(undefined)
+      inspect: vi.fn().mockReturnValue({ globalValue: existing, workspaceValue: {} }),
+      update: vi.fn().mockResolvedValue(undefined)
     }
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue(cfg)
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue(cfg)
 
     createManager()
 
@@ -644,15 +647,15 @@ describe("message handling: requestBulkUsernameEdit / bulkEditUsername", () => {
 
 describe("message handling: confirmBulkDelete", () => {
   test("deletes after confirmation", async () => {
-    const { funWindow: w } = require("../services/funMessenger")
-    ;(w.showWarningMessage as jest.Mock).mockResolvedValue("Delete All")
+    const { funWindow: w } = (__$mock_services_funMessenger)
+    ;(w.showWarningMessage as Mock).mockResolvedValue("Delete All")
 
     const existing = { a: { url: "https://h1", username: "u" }, b: { url: "https://h2", username: "u" } }
     const cfg = {
-      inspect: jest.fn().mockReturnValue({ globalValue: existing, workspaceValue: {} }),
-      update: jest.fn().mockResolvedValue(undefined)
+      inspect: vi.fn().mockReturnValue({ globalValue: existing, workspaceValue: {} }),
+      update: vi.fn().mockResolvedValue(undefined)
     }
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue(cfg)
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue(cfg)
 
     createManager()
 
@@ -668,14 +671,14 @@ describe("message handling: confirmBulkDelete", () => {
   })
 
   test("does not delete when user cancels bulk confirm", async () => {
-    const { funWindow: w } = require("../services/funMessenger")
-    ;(w.showWarningMessage as jest.Mock).mockResolvedValue(undefined)
+    const { funWindow: w } = (__$mock_services_funMessenger)
+    ;(w.showWarningMessage as Mock).mockResolvedValue(undefined)
 
     const cfg = {
-      inspect: jest.fn().mockReturnValue({ globalValue: {}, workspaceValue: {} }),
-      update: jest.fn()
+      inspect: vi.fn().mockReturnValue({ globalValue: {}, workspaceValue: {} }),
+      update: vi.fn()
     }
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue(cfg)
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue(cfg)
 
     createManager()
 
@@ -693,11 +696,11 @@ describe("message handling: confirmBulkDelete", () => {
 
 describe("message handling: createCloudConnection (service key)", () => {
   test("sends error for invalid service key format", async () => {
-    const { isAbapServiceKey } = require("abap_cloud_platform")
-    ;(isAbapServiceKey as jest.Mock).mockReturnValue(false)
+    const { isAbapServiceKey } = (__$mock_abap_cloud_platform)
+    ;(isAbapServiceKey as Mock).mockReturnValue(false)
 
     const cfg = makeWorkspaceConfig()
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue(cfg)
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue(cfg)
 
     createManager()
 
@@ -715,7 +718,7 @@ describe("message handling: createCloudConnection (service key)", () => {
 
   test("sends error for malformed JSON service key", async () => {
     const cfg = makeWorkspaceConfig()
-    ;(vscode.workspace.getConfiguration as jest.Mock).mockReturnValue(cfg)
+    ;(vscode.workspace.getConfiguration as Mock).mockReturnValue(cfg)
 
     createManager()
 

@@ -67,7 +67,9 @@
     "deploy": "vsce publish --no-dependencies",
     "docs": "uv run mkdocs serve --livereload",
     "clean": "pnpm -r run clean && rimraf out *.vsix node_modules client/dist server/dist",
-    "format": "prettier --write \"client/src/**/*.ts\" \"modules/abapfs/src/**/*.ts\" \"modules/abapObject/src/**/*.ts\" \"modules/sharedapi/src/**/*.ts\" \"server/src/**/*.ts\""
+    "format": "prettier --write \"client/src/**/*.ts\" \"modules/abapfs/src/**/*.ts\" \"modules/abapObject/src/**/*.ts\" \"modules/sharedapi/src/**/*.ts\" \"server/src/**/*.ts\"",
+    "test:watch": "pnpm -r run test:watch",
+    "test:scripts": "vitest run --config scripts/vitest.config.ts"
   },
   "devDependencies": {
     "@types/mocha": "^7.0.2",
@@ -76,8 +78,10 @@
     "concurrently": "^6.3.0",
     "ovsx": "^0.10.1",
     "rimraf": "^3.0.2",
+    "ts-morph": "28.0.0",
     "tsdown": "^0.22.2",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "5.0.0-beta.4"
   },
   "contributes": {
     "languages": [

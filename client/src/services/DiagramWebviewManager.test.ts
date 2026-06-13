@@ -1,15 +1,12 @@
-/**
- * Tests for DiagramWebviewManager.ts
- * Tests singleton pattern, displayDiagram, and message handling.
- */
-
-const mockCreateWebviewPanel = jest.fn()
-const mockShowSaveDialog = jest.fn()
-const mockWriteFile = jest.fn().mockResolvedValue(undefined)
-const mockShowInfoMessage = jest.fn()
-const mockShowErrorMessage = jest.fn()
-
-jest.mock(
+const { mockCreateWebviewPanel, mockShowSaveDialog, mockWriteFile, mockShowInfoMessage, mockShowErrorMessage } = vi.hoisted(() => {
+  const mockCreateWebviewPanel = vi.fn()
+  const mockShowSaveDialog = vi.fn()
+  const mockWriteFile = vi.fn().mockResolvedValue(undefined)
+  const mockShowInfoMessage = vi.fn()
+  const mockShowErrorMessage = vi.fn()
+  return { mockCreateWebviewPanel, mockShowSaveDialog, mockWriteFile, mockShowInfoMessage, mockShowErrorMessage }
+})
+vi.mock(
   "vscode",
   () => ({
     window: {
@@ -20,20 +17,19 @@ jest.mock(
     },
     workspace: {
       fs: { writeFile: mockWriteFile },
-      getConfiguration: jest.fn().mockReturnValue({
-        get: jest.fn((k: string, d: any) => d)
+      getConfiguration: vi.fn().mockReturnValue({
+        get: vi.fn(function (k: string, d: any) { return d })
       })
     },
     ViewColumn: { One: 1, Active: -1 },
     Uri: {
-      joinPath: jest.fn((...args: any[]) => ({ fsPath: args.join("/"), toString: () => args.join("/") })),
-      file: jest.fn((p: string) => ({ fsPath: p }))
+      joinPath: vi.fn(function (...args: any[]) { return ({ fsPath: args.join("/"), toString: () => args.join("/") }) }),
+      file: vi.fn(function (p: string) { return ({ fsPath: p }) })
     }
-  }),
-  { virtual: true }
+  })
 )
 
-jest.mock("./funMessenger", () => ({
+vi.mock("./funMessenger", () => ({
   funWindow: {
     showInformationMessage: mockShowInfoMessage,
     showErrorMessage: mockShowErrorMessage,
@@ -42,11 +38,11 @@ jest.mock("./funMessenger", () => ({
   }
 }))
 
-jest.mock("./abapCopilotLogger", () => ({
+vi.mock("./abapCopilotLogger", () => ({
   logCommands: {
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn()
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn()
   }
 }))
 
@@ -60,20 +56,20 @@ function makeMockPanel() {
   const panel = {
     webview: {
       html: "",
-      onDidReceiveMessage: jest.fn((handler: (msg: any) => void) => {
-        messageHandlers.push(handler)
-        return { dispose: jest.fn() }
-      }),
-      postMessage: jest.fn().mockResolvedValue(true),
-      asWebviewUri: jest.fn((uri: any) => uri)
+      onDidReceiveMessage: vi.fn(function (handler: (msg: any) => void) {
+              messageHandlers.push(handler)
+              return { dispose: vi.fn() }
+            }),
+      postMessage: vi.fn().mockResolvedValue(true),
+      asWebviewUri: vi.fn(function (uri: any) { return uri })
     },
     title: "Test Panel",
-    onDidDispose: jest.fn((fn: () => void) => {
-      onDisposeFns.push(fn)
-      return { dispose: jest.fn() }
-    }),
-    dispose: jest.fn(() => { onDisposeFns.forEach(fn => fn()) }),
-    reveal: jest.fn(),
+    onDidDispose: vi.fn(function (fn: () => void) {
+          onDisposeFns.push(fn)
+          return { dispose: vi.fn() }
+        }),
+    dispose: vi.fn(function () { onDisposeFns.forEach(fn => fn()) }),
+    reveal: vi.fn(),
     _triggerMessage: (msg: any) => messageHandlers.forEach(h => h(msg)),
     _triggerDispose: () => onDisposeFns.forEach(fn => fn())
   }
@@ -84,7 +80,7 @@ describe("DiagramWebviewManager", () => {
   const mockUri = { fsPath: "/ext", toString: () => "/ext" } as any
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     // Reset singleton
     ;(DiagramWebviewManager as any).instance = undefined
     ;(DiagramWebviewManager as any).isInitialized = false

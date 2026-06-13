@@ -1,22 +1,22 @@
 // dataQueryTool tests focus purely on prepareInvocation validation logic
 // (the SQL guards and input validations) since invoke requires heavy infrastructure.
-jest.mock("vscode", () => ({
-  LanguageModelToolResult: jest.fn().mockImplementation((parts: any[]) => ({ parts })),
-  LanguageModelTextPart: jest.fn().mockImplementation((text: string) => ({ text })),
-  MarkdownString: jest.fn().mockImplementation((text: string) => ({ text })),
-  lm: { registerTool: jest.fn(() => ({ dispose: jest.fn() })) }
-}), { virtual: true })
+vi.mock("vscode", () => ({
+  LanguageModelToolResult: vi.fn().mockImplementation(function (parts: any[]) { return ({ parts }) }),
+  LanguageModelTextPart: vi.fn().mockImplementation(function (text: string) { return ({ text }) }),
+  MarkdownString: vi.fn().mockImplementation(function (text: string) { return ({ text }) }),
+  lm: { registerTool: vi.fn(function () { return ({ dispose: vi.fn() }) }) }
+}))
 
-jest.mock("../../adt/conections", () => ({ getClient: jest.fn() }))
-jest.mock("../telemetry", () => ({ logTelemetry: jest.fn() }))
-jest.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: jest.fn(() => ({ dispose: jest.fn() }))
+vi.mock("../../adt/conections", () => ({ getClient: vi.fn() }))
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("./toolRegistry", () => ({
+  registerToolWithRegistry: vi.fn(function () { return ({ dispose: vi.fn() }) })
 }))
-jest.mock("../webviewManager", () => ({
-  WebviewManager: { getInstance: jest.fn(() => ({ executeQuery: jest.fn(), getWebview: jest.fn() })) }
+vi.mock("../webviewManager", () => ({
+  WebviewManager: { getInstance: vi.fn(function () { return ({ executeQuery: vi.fn(), getWebview: vi.fn() }) }) }
 }))
-jest.mock("../sapSystemInfo", () => ({ getSAPSystemInfo: jest.fn() }))
-jest.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }))
+vi.mock("../sapSystemInfo", () => ({ getSAPSystemInfo: vi.fn() }))
+vi.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }))
 
 import { ExecuteDataQueryTool } from "./dataQueryTool"
 

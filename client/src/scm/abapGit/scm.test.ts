@@ -1,66 +1,66 @@
-jest.mock("vscode", () => ({
+vi.mock("vscode", () => ({
   Uri: {
-    parse: jest.fn((s: string) => ({
-      scheme: s.split("://")[0],
-      authority: s.split("://")[1]?.split("/")[0] || "",
-      path: "/" + (s.split("://")[1]?.split("/").slice(1).join("/") || ""),
-      toString: () => s
-    }))
+    parse: vi.fn(function (s: string) { return ({
+          scheme: s.split("://")[0],
+          authority: s.split("://")[1]?.split("/")[0] || "",
+          path: "/" + (s.split("://")[1]?.split("/").slice(1).join("/") || ""),
+          toString: () => s
+        }) })
   },
   scm: {
-    createSourceControl: jest.fn().mockReturnValue({
+    createSourceControl: vi.fn().mockReturnValue({
       inputBox: { placeholder: "" },
       statusBarCommands: [],
-      createResourceGroup: jest.fn().mockReturnValue({
+      createResourceGroup: vi.fn().mockReturnValue({
         hideWhenEmpty: false,
         resourceStates: [],
         id: "staged",
-        [Symbol.iterator]: jest.fn().mockReturnValue([][Symbol.iterator]())
+        [Symbol.iterator]: vi.fn().mockReturnValue([][Symbol.iterator]())
       })
     })
   },
-  SourceControl: jest.fn(),
-  SourceControlResourceGroup: jest.fn(),
-  SourceControlResourceState: jest.fn()
-}), { virtual: true })
-
-jest.mock("../../lib", () => ({
-  Cache: jest.fn(),
-  mapGet: jest.fn((map: Map<any, any>, key: string, fn: () => any) => {
-    if (!map.has(key)) map.set(key, fn())
-    return map.get(key)
-  }),
-  cache: jest.fn((fn: any) => {
-    const map = new Map()
-    return {
-      get: (k: string) => { if (!map.has(k)) map.set(k, fn(k)); return map.get(k) },
-      [Symbol.iterator]: function*() { yield* map.entries() }
-    }
-  })
+  SourceControl: vi.fn(class {}),
+  SourceControlResourceGroup: vi.fn(class {}),
+  SourceControlResourceState: vi.fn(class {})
 }))
 
-jest.mock("./credentials", () => ({
-  dataCredentials: jest.fn()
+vi.mock("../../lib", () => ({
+  Cache: vi.fn(class {}),
+  mapGet: vi.fn(function (map: Map<any, any>, key: string, fn: () => any) {
+      if (!map.has(key)) map.set(key, fn())
+      return map.get(key)
+    }),
+  cache: vi.fn(function (fn: any) {
+      const map = new Map()
+      return {
+        get: (k: string) => { if (!map.has(k)) map.set(k, fn(k)); return map.get(k) },
+        [Symbol.iterator]: function*() { yield* map.entries() }
+      }
+    })
 }))
 
-jest.mock("./documentProvider", () => ({
-  gitUrl: jest.fn((data: any, href: string) => ({ toString: () => href }))
+vi.mock("./credentials", () => ({
+  dataCredentials: vi.fn()
 }))
 
-jest.mock("../../commands", () => ({
+vi.mock("./documentProvider", () => ({
+  gitUrl: vi.fn(function (data: any, href: string) { return ({ toString: () => href }) })
+}))
+
+vi.mock("../../commands", () => ({
   AbapFsCommands: { agitBranch: "abapfs.agitBranch" }
 }))
 
-jest.mock("fp-ts/lib/Option", () => ({
-  isNone: jest.fn(),
-  fromNullable: jest.fn((v: any) => v ? { _tag: "Some", value: v } : { _tag: "None" }),
-  some: jest.fn((v: any) => ({ _tag: "Some", value: v }))
+vi.mock("fp-ts/lib/Option", () => ({
+  isNone: vi.fn(),
+  fromNullable: vi.fn(function (v: any) { return v ? { _tag: "Some", value: v } : { _tag: "None" } }),
+  some: vi.fn(function (v: any) { return ({ _tag: "Some", value: v }) })
 }))
 
-jest.mock("./storage", () => ({ saveRepos: jest.fn() }))
+vi.mock("./storage", () => ({ saveRepos: vi.fn() }))
 
-jest.mock("../../adt/conections", () => ({
-  getClient: jest.fn()
+vi.mock("../../adt/conections", () => ({
+  getClient: vi.fn()
 }))
 
 import {
@@ -69,6 +69,7 @@ import {
   setStatusCommand, addRepo, fromSC, fromGroup, ScmData
 } from "./scm"
 import { Uri } from "vscode"
+import * as __$mock_fp_ts_lib_Option from "fp-ts/lib/Option";
 
 describe("constants", () => {
   it("STAGED is 'staged'", () => { expect(STAGED).toBe("staged") })
@@ -179,7 +180,7 @@ describe("setStatusCommand", () => {
 })
 
 describe("addRepo", () => {
-  beforeEach(() => jest.clearAllMocks())
+  beforeEach(() => vi.clearAllMocks())
 
   it("creates a new ScmData when not existing", async () => {
     const mockRepo: any = {
@@ -202,7 +203,7 @@ describe("addRepo", () => {
 
 describe("fromSC", () => {
   it("returns None when scm not found", () => {
-    const { fromNullable } = require("fp-ts/lib/Option")
+    const { fromNullable } = (__$mock_fp_ts_lib_Option)
     const fakeSC: any = {}
     const result = fromSC(fakeSC)
     expect(fromNullable).toHaveBeenCalledWith(undefined)

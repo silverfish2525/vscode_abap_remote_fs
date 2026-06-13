@@ -1,30 +1,34 @@
-jest.mock("vscode", () => ({
+vi.mock("vscode", () => ({
   window: {
-    createOutputChannel: jest.fn()
+    createOutputChannel: vi.fn()
   }
-}), { virtual: true })
+}))
 
-jest.mock("../lib/logger", () => {
+// Hoisted shared state for the mock factory. Vitest hoists vi.mock above
+// every top-level statement (including imports), so the factory below cannot
+// reference values produced by the post-hoist `import { channel }` line.
+// We materialize the mock channel inside vi.hoisted so the factory and the
+// test body both see the same object.
+const { mockChannel } = vi.hoisted(() => {
   const mockChannel = {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
-    trace: jest.fn(),
-    show: jest.fn(),
-    clear: jest.fn(),
-    dispose: jest.fn()
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+    trace: vi.fn(),
+    show: vi.fn(),
+    clear: vi.fn(),
+    dispose: vi.fn()
   }
-  return { channel: mockChannel }
+  return { mockChannel }
 })
 
-import { copilotLogger, logInlineProvider, logSearch, logCommands } from "./abapCopilotLogger"
-import { channel } from "../lib/logger"
+vi.mock("../lib/logger", () => ({ channel: mockChannel }))
 
-const mockChannel = channel as any
+import { copilotLogger, logInlineProvider, logSearch, logCommands } from "./abapCopilotLogger"
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
 })
 
 // ─── copilotLogger singleton ──────────────────────────────────────────────────
@@ -34,9 +38,9 @@ describe("copilotLogger singleton", () => {
     expect(copilotLogger).toBeDefined()
   })
 
-  test("repeated require returns same exported instance", () => {
-    const { copilotLogger: a } = require("./abapCopilotLogger")
-    const { copilotLogger: b } = require("./abapCopilotLogger")
+  test("repeated require returns same exported instance", async () => {
+    const { copilotLogger: a } = await import("./abapCopilotLogger")
+    const { copilotLogger: b } = await import("./abapCopilotLogger")
     expect(a).toBe(b)
   })
 })

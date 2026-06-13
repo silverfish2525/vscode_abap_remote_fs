@@ -17,7 +17,7 @@
  */
 
 import { randomUUID } from "crypto"
-import * as vscode from "vscode"
+import type * as vscode from "vscode"
 
 /** Set of currently valid one-time nonces for MCP invocations */
 const activeNonces = new Set<string>()
@@ -44,8 +44,11 @@ export function createMcpAuthorizedOptions<T>(input: T): McpAuthorizedOptions<T>
   // Safety: auto-expire nonce after 30 seconds to prevent unbounded accumulation
   // if a tool call is cancelled or throws before the guard checks it
   setTimeout(() => activeNonces.delete(nonce), 30_000)
-  const options = { input, toolInvocationToken: undefined } as unknown as McpAuthorizedOptions<T>
-  options[MCP_NONCE_KEY] = nonce
+  const options: McpAuthorizedOptions<T> = {
+    input,
+    toolInvocationToken: undefined as unknown as vscode.ChatParticipantToolToken,
+    [MCP_NONCE_KEY]: nonce
+  }
   return options
 }
 
@@ -57,7 +60,9 @@ export function isToolInvocationAuthorized(
   options: vscode.LanguageModelToolInvocationOptions<any>
 ): boolean {
   if (options.toolInvocationToken) return true
-  const nonce = (options as any)[MCP_NONCE_KEY] as string | undefined
+  const nonce = (options as unknown as { [k: symbol]: unknown })[MCP_NONCE_KEY] as
+    | string
+    | undefined
   if (nonce && activeNonces.has(nonce)) {
     activeNonces.delete(nonce)
     return true

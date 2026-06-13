@@ -1,40 +1,42 @@
-jest.mock("vscode", () => ({
+vi.mock("vscode", () => ({
   extensions: {
-    getExtension: jest.fn().mockReturnValue({ packageJSON: { version: "2.1.0" } })
+    getExtension: vi.fn().mockReturnValue({ packageJSON: { version: "2.1.0" } })
   },
-  Disposable: jest.fn().mockImplementation((fn: () => void) => ({ dispose: fn })),
-  commands: { executeCommand: jest.fn() }
-}), { virtual: true })
+  Disposable: vi.fn().mockImplementation(function (fn: () => void) {
+    return { dispose: fn }
+  }),
+  commands: { executeCommand: vi.fn() }
+}))
 
-jest.mock("./appInsightsService", () => ({
+vi.mock("./appInsightsService", () => ({
   AppInsightsService: {
-    getInstance: jest.fn().mockReturnValue({ track: jest.fn() })
+    getInstance: vi.fn().mockReturnValue({ track: vi.fn() })
   }
 }))
 
-jest.mock("./reviewPrompt", () => ({
-  incrementReviewCounter: jest.fn()
+vi.mock("./reviewPrompt", () => ({
+  incrementReviewCounter: vi.fn()
 }))
 
-jest.mock("fs", () => ({
-  existsSync: jest.fn().mockReturnValue(true),
-  mkdirSync: jest.fn(),
+vi.mock("fs", () => ({
+  existsSync: vi.fn().mockReturnValue(true),
+  mkdirSync: vi.fn(),
   promises: {
-    appendFile: jest.fn().mockResolvedValue(undefined)
+    appendFile: vi.fn().mockResolvedValue(undefined)
   }
 }))
 
-jest.mock("os", () => ({
-  hostname: jest.fn().mockReturnValue("test-machine"),
-  userInfo: jest.fn().mockReturnValue({ username: "testuser" }),
-  platform: jest.fn().mockReturnValue("linux")
+vi.mock("os", () => ({
+  hostname: vi.fn().mockReturnValue("test-machine"),
+  userInfo: vi.fn().mockReturnValue({ username: "testuser" }),
+  platform: vi.fn().mockReturnValue("linux")
 }))
 
-jest.mock("crypto", () => {
-  const actual = jest.requireActual("crypto")
+vi.mock("crypto", async () => {
+  const actual = await vi.importActual<typeof import("crypto")>("crypto")
   return {
     ...actual,
-    randomUUID: jest.fn().mockReturnValue("00000000-0000-0000-0000-000000000001")
+    randomUUID: vi.fn().mockReturnValue("00000000-0000-0000-0000-000000000001")
   }
 })
 
@@ -44,8 +46,8 @@ import { incrementReviewCounter } from "./reviewPrompt"
 import * as vscode from "vscode"
 import * as fs from "fs"
 
-const mockAppInsights = AppInsightsService.getInstance as jest.Mock
-const mockIncrementReviewCounter = incrementReviewCounter as jest.Mock
+const mockAppInsights = AppInsightsService.getInstance as Mock
+const mockIncrementReviewCounter = incrementReviewCounter as Mock
 const mockVscodeCommands = vscode.commands as any
 
 function makeContext(version = "2.1.0") {
@@ -58,7 +60,7 @@ function makeContext(version = "2.1.0") {
 }
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
   // Reset singleton
   ;(TelemetryService as any).instance = undefined
 })
@@ -115,7 +117,7 @@ describe("TelemetryService.log", () => {
     const svc = TelemetryService.getInstance()
 
     // Fill beyond max - auto-flush fires at 25, so we need to prevent flushes
-    jest.spyOn(svc as any, "flushToFile").mockImplementation(() => {
+    vi.spyOn(svc as any, "flushToFile").mockImplementation(function () {
       // no-op to prevent real flushing during this test
     })
 
@@ -176,7 +178,7 @@ describe("logTelemetry", () => {
   })
 
   test("calls AppInsightsService.track", () => {
-    const trackMock = jest.fn()
+    const trackMock = vi.fn()
     mockAppInsights.mockReturnValue({ track: trackMock })
 
     logTelemetry("command_activate_called")
@@ -184,25 +186,25 @@ describe("logTelemetry", () => {
   })
 
   test("calls incrementReviewCounter for command_ actions", () => {
-    mockAppInsights.mockReturnValue({ track: jest.fn() })
+    mockAppInsights.mockReturnValue({ track: vi.fn() })
     logTelemetry("command_activate_called")
     expect(mockIncrementReviewCounter).toHaveBeenCalled()
   })
 
   test("calls incrementReviewCounter for tool_ actions", () => {
-    mockAppInsights.mockReturnValue({ track: jest.fn() })
+    mockAppInsights.mockReturnValue({ track: vi.fn() })
     logTelemetry("tool_search_abap_objects_called")
     expect(mockIncrementReviewCounter).toHaveBeenCalled()
   })
 
   test("does NOT call incrementReviewCounter for non-command/tool actions", () => {
-    mockAppInsights.mockReturnValue({ track: jest.fn() })
+    mockAppInsights.mockReturnValue({ track: vi.fn() })
     logTelemetry("some_internal_event")
     expect(mockIncrementReviewCounter).not.toHaveBeenCalled()
   })
 
   test("sets walkthrough context key for known tool actions", () => {
-    mockAppInsights.mockReturnValue({ track: jest.fn() })
+    mockAppInsights.mockReturnValue({ track: vi.fn() })
     logTelemetry("tool_search_abap_objects_called")
     expect(mockVscodeCommands.executeCommand).toHaveBeenCalledWith(
       "setContext",
@@ -212,14 +214,14 @@ describe("logTelemetry", () => {
   })
 
   test("does not set context key for unknown actions", () => {
-    mockAppInsights.mockReturnValue({ track: jest.fn() })
+    mockAppInsights.mockReturnValue({ track: vi.fn() })
     logTelemetry("completely_unknown_action")
     expect(mockVscodeCommands.executeCommand).not.toHaveBeenCalled()
   })
 
   test("silently handles AppInsights failures", () => {
     mockAppInsights.mockReturnValue({
-      track: jest.fn().mockImplementation(() => {
+      track: vi.fn().mockImplementation(function () {
         throw new Error("AppInsights down")
       })
     })
@@ -228,7 +230,7 @@ describe("logTelemetry", () => {
   })
 
   test("passes options to AppInsights.track", () => {
-    const trackMock = jest.fn()
+    const trackMock = vi.fn()
     mockAppInsights.mockReturnValue({ track: trackMock })
 
     const options = { connectionId: "dev100" }
@@ -245,7 +247,7 @@ describe("shouldCountForReviewPrompt logic", () => {
     ;(TelemetryService as any).instance = undefined
     const ctx = makeContext()
     TelemetryService.initialize(ctx)
-    mockAppInsights.mockReturnValue({ track: jest.fn() })
+    mockAppInsights.mockReturnValue({ track: vi.fn() })
   })
 
   const shouldCount = ["command_anything_called", "tool_anything_called"]

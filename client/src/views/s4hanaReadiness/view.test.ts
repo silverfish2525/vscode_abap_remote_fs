@@ -1,7 +1,7 @@
-jest.mock("vscode", () => {
+vi.mock("vscode", () => {
   class MockEventEmitter {
     private listeners: Function[] = []
-    event = (listener: Function) => { this.listeners.push(listener); return { dispose: jest.fn() } }
+    event = (listener: Function) => { this.listeners.push(listener); return { dispose: vi.fn() } }
     fire = (data: any) => { this.listeners.forEach(l => l(data)) }
   }
   return {
@@ -11,7 +11,7 @@ jest.mock("vscode", () => {
     ThemeColor: class { constructor(public id: string) {} },
     ThemeIcon: class { constructor(public id: string, public color?: any) {} }
   }
-}, { virtual: true })
+})
 
 import { S4HItemNode, S4HProvider, S4HRefNode, S4HRoot, S4HSummaryNode } from "./view"
 import { CustomReference, GroupedData, ItemGroup } from "./types"
@@ -87,7 +87,7 @@ describe("S4HProvider", () => {
   })
 
   it("fires change event on setData", () => {
-    const handler = jest.fn()
+    const handler = vi.fn()
     provider.onDidChangeTreeData(handler)
     provider.setData("dev100", makeGroupedData())
     expect(handler).toHaveBeenCalled()

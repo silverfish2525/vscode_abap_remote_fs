@@ -1,27 +1,19 @@
-jest.mock(
-  "vscode",
-  () => ({
-    LanguageModelToolResult: jest.fn().mockImplementation((parts: any[]) => ({ parts })),
-    LanguageModelTextPart: jest.fn().mockImplementation((text: string) => ({ text })),
-    MarkdownString: jest.fn().mockImplementation((text: string) => ({ text })),
-    lm: { registerTool: jest.fn(() => ({ dispose: jest.fn() })) }
-  }),
-  { virtual: true }
-)
-
-jest.mock("../../adt/conections", () => ({}))
-jest.mock("../telemetry", () => ({ logTelemetry: jest.fn() }))
-jest.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: jest.fn(() => ({ dispose: jest.fn() }))
+vi.mock("vscode", () => ({
+  LanguageModelToolResult: vi.fn().mockImplementation(function (parts: any[]) { return ({ parts }) }),
+  LanguageModelTextPart: vi.fn().mockImplementation(function (text: string) { return ({ text }) }),
+  MarkdownString: vi.fn().mockImplementation(function (text: string) { return ({ text }) }),
+  lm: { registerTool: vi.fn(function () { return ({ dispose: vi.fn() }) }) }
 }))
-jest.mock("../abapSearchService", () => ({ getSearchService: jest.fn() }))
-jest.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }))
-jest.mock("../../commands/commands", () => ({ openObject: jest.fn() }))
 
-jest.mock("./toolGuard", () => ({
-  assertToolInvocationAuthorized: jest.fn(),
-  isToolInvocationAuthorized: jest.fn(() => true)
+vi.mock("../../adt/conections", () => ({}))
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("./toolRegistry", () => ({
+  registerToolWithRegistry: vi.fn(function () { return ({ dispose: vi.fn() }) })
 }))
+vi.mock("../abapSearchService", () => ({ getSearchService: vi.fn() }))
+vi.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }))
+vi.mock("../../commands/commands", () => ({ openObject: vi.fn() }))
+
 import { OpenObjectTool } from "./openObjectTool"
 import { getSearchService } from "../abapSearchService"
 import { openObject } from "../../commands/commands"
@@ -35,7 +27,7 @@ function makeOptions(input: any = {}) {
 }
 
 const mockSearcher = {
-  searchObjects: jest.fn()
+  searchObjects: vi.fn()
 }
 
 describe("OpenObjectTool", () => {
@@ -43,8 +35,8 @@ describe("OpenObjectTool", () => {
 
   beforeEach(() => {
     tool = new OpenObjectTool()
-    jest.clearAllMocks()
-    ;(getSearchService as jest.Mock).mockReturnValue(mockSearcher)
+    vi.clearAllMocks()
+    ;(getSearchService as Mock).mockReturnValue(mockSearcher)
     ;(window as any).activeTextEditor = undefined
   })
 
@@ -78,23 +70,21 @@ describe("OpenObjectTool", () => {
   describe("invoke", () => {
     it("logs telemetry", async () => {
       mockSearcher.searchObjects.mockResolvedValue([{ uri: "/sap/bc/adt/programs/programs/zprog" }])
-      ;(openObject as jest.Mock).mockResolvedValue(undefined)
+      ;(openObject as Mock).mockResolvedValue(undefined)
       await tool.invoke(makeOptions({ objectName: "ZPROG", connectionId: "DEV100" }), mockToken)
-      expect(logTelemetry).toHaveBeenCalledWith("tool_open_object_called", {
-        connectionId: "DEV100"
-      })
+      expect(logTelemetry).toHaveBeenCalledWith("tool_open_object_called", { connectionId: "DEV100" })
     })
 
     it("uses lowercase connectionId for service", async () => {
       mockSearcher.searchObjects.mockResolvedValue([{ uri: "/sap/bc/adt/programs/programs/zprog" }])
-      ;(openObject as jest.Mock).mockResolvedValue(undefined)
+      ;(openObject as Mock).mockResolvedValue(undefined)
       await tool.invoke(makeOptions({ objectName: "ZPROG", connectionId: "DEV100" }), mockToken)
       expect(getSearchService).toHaveBeenCalledWith("dev100")
     })
 
     it("returns success message on successful open", async () => {
       mockSearcher.searchObjects.mockResolvedValue([{ uri: "/sap/bc/adt/programs/programs/zprog" }])
-      ;(openObject as jest.Mock).mockResolvedValue(undefined)
+      ;(openObject as Mock).mockResolvedValue(undefined)
       const result: any = await tool.invoke(
         makeOptions({ objectName: "ZPROG", connectionId: "dev100" }),
         mockToken
@@ -123,7 +113,7 @@ describe("OpenObjectTool", () => {
 
     it("returns failure message when openObject throws", async () => {
       mockSearcher.searchObjects.mockResolvedValue([{ uri: "/sap/bc/adt/programs/programs/zprog" }])
-      ;(openObject as jest.Mock).mockRejectedValue(new Error("editor error"))
+      ;(openObject as Mock).mockRejectedValue(new Error("editor error"))
       const result: any = await tool.invoke(
         makeOptions({ objectName: "ZPROG", connectionId: "dev100" }),
         mockToken
@@ -133,7 +123,7 @@ describe("OpenObjectTool", () => {
 
     it("searches with objectType when provided", async () => {
       mockSearcher.searchObjects.mockResolvedValue([{ uri: "/sap/bc/adt/oo/classes/zclass" }])
-      ;(openObject as jest.Mock).mockResolvedValue(undefined)
+      ;(openObject as Mock).mockResolvedValue(undefined)
       await tool.invoke(
         makeOptions({ objectName: "ZCLASS", objectType: "CLAS/OC", connectionId: "dev100" }),
         mockToken
@@ -143,7 +133,7 @@ describe("OpenObjectTool", () => {
 
     it("searches without objectType filter when not provided", async () => {
       mockSearcher.searchObjects.mockResolvedValue([{ uri: "/sap/bc/adt/programs/programs/zprog" }])
-      ;(openObject as jest.Mock).mockResolvedValue(undefined)
+      ;(openObject as Mock).mockResolvedValue(undefined)
       await tool.invoke(makeOptions({ objectName: "ZPROG", connectionId: "dev100" }), mockToken)
       expect(mockSearcher.searchObjects).toHaveBeenCalledWith("ZPROG", undefined, 1)
     })
@@ -151,7 +141,7 @@ describe("OpenObjectTool", () => {
     it("calls openObject with lowercase connectionId and URI", async () => {
       const uri = "/sap/bc/adt/programs/programs/zprog"
       mockSearcher.searchObjects.mockResolvedValue([{ uri }])
-      ;(openObject as jest.Mock).mockResolvedValue(undefined)
+      ;(openObject as Mock).mockResolvedValue(undefined)
       await tool.invoke(makeOptions({ objectName: "ZPROG", connectionId: "DEV100" }), mockToken)
       expect(openObject).toHaveBeenCalledWith("dev100", uri)
     })

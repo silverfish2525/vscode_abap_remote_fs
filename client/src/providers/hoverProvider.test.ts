@@ -1,5 +1,5 @@
 // Tests for providers/hoverProvider.ts - AbapHoverProviderV2 (private methods via indirect testing)
-jest.mock("vscode", () => {
+vi.mock("vscode", () => {
   const Position = class {
     constructor(public line: number, public character: number) {}
   }
@@ -23,13 +23,13 @@ jest.mock("vscode", () => {
     MarkdownString,
     Hover,
     CancellationToken: CancellationTokenCls,
-    commands: { executeCommand: jest.fn() },
-    workspace: { openTextDocument: jest.fn() },
+    commands: { executeCommand: vi.fn() },
+    workspace: { openTextDocument: vi.fn() },
     window: { visibleTextEditors: [] }
   }
-}, { virtual: true })
+})
 
-jest.mock("../services/funMessenger", () => ({
+vi.mock("../services/funMessenger", () => ({
   funWindow: { visibleTextEditors: [] }
 }))
 
@@ -41,12 +41,12 @@ const makeMockDocument = (lines: string[], uriStr = "file:///test.abap") => {
   const mockUri = { toString: () => uriStr, path: uriStr, scheme: "file", authority: "" }
   return {
     uri: mockUri,
-    lineAt: jest.fn((lineOrPos: number | any) => {
-      const line = typeof lineOrPos === "number" ? lineOrPos : lineOrPos.line
-      return { text: lines[line] ?? "" }
-    }),
-    getText: jest.fn((range?: any) => lines.join("\n")),
-    getWordRangeAtPosition: jest.fn()
+    lineAt: vi.fn(function (lineOrPos: number | any) {
+          const line = typeof lineOrPos === "number" ? lineOrPos : lineOrPos.line
+          return { text: lines[line] ?? "" }
+        }),
+    getText: vi.fn(function (range?: any) { return lines.join("\n") }),
+    getWordRangeAtPosition: vi.fn()
   } as any
 }
 
@@ -55,11 +55,11 @@ const makeMockToken = () => ({ isCancellationRequested: false } as unknown as vs
 
 describe("AbapHoverProviderV2", () => {
   let provider: AbapHoverProviderV2
-  let logMock: jest.Mock
+  let logMock: Mock
 
   beforeEach(() => {
-    jest.clearAllMocks()
-    logMock = jest.fn()
+    vi.clearAllMocks()
+    logMock = vi.fn()
     provider = new AbapHoverProviderV2(logMock)
   })
 
@@ -69,7 +69,7 @@ describe("AbapHoverProviderV2", () => {
     })
 
     it("creates instance with log", () => {
-      expect(() => new AbapHoverProviderV2(jest.fn())).not.toThrow()
+      expect(() => new AbapHoverProviderV2(vi.fn())).not.toThrow()
     })
   })
 
@@ -89,7 +89,7 @@ describe("AbapHoverProviderV2", () => {
       doc.getWordRangeAtPosition.mockReturnValue(
         new vscode.Range(new vscode.Position(0, 5), new vscode.Position(0, 11))
       )
-      ;(vscode.commands.executeCommand as jest.Mock).mockResolvedValue([])
+      ;(vscode.commands.executeCommand as Mock).mockResolvedValue([])
 
       const pos = makeMockPosition(0, 6)
       const result = await provider.provideHover(doc, pos, makeMockToken())
@@ -104,7 +104,7 @@ describe("AbapHoverProviderV2", () => {
       const line = "  WRITE TEXT-001."
       const doc = makeMockDocument([line])
       doc.getWordRangeAtPosition.mockReturnValue(undefined)
-      ;(vscode.commands.executeCommand as jest.Mock).mockResolvedValue(null)
+      ;(vscode.commands.executeCommand as Mock).mockResolvedValue(null)
 
       // position within TEXT-001
       const pos = makeMockPosition(0, 10)
@@ -119,7 +119,7 @@ describe("AbapHoverProviderV2", () => {
       const line = "  IF SY-SUBRC <> 0."
       const doc = makeMockDocument([line])
       doc.getWordRangeAtPosition.mockReturnValue(undefined)
-      ;(vscode.commands.executeCommand as jest.Mock).mockResolvedValue(null)
+      ;(vscode.commands.executeCommand as Mock).mockResolvedValue(null)
 
       const pos = makeMockPosition(0, 6)
       const result = await provider.provideHover(doc, pos, makeMockToken())
@@ -130,7 +130,7 @@ describe("AbapHoverProviderV2", () => {
       const line = "  normal_variable."
       const doc = makeMockDocument([line])
       doc.getWordRangeAtPosition.mockReturnValue(undefined)
-      ;(vscode.commands.executeCommand as jest.Mock).mockResolvedValue(null)
+      ;(vscode.commands.executeCommand as Mock).mockResolvedValue(null)
 
       const pos = makeMockPosition(0, 3)
       await expect(provider.provideHover(doc, pos, makeMockToken())).resolves.not.toThrow()
@@ -143,7 +143,7 @@ describe("AbapHoverProviderV2", () => {
       doc.getWordRangeAtPosition.mockReturnValue(
         new vscode.Range(new vscode.Position(0, 2), new vscode.Position(0, 9))
       )
-      ;(vscode.commands.executeCommand as jest.Mock).mockRejectedValue(new Error("failed"))
+      ;(vscode.commands.executeCommand as Mock).mockRejectedValue(new Error("failed"))
 
       const pos = makeMockPosition(0, 5)
       const result = await provider.provideHover(doc, pos, makeMockToken())
@@ -160,10 +160,10 @@ describe("AbapHoverProviderV2", () => {
 
       const defUri = { toString: () => "file:///fm.abap", path: "/fm.abap", scheme: "file", authority: "" }
       const defDoc = makeMockDocument(["FUNCTION MY_FM.", "  ....", "ENDFUNCTION."], "file:///fm.abap")
-      ;(vscode.commands.executeCommand as jest.Mock).mockResolvedValue([
+      ;(vscode.commands.executeCommand as Mock).mockResolvedValue([
         { uri: defUri, range: { start: { line: 0 } } }
       ])
-      ;(vscode.workspace.openTextDocument as jest.Mock).mockResolvedValue(defDoc)
+      ;(vscode.workspace.openTextDocument as Mock).mockResolvedValue(defDoc)
 
       const pos = makeMockPosition(0, 18)
       const result = await provider.provideHover(doc, pos, makeMockToken())
@@ -175,9 +175,9 @@ describe("AbapHoverProviderV2", () => {
     it("catches errors in provideHover and returns undefined", async () => {
       const doc = {
         uri: { toString: () => "file:///err.abap" },
-        lineAt: jest.fn(() => { throw new Error("document error") }),
-        getText: jest.fn(),
-        getWordRangeAtPosition: jest.fn(() => new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 5)))
+        lineAt: vi.fn(function () { throw new Error("document error") }),
+        getText: vi.fn(),
+        getWordRangeAtPosition: vi.fn(function () { return new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 5)) })
       } as any
 
       const pos = makeMockPosition(0, 2)

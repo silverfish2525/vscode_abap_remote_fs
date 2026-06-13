@@ -1,39 +1,29 @@
-jest.mock(
-  "vscode",
-  () => ({
-    LanguageModelToolResult: jest.fn().mockImplementation((parts: any[]) => ({ parts })),
-    LanguageModelTextPart: jest.fn().mockImplementation((text: string) => ({ text })),
-    MarkdownString: jest.fn().mockImplementation((value: string) => ({ value })),
-    lm: { registerTool: jest.fn(() => ({ dispose: jest.fn() })) }
-  }),
-  { virtual: true }
-)
+vi.mock("vscode", () => ({
+  LanguageModelToolResult: vi.fn().mockImplementation(function (parts: any[]) { return ({ parts }) }),
+  LanguageModelTextPart: vi.fn().mockImplementation(function (text: string) { return ({ text }) }),
+  MarkdownString: vi.fn().mockImplementation(function (value: string) { return ({ value }) }),
+  lm: { registerTool: vi.fn(function () { return ({ dispose: vi.fn() }) }) }
+}))
 
-jest.mock("../../adt/conections", () => ({
-  getClient: jest.fn(),
-  abapUri: jest.fn()
+vi.mock("../../adt/conections", () => ({
+  getClient: vi.fn(),
+  abapUri: vi.fn()
 }))
-jest.mock("../telemetry", () => ({ logTelemetry: jest.fn() }))
-jest.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }))
-jest.mock("./toolRegistry", () => ({
-  registerToolWithRegistry: jest.fn(() => ({ dispose: jest.fn() }))
+vi.mock("../telemetry", () => ({ logTelemetry: vi.fn() }))
+vi.mock("../funMessenger", () => ({ funWindow: { activeTextEditor: undefined } }))
+vi.mock("./toolRegistry", () => ({
+  registerToolWithRegistry: vi.fn(function () { return ({ dispose: vi.fn() }) })
 }))
-jest.mock("../abapCopilotLogger", () => ({
-  logCommands: { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+vi.mock("../abapCopilotLogger", () => ({
+  logCommands: { info: vi.fn(), error: vi.fn(), warn: vi.fn() }
 }))
-jest.mock("../abapSearchService", () => ({ getSearchService: jest.fn() }))
-jest.mock("./shared", () => ({
-  getOptimalObjectURI: jest.fn((type: string, uri: string) => uri + "/source/main"),
-  resolveCorrectURI: jest.fn((uri: string) => Promise.resolve(uri)),
-  getObjectEnhancements: jest.fn(() =>
-    Promise.resolve({ hasEnhancements: false, enhancements: [] })
-  ),
-  getTableTypeFromDD: jest.fn(() => Promise.resolve("")),
-  getTableStructureFromDD: jest.fn(() => Promise.resolve(""))
-}))
-jest.mock("./toolGuard", () => ({
-  assertToolInvocationAuthorized: jest.fn(),
-  isToolInvocationAuthorized: jest.fn(() => true)
+vi.mock("../abapSearchService", () => ({ getSearchService: vi.fn() }))
+vi.mock("./shared", () => ({
+  getOptimalObjectURI: vi.fn(function (type: string, uri: string) { return uri + "/source/main" }),
+  resolveCorrectURI: vi.fn(function (uri: string) { return Promise.resolve(uri) }),
+  getObjectEnhancements: vi.fn(function () { return Promise.resolve({ hasEnhancements: false, enhancements: [] }) }),
+  getTableTypeFromDD: vi.fn(function () { return Promise.resolve("") }),
+  getTableStructureFromDD: vi.fn(function () { return Promise.resolve("") })
 }))
 
 import { SearchABAPObjectLinesTool } from "./searchObjectLinesTool"
@@ -48,17 +38,17 @@ function makeOptions(input: any = {}) {
   return { input } as any
 }
 
-const mockSearcher = { searchObjects: jest.fn() }
-const mockClient = { getObjectSource: jest.fn() }
+const mockSearcher = { searchObjects: vi.fn() }
+const mockClient = { getObjectSource: vi.fn() }
 
 describe("SearchABAPObjectLinesTool", () => {
   let tool: SearchABAPObjectLinesTool
 
   beforeEach(() => {
     tool = new SearchABAPObjectLinesTool()
-    jest.clearAllMocks()
-    ;(getSearchService as jest.Mock).mockReturnValue(mockSearcher)
-    ;(getClient as jest.Mock).mockReturnValue(mockClient)
+    vi.clearAllMocks()
+    ;(getSearchService as Mock).mockReturnValue(mockSearcher)
+    ;(getClient as Mock).mockReturnValue(mockClient)
     ;(window as any).activeTextEditor = undefined
   })
 
@@ -79,12 +69,7 @@ describe("SearchABAPObjectLinesTool", () => {
 
     it("shows REGEX flag when isRegexp is true", async () => {
       const result = await tool.prepareInvocation(
-        makeOptions({
-          objectName: "ZREPORT",
-          searchTerm: "METHOD.*factory",
-          isRegexp: true,
-          connectionId: "dev100"
-        }),
+        makeOptions({ objectName: "ZREPORT", searchTerm: "METHOD.*factory", isRegexp: true, connectionId: "dev100" }),
         mockToken
       )
       expect(result.confirmationMessages.message.value).toContain("REGEX")
@@ -92,12 +77,7 @@ describe("SearchABAPObjectLinesTool", () => {
 
     it("shows MAX OBJECTS when maxObjects > 1", async () => {
       const result = await tool.prepareInvocation(
-        makeOptions({
-          objectName: "Z*",
-          searchTerm: "SELECT",
-          maxObjects: 5,
-          connectionId: "dev100"
-        }),
+        makeOptions({ objectName: "Z*", searchTerm: "SELECT", maxObjects: 5, connectionId: "dev100" }),
         mockToken
       )
       expect(result.confirmationMessages.message.value).toContain("MAX 5 OBJECTS")
@@ -106,12 +86,7 @@ describe("SearchABAPObjectLinesTool", () => {
 
     it("uses single-object message when maxObjects is 1", async () => {
       const result = await tool.prepareInvocation(
-        makeOptions({
-          objectName: "ZREPORT",
-          searchTerm: "DATA",
-          maxObjects: 1,
-          connectionId: "dev100"
-        }),
+        makeOptions({ objectName: "ZREPORT", searchTerm: "DATA", maxObjects: 1, connectionId: "dev100" }),
         mockToken
       )
       expect(result.invocationMessage).not.toContain("up to")
@@ -128,12 +103,7 @@ describe("SearchABAPObjectLinesTool", () => {
 
     it("includes context lines in message", async () => {
       const result = await tool.prepareInvocation(
-        makeOptions({
-          objectName: "ZREPORT",
-          searchTerm: "DATA",
-          contextLines: 5,
-          connectionId: "dev100"
-        }),
+        makeOptions({ objectName: "ZREPORT", searchTerm: "DATA", contextLines: 5, connectionId: "dev100" }),
         mockToken
       )
       expect(result.confirmationMessages.message.value).toContain("5 context lines")
@@ -157,7 +127,10 @@ describe("SearchABAPObjectLinesTool", () => {
 
     it("throws when no connectionId and no active editor", async () => {
       await expect(
-        tool.invoke(makeOptions({ objectName: "ZTEST", searchTerm: "DATA" }), mockToken)
+        tool.invoke(
+          makeOptions({ objectName: "ZTEST", searchTerm: "DATA" }),
+          mockToken
+        )
       ).rejects.toThrow("No active ABAP document")
     })
 
@@ -165,7 +138,7 @@ describe("SearchABAPObjectLinesTool", () => {
       ;(window as any).activeTextEditor = {
         document: { uri: { authority: "local", scheme: "file" } }
       }
-      ;(abapUri as jest.Mock).mockReturnValue(false)
+      ;(abapUri as Mock).mockReturnValue(false)
 
       await expect(
         tool.invoke(makeOptions({ objectName: "ZTEST", searchTerm: "DATA" }), mockToken)
@@ -176,10 +149,13 @@ describe("SearchABAPObjectLinesTool", () => {
       ;(window as any).activeTextEditor = {
         document: { uri: { authority: "dev100", scheme: "adt" } }
       }
-      ;(abapUri as jest.Mock).mockReturnValue(true)
+      ;(abapUri as Mock).mockReturnValue(true)
       mockSearcher.searchObjects.mockResolvedValue([])
 
-      await tool.invoke(makeOptions({ objectName: "ZTEST", searchTerm: "DATA" }), mockToken)
+      await tool.invoke(
+        makeOptions({ objectName: "ZTEST", searchTerm: "DATA" }),
+        mockToken
+      )
 
       expect(getSearchService).toHaveBeenCalledWith("dev100")
     })
@@ -192,9 +168,7 @@ describe("SearchABAPObjectLinesTool", () => {
         mockToken
       )
 
-      expect(logTelemetry).toHaveBeenCalledWith("tool_search_abap_object_lines_called", {
-        connectionId: "dev100"
-      })
+      expect(logTelemetry).toHaveBeenCalledWith("tool_search_abap_object_lines_called", { connectionId: "dev100" })
     })
   })
 
@@ -215,13 +189,11 @@ describe("SearchABAPObjectLinesTool", () => {
     ].join("\n")
 
     beforeEach(() => {
-      mockSearcher.searchObjects.mockResolvedValue([
-        {
-          name: "ZTEST",
-          type: "PROG/P",
-          uri: "/sap/bc/adt/programs/programs/ztest"
-        }
-      ])
+      mockSearcher.searchObjects.mockResolvedValue([{
+        name: "ZTEST",
+        type: "PROG/P",
+        uri: "/sap/bc/adt/programs/programs/ztest"
+      }])
       mockClient.getObjectSource.mockResolvedValue(sourceCode)
     })
 
@@ -232,7 +204,7 @@ describe("SearchABAPObjectLinesTool", () => {
       )
 
       const text = result.parts[0].text
-      expect(text).toContain("1") // 1 match
+      expect(text).toContain("1")  // 1 match
       expect(text).toContain("SELECT")
     })
 
@@ -249,11 +221,7 @@ describe("SearchABAPObjectLinesTool", () => {
 
     it("returns no-matches message when search term not found", async () => {
       const result: any = await tool.invoke(
-        makeOptions({
-          objectName: "ZTEST",
-          searchTerm: "NONEXISTENT_TERM",
-          connectionId: "dev100"
-        }),
+        makeOptions({ objectName: "ZTEST", searchTerm: "NONEXISTENT_TERM", connectionId: "dev100" }),
         mockToken
       )
 
@@ -263,12 +231,7 @@ describe("SearchABAPObjectLinesTool", () => {
 
     it("handles regex search mode", async () => {
       const result: any = await tool.invoke(
-        makeOptions({
-          objectName: "ZTEST",
-          searchTerm: "DATA.*string",
-          isRegexp: true,
-          connectionId: "dev100"
-        }),
+        makeOptions({ objectName: "ZTEST", searchTerm: "DATA.*string", isRegexp: true, connectionId: "dev100" }),
         mockToken
       )
 
@@ -279,12 +242,7 @@ describe("SearchABAPObjectLinesTool", () => {
     it("falls back to literal search when regex is invalid", async () => {
       // Invalid regex like unmatched bracket
       const result: any = await tool.invoke(
-        makeOptions({
-          objectName: "ZTEST",
-          searchTerm: "DATA",
-          isRegexp: true,
-          connectionId: "dev100"
-        }),
+        makeOptions({ objectName: "ZTEST", searchTerm: "DATA", isRegexp: true, connectionId: "dev100" }),
         mockToken
       )
 
@@ -295,12 +253,7 @@ describe("SearchABAPObjectLinesTool", () => {
 
     it("includes context lines around matches", async () => {
       const result: any = await tool.invoke(
-        makeOptions({
-          objectName: "ZTEST",
-          searchTerm: "SELECT",
-          contextLines: 2,
-          connectionId: "dev100"
-        }),
+        makeOptions({ objectName: "ZTEST", searchTerm: "SELECT", contextLines: 2, connectionId: "dev100" }),
         mockToken
       )
 
@@ -354,12 +307,7 @@ describe("SearchABAPObjectLinesTool", () => {
         .mockResolvedValueOnce("REPORT zreport2.\nDATA lv_also TYPE string.\n")
 
       const result: any = await tool.invoke(
-        makeOptions({
-          objectName: "ZREPORT*",
-          searchTerm: "DATA",
-          maxObjects: 5,
-          connectionId: "dev100"
-        }),
+        makeOptions({ objectName: "ZREPORT*", searchTerm: "DATA", maxObjects: 5, connectionId: "dev100" }),
         mockToken
       )
 
@@ -378,12 +326,7 @@ describe("SearchABAPObjectLinesTool", () => {
       mockClient.getObjectSource.mockResolvedValue("REPORT zrep.\nWRITE 'hello'.\n")
 
       const result: any = await tool.invoke(
-        makeOptions({
-          objectName: "ZREP*",
-          searchTerm: "WRITE",
-          maxObjects: 3,
-          connectionId: "dev100"
-        }),
+        makeOptions({ objectName: "ZREP*", searchTerm: "WRITE", maxObjects: 3, connectionId: "dev100" }),
         mockToken
       )
 
@@ -401,12 +344,7 @@ describe("SearchABAPObjectLinesTool", () => {
       mockClient.getObjectSource.mockResolvedValue("REPORT zrep.\n")
 
       const result: any = await tool.invoke(
-        makeOptions({
-          objectName: "ZREP*",
-          searchTerm: "NONEXISTENT",
-          maxObjects: 3,
-          connectionId: "dev100"
-        }),
+        makeOptions({ objectName: "ZREP*", searchTerm: "NONEXISTENT", maxObjects: 3, connectionId: "dev100" }),
         mockToken
       )
 
@@ -424,12 +362,7 @@ describe("SearchABAPObjectLinesTool", () => {
       mockSearcher.searchObjects.mockResolvedValue([])
 
       await tool.invoke(
-        makeOptions({
-          objectName: "ZTEST",
-          searchTerm: "DATA",
-          maxObjects: -5,
-          connectionId: "dev100"
-        }),
+        makeOptions({ objectName: "ZTEST", searchTerm: "DATA", maxObjects: -5, connectionId: "dev100" }),
         mockToken
       )
 
@@ -440,12 +373,7 @@ describe("SearchABAPObjectLinesTool", () => {
       mockSearcher.searchObjects.mockResolvedValue([])
 
       await tool.invoke(
-        makeOptions({
-          objectName: "ZTEST",
-          searchTerm: "DATA",
-          maxObjects: 50,
-          connectionId: "dev100"
-        }),
+        makeOptions({ objectName: "ZTEST", searchTerm: "DATA", maxObjects: 50, connectionId: "dev100" }),
         mockToken
       )
 
@@ -458,23 +386,19 @@ describe("SearchABAPObjectLinesTool", () => {
   // =========================================================================
   describe("invoke enhancement search", () => {
     it("includes enhancement matches in results", async () => {
-      mockSearcher.searchObjects.mockResolvedValue([
-        {
-          name: "ZREPORT",
-          type: "PROG/P",
-          uri: "/sap/bc/adt/programs/programs/zreport"
-        }
-      ])
+      mockSearcher.searchObjects.mockResolvedValue([{
+        name: "ZREPORT",
+        type: "PROG/P",
+        uri: "/sap/bc/adt/programs/programs/zreport"
+      }])
       mockClient.getObjectSource.mockResolvedValue("REPORT zreport.\nWRITE 'base'.\n")
-      ;(getObjectEnhancements as jest.Mock).mockResolvedValue({
+      ;(getObjectEnhancements as Mock).mockResolvedValue({
         hasEnhancements: true,
-        enhancements: [
-          {
-            name: "ZENH_IMPL",
-            uri: "/sap/bc/adt/enhancements/zenh_impl",
-            code: "DATA lv_enhanced TYPE string.\nlv_enhanced = 'FOUND_IN_ENH'.\n"
-          }
-        ]
+        enhancements: [{
+          name: "ZENH_IMPL",
+          uri: "/sap/bc/adt/enhancements/zenh_impl",
+          code: "DATA lv_enhanced TYPE string.\nlv_enhanced = 'FOUND_IN_ENH'.\n"
+        }]
       })
 
       const result: any = await tool.invoke(
@@ -489,23 +413,19 @@ describe("SearchABAPObjectLinesTool", () => {
     })
 
     it("counts enhancement matches separately from base matches", async () => {
-      mockSearcher.searchObjects.mockResolvedValue([
-        {
-          name: "ZREPORT",
-          type: "PROG/P",
-          uri: "/sap/bc/adt/programs/programs/zreport"
-        }
-      ])
+      mockSearcher.searchObjects.mockResolvedValue([{
+        name: "ZREPORT",
+        type: "PROG/P",
+        uri: "/sap/bc/adt/programs/programs/zreport"
+      }])
       mockClient.getObjectSource.mockResolvedValue("REPORT zreport.\nDATA lv_test TYPE string.\n")
-      ;(getObjectEnhancements as jest.Mock).mockResolvedValue({
+      ;(getObjectEnhancements as Mock).mockResolvedValue({
         hasEnhancements: true,
-        enhancements: [
-          {
-            name: "ZENH1",
-            uri: "/sap/bc/adt/enhancements/zenh1",
-            code: "DATA lv_enh TYPE string.\n"
-          }
-        ]
+        enhancements: [{
+          name: "ZENH1",
+          uri: "/sap/bc/adt/enhancements/zenh1",
+          code: "DATA lv_enh TYPE string.\n"
+        }]
       })
 
       const result: any = await tool.invoke(
@@ -524,16 +444,16 @@ describe("SearchABAPObjectLinesTool", () => {
   // =========================================================================
   describe("invoke table object search", () => {
     it("searches within complete table structure for TABL types", async () => {
-      mockSearcher.searchObjects.mockResolvedValue([
-        {
-          name: "MARA",
-          type: "TABL/TA",
-          uri: "/sap/bc/adt/ddic/tables/mara"
-        }
-      ])
+      mockSearcher.searchObjects.mockResolvedValue([{
+        name: "MARA",
+        type: "TABL/TA",
+        uri: "/sap/bc/adt/ddic/tables/mara"
+      }])
       // The tool internally calls getCompleteTableStructure (local helper)
       // which uses getClient().getObjectSource()
-      mockClient.getObjectSource.mockResolvedValue("MANDT CLNT 3\nMATNR CHAR 40\nERSDA DATE 8\n")
+      mockClient.getObjectSource.mockResolvedValue(
+        "MANDT CLNT 3\nMATNR CHAR 40\nERSDA DATE 8\n"
+      )
 
       const result: any = await tool.invoke(
         makeOptions({ objectName: "MARA", searchTerm: "MATNR", connectionId: "dev100" }),
@@ -561,13 +481,11 @@ describe("SearchABAPObjectLinesTool", () => {
     })
 
     it("handles object with no URI gracefully", async () => {
-      mockSearcher.searchObjects.mockResolvedValue([
-        {
-          name: "ZOBJ",
-          type: "PROG/P",
-          uri: undefined
-        }
-      ])
+      mockSearcher.searchObjects.mockResolvedValue([{
+        name: "ZOBJ",
+        type: "PROG/P",
+        uri: undefined
+      }])
 
       const result: any = await tool.invoke(
         makeOptions({ objectName: "ZOBJ", searchTerm: "DATA", connectionId: "dev100" }),
@@ -586,17 +504,12 @@ describe("SearchABAPObjectLinesTool", () => {
       ])
       mockClient.getObjectSource
         .mockRejectedValueOnce(new Error("Access denied"))
-        .mockRejectedValueOnce(new Error("Access denied")) // fallback also fails
-        .mockRejectedValueOnce(new Error("Access denied")) // resolved URI also fails
+        .mockRejectedValueOnce(new Error("Access denied"))  // fallback also fails
+        .mockRejectedValueOnce(new Error("Access denied"))  // resolved URI also fails
         .mockResolvedValueOnce("REPORT zrep2.\nDATA lv_x TYPE string.\n")
 
       const result: any = await tool.invoke(
-        makeOptions({
-          objectName: "ZREP*",
-          searchTerm: "DATA",
-          maxObjects: 5,
-          connectionId: "dev100"
-        }),
+        makeOptions({ objectName: "ZREP*", searchTerm: "DATA", maxObjects: 5, connectionId: "dev100" }),
         mockToken
       )
 
@@ -606,13 +519,11 @@ describe("SearchABAPObjectLinesTool", () => {
     })
 
     it("handles empty source content", async () => {
-      mockSearcher.searchObjects.mockResolvedValue([
-        {
-          name: "ZEMPTY",
-          type: "PROG/P",
-          uri: "/sap/bc/adt/programs/programs/zempty"
-        }
-      ])
+      mockSearcher.searchObjects.mockResolvedValue([{
+        name: "ZEMPTY",
+        type: "PROG/P",
+        uri: "/sap/bc/adt/programs/programs/zempty"
+      }])
       mockClient.getObjectSource.mockResolvedValue("")
 
       const result: any = await tool.invoke(

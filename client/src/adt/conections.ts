@@ -1,13 +1,17 @@
 import { RemoteManager, createClient } from "../config"
 import { AFsService, Root } from "abapfs"
-import { Uri, FileSystemError, workspace } from "vscode"
-import { ADTClient } from "abap-adt-api"
+import { type Uri, FileSystemError, workspace } from "vscode"
+import type { ADTClient } from "abap-adt-api"
 import { LogOutPendingDebuggers } from "./debugger"
 import { SapSystemValidator } from "../services/sapSystemValidator"
 import { LocalFsProvider } from "../fs/LocalFsProvider"
 import { log } from "../lib"
-export const ADTSCHEME = "adt"
-export const ADTURIPATTERN = /\/sap\/bc\/adt\//
+import { ADTSCHEME, ADTURIPATTERN } from "../lib/adtScheme"
+// Re-exported for backward compatibility — the canonical home for these
+// constants is `lib/adtScheme.ts` (kept low in the dependency graph so
+// that low-level utilities can reference it without dragging the entire
+// adt/connection subtree into their consumer's import closure).
+export { ADTSCHEME, ADTURIPATTERN }
 
 const roots = new Map<string, Root>()
 const clients = new Map<string, ADTClient>()
@@ -122,7 +126,7 @@ async function create(connId: string) {
     addContentTypeInterceptor(client.statelessClone)
   }
 
-  // @ts-ignore
+  // @ts-expect-error
   const service = new AFsService(client)
   const newRoot = new Root(connId, service)
   roots.set(connId, newRoot)

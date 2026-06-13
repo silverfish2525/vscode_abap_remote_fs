@@ -1,17 +1,17 @@
-jest.mock("vscode", () => ({
+vi.mock("vscode", () => ({
   extensions: {
-    getExtension: jest.fn()
+    getExtension: vi.fn()
   }
-}), { virtual: true })
+}))
 
 import { getWinRegistryReader } from "./winregistry"
 import { extensions } from "vscode"
 
-const mockGetExtension = extensions.getExtension as jest.MockedFunction<typeof extensions.getExtension>
+const mockGetExtension = extensions.getExtension as MockedFunction<typeof extensions.getExtension>
 
 describe("getWinRegistryReader", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   test("returns undefined when extension is not found", () => {
@@ -22,13 +22,13 @@ describe("getWinRegistryReader", () => {
   test("returns undefined when extension is not active", () => {
     mockGetExtension.mockReturnValueOnce({
       isActive: false,
-      exports: { GetStringRegKey: jest.fn() }
+      exports: { GetStringRegKey: vi.fn() }
     } as any)
     expect(getWinRegistryReader()).toBeUndefined()
   })
 
   test("returns GetStringRegKey when extension is active", () => {
-    const mockGetStringRegKey = jest.fn()
+    const mockGetStringRegKey = vi.fn()
     mockGetExtension.mockReturnValueOnce({
       isActive: true,
       exports: { GetStringRegKey: mockGetStringRegKey }
